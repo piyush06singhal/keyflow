@@ -8,12 +8,12 @@ const providers: Record<AiProviderId, AiProvider> = {
 };
 
 const defaultProviderByKind: Record<AiRequestKind, AiProviderId> = {
-  typing_session_analysis: "gemini",
-  coding_exercise_generation: "gemini",
-  lesson_generation: "gemini",
-  practice_plan: "gemini",
+  typing_session_analysis: "groq",
+  coding_exercise_generation: "groq",
+  lesson_generation: "groq",
+  practice_plan: "groq",
   coach_chat: "groq",
-  progress_summary: "gemini",
+  progress_summary: "groq",
 };
 
 export function selectAiProvider(kind: AiRequestKind, preferred?: AiProviderId) {

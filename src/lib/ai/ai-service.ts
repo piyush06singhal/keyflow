@@ -1,6 +1,8 @@
 import { logAiRequest } from "@/lib/ai/logger";
 import { withRetry } from "@/lib/ai/retry";
 import { selectAiProvider } from "@/lib/ai/ai-router";
+import { checkUserAiRateLimit } from "@/lib/ai/rate-limit";
+import { AiError } from "@/lib/ai/errors";
 import type {
   AiGenerateTextInput,
   AiGenerateTextResult,
@@ -9,8 +11,22 @@ import type {
 
 export async function generateAiText(
   input: AiGenerateTextInput,
-  options: { provider?: AiProviderId; retry?: boolean } = {},
+  options: {
+    provider?: AiProviderId;
+    retry?: boolean;
+    userId?: string;
+  } = {},
 ): Promise<AiGenerateTextResult> {
+  if (options.userId) {
+    const limit = checkUserAiRateLimit(options.userId);
+    if (!limit.allowed) {
+      throw new AiError(
+        "AI rate limit exceeded. Please try again later.",
+        "AI_RATE_LIMIT",
+      );
+    }
+  }
+
   const provider = selectAiProvider(input.kind, options.provider);
 
   try {
