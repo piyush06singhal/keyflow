@@ -15,7 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Calendar } from "lucide-react";
-import { AnalyticsService } from "../services/analytics.service";
+import { AnalyticsService } from "@/features/analytics/services/analytics.service";
 
 interface YearlyPracticeHeatmapProps {
   userId: string;

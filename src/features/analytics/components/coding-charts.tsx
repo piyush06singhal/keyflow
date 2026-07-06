@@ -26,8 +26,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AnalyticsService } from "../services/analytics.service";
-import type { AnalyticsTimeframe, LanguageStatPoint } from "../types";
+import { AnalyticsService } from "@/features/analytics/services/analytics.service";
+import type { AnalyticsTimeframe, LanguageStatPoint } from "@/features/analytics/types";
 
 interface CodingChartsProps {
   userId: string;

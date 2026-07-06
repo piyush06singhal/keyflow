@@ -7,6 +7,8 @@ import { CommandPalette } from "./command-palette";
 import { MobileSidebar } from "./mobile-sidebar";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMediaQuery } from "@/hooks";
+import { useNotifications } from "@/features/notifications/context/notification-provider";
+import { NotificationsDrawer } from "@/features/notifications/components/notifications-drawer";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -19,10 +21,10 @@ export function AppLayout({ children, user }: AppLayoutProps) {
     const saved = localStorage.getItem("sidebar-open");
     return saved !== null ? JSON.parse(saved) : true;
   });
+  const { setIsDrawerOpen } = useNotifications();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [_searchOpen, setSearchOpen] = useState(false);
-  const [_notificationsOpen, setNotificationsOpen] = useState(false);
 
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
@@ -51,7 +53,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
       if (e.key === "Escape") {
         setCommandPaletteOpen(false);
         setSearchOpen(false);
-        setNotificationsOpen(false);
+        setIsDrawerOpen(false);
         setMobileSidebarOpen(false);
       }
     };
@@ -101,7 +103,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
           onMobileMenuToggle={() => setMobileSidebarOpen(true)}
           onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
           onSearchOpen={() => setSearchOpen(true)}
-          onNotificationsOpen={() => setNotificationsOpen(true)}
+          onNotificationsOpen={() => setIsDrawerOpen(true)}
         />
 
         {/* Page Content */}
@@ -126,8 +128,8 @@ export function AppLayout({ children, user }: AppLayoutProps) {
         onClose={() => setCommandPaletteOpen(false)}
       />
 
-      {/* TODO: Add Search Dialog */}
-      {/* TODO: Add Notifications Panel */}
+      {/* Search Dialog */}
+      <NotificationsDrawer />
     </div>
   );
 }

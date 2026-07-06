@@ -14,8 +14,11 @@ import {
   Legend,
 } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AnalyticsService } from "../services/analytics.service";
-import type { AnalyticsTimeframe, WpmProgressionPoint } from "../types";
+import { AnalyticsService } from "@/features/analytics/services/analytics.service";
+import type {
+  AnalyticsTimeframe,
+  WpmProgressionPoint,
+} from "@/features/analytics/types";
 
 interface PerformanceChartsProps {
   userId: string;

@@ -19,8 +19,8 @@ import {
   AreaChart,
 } from "recharts";
 import { Info, Sparkles } from "lucide-react";
-import { AnalyticsService } from "../services/analytics.service";
-import type { PerformanceForecastPoint } from "../types";
+import { AnalyticsService } from "@/features/analytics/services/analytics.service";
+import type { PerformanceForecastPoint } from "@/features/analytics/types";
 
 interface ForecastCardProps {
   userId: string;

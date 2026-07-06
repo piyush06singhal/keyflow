@@ -11,9 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Brain, Code2, AlertTriangle, ArrowRight } from "lucide-react";
-import { AnalyticsService } from "../services/analytics.service";
+import { AnalyticsService } from "@/features/analytics/services/analytics.service";
 import Link from "next/link";
-import type { AIAnalyticsInsight } from "../types";
+import type { AIAnalyticsInsight } from "@/features/analytics/types";
 
 interface AIInsightCardProps {
   userId: string;

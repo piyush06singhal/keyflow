@@ -80,14 +80,14 @@ export function WelcomeCard({
           {/* Right: Quick Actions */}
           <div className="flex flex-col gap-2.5">
             <Button asChild size="lg" className="group shadow-key-sm rounded-xl">
-              <Link href="/practice/typing">
+              <Link href="/practice">
                 <Zap className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                 Start Typing
               </Link>
             </Button>
             <div className="flex gap-2">
               <Button asChild variant="outline" size="sm" className="flex-1 rounded-xl">
-                <Link href="/practice/coding">Coding</Link>
+                <Link href="/practice/code/dashboard">Coding</Link>
               </Button>
               <Button asChild variant="outline" size="sm" className="flex-1 rounded-xl">
                 <Link href="/challenges">Challenge</Link>

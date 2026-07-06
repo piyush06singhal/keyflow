@@ -5,6 +5,8 @@ import { routes } from "@/lib/constants/routes";
 import { AppLayout } from "@/components/app-shell";
 import { getUserProfile } from "@/lib/supabase/profile";
 
+import { NotificationProvider } from "@/features/notifications/context/notification-provider";
+
 export default async function AppLayoutWrapper({
   children,
 }: {
@@ -29,5 +31,9 @@ export default async function AppLayoutWrapper({
       "User",
   };
 
-  return <AppLayout user={userData}>{children}</AppLayout>;
+  return (
+    <NotificationProvider>
+      <AppLayout user={userData}>{children}</AppLayout>
+    </NotificationProvider>
+  );
 }

@@ -11,8 +11,8 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Target, CheckCircle2, AlertCircle, Calendar } from "lucide-react";
-import { AnalyticsService } from "../services/analytics.service";
-import type { GoalProgressItem } from "../types";
+import { AnalyticsService } from "@/features/analytics/services/analytics.service";
+import type { GoalProgressItem } from "@/features/analytics/types";
 
 interface GoalProgressProps {
   userId: string;

@@ -782,7 +782,7 @@ export class AnalyticsService {
           impact: "high",
           category: "coding",
           suggestedAction: "Practice JavaScript snippets",
-          actionUrl: "/practice/coding?lang=javascript",
+          actionUrl: "/practice/code/dashboard?lang=javascript",
         },
         {
           id: "in2",

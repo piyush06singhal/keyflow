@@ -30,20 +30,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AnalyticsService } from "../services/analytics.service";
-import type { AnalyticsTimeframe, AnalyticsSummary } from "../types";
+import { AnalyticsService } from "@/features/analytics/services/analytics.service";
+import type { AnalyticsTimeframe, AnalyticsSummary } from "@/features/analytics/types";
 
 // Dynamic sub-components
-import { OverviewCards } from "./overview-cards";
-import { PerformanceCharts } from "./performance-charts";
-import { CodingCharts } from "./coding-charts";
-import { KeyboardHeatmap } from "./keyboard-heatmap";
-import { MistakeAnalysis } from "./mistake-analysis";
-import { YearlyPracticeHeatmap } from "./yearly-practice-heatmap";
-import { GoalProgress } from "./goal-progress";
-import { HistoricalTimeline } from "./historical-timeline";
-import { ForecastCard } from "./forecast-card";
-import { AIInsightCard } from "./ai-insight-card";
+import { OverviewCards } from "@/features/analytics/components/overview-cards";
+import { PerformanceCharts } from "@/features/analytics/components/performance-charts";
+import { CodingCharts } from "@/features/analytics/components/coding-charts";
+import { KeyboardHeatmap } from "@/features/analytics/components/keyboard-heatmap";
+import { MistakeAnalysis } from "@/features/analytics/components/mistake-analysis";
+import { YearlyPracticeHeatmap } from "@/features/analytics/components/yearly-practice-heatmap";
+import { GoalProgress } from "@/features/analytics/components/goal-progress";
+import { HistoricalTimeline } from "@/features/analytics/components/historical-timeline";
+import { ForecastCard } from "@/features/analytics/components/forecast-card";
+import { AIInsightCard } from "@/features/analytics/components/ai-insight-card";
 
 interface AnalyticsClientProps {
   userId: string;

@@ -232,9 +232,8 @@ export async function getUserStatsForCompletion(
       return null;
     }
 
-    // Calculate XP from total practice time (simple formula)
-    const totalMinutes = Math.floor(data.total_practice_time / 60);
-    const currentXp = totalMinutes * 10;
+    // Use the actual XP stored in the database if available, otherwise fallback
+    const currentXp = data.xp ?? Math.floor((data.total_practice_time || 0) / 60) * 10;
 
     return {
       bestWpm: data.best_wpm || 0,

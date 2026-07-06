@@ -36,13 +36,13 @@ const navigationItems: NavItem[] = [
   { label: "AI Coach", href: "/ai-coach", icon: Brain, group: "main" },
   {
     label: "Typing Practice",
-    href: "/practice/typing",
+    href: "/practice",
     icon: Keyboard,
     group: "practice",
   },
   {
     label: "Coding Practice",
-    href: "/practice/coding",
+    href: "/practice/code/dashboard",
     icon: Code2,
     group: "practice",
   },

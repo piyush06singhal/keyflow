@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { useTheme } from "next-themes";
 import { routes } from "@/lib/constants/routes";
 import Link from "next/link";
+import { useNotifications } from "@/features/notifications/context/notification-provider";
 
 interface AppTopbarProps {
   user: { email?: string; display_name?: string };
@@ -35,7 +36,7 @@ export function AppTopbar({
 }: AppTopbarProps) {
   const pathname = usePathname();
   const { setTheme } = useTheme();
-  const [notificationCount] = useState(3);
+  const { unreadCount } = useNotifications();
 
   const breadcrumbs = getBreadcrumbs(pathname);
 
@@ -126,12 +127,12 @@ export function AppTopbar({
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" />
-          {notificationCount > 0 && (
+          {unreadCount > 0 && (
             <Badge
               variant="destructive"
               className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs"
             >
-              {notificationCount}
+              {unreadCount}
             </Badge>
           )}
         </Button>

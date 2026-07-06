@@ -11,8 +11,11 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CornerDownLeft, RotateCcw, Percent } from "lucide-react";
-import { AnalyticsService } from "../services/analytics.service";
-import type { AnalyticsTimeframe, MistakeAnalysisData } from "../types";
+import { AnalyticsService } from "@/features/analytics/services/analytics.service";
+import type {
+  AnalyticsTimeframe,
+  MistakeAnalysisData,
+} from "@/features/analytics/types";
 
 interface MistakeAnalysisProps {
   userId: string;

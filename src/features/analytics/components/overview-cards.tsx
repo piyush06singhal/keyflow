@@ -9,7 +9,7 @@ import {
   Code2,
   Percent,
 } from "lucide-react";
-import type { AnalyticsSummary } from "../types";
+import type { AnalyticsSummary } from "@/features/analytics/types";
 
 interface OverviewCardsProps {
   summary: AnalyticsSummary;

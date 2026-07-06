@@ -60,7 +60,7 @@ const navigationItems: NavItem[] = [
   },
   {
     label: "Coding Practice",
-    href: "/practice/coding",
+    href: "/practice/code/dashboard",
     icon: Code2,
     shortcut: "C",
     group: "practice",

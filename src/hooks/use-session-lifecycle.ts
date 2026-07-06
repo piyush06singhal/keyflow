@@ -18,7 +18,8 @@ import {
   type SessionSyncStatus,
 } from "@/lib/session-lifecycle";
 import { saveTypingSession } from "@/lib/supabase/typing-practice";
-
+import { useNotifications } from "@/features/notifications/context/notification-provider";
+import { evaluateSessionRewards } from "@/features/gamification/services/reward-engine";
 export interface UseSessionLifecycleReturn {
   // State
   completionResult: SessionCompletionResult | null;
@@ -38,6 +39,7 @@ export interface UseSessionLifecycleReturn {
 
 export function useSessionLifecycle(): UseSessionLifecycleReturn {
   const { user } = useAuth();
+  const { addNotification } = useNotifications();
   const [completionResult, setCompletionResult] =
     useState<SessionCompletionResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -98,6 +100,29 @@ export function useSessionLifecycle(): UseSessionLifecycleReturn {
           practiceMode,
           userStats,
         );
+
+        // Evaluate and save gamification rewards and trigger real-time notifications
+        if (result.saved || result.statisticsUpdated) {
+          const rewardResult = await evaluateSessionRewards(
+            user.id,
+            {
+              duration: sessionResult.duration,
+              finalWpm: sessionResult.finalWpm,
+              finalAccuracy: sessionResult.finalAccuracy,
+              consistency: sessionResult.consistency,
+              wordsTyped: sessionResult.finalStats.completedWords,
+            },
+            practiceMode,
+            (title, message, type) => {
+              addNotification(title, message, type);
+            },
+          );
+
+          // Sync UI display XP with actual processed database result
+          result.xpGained = rewardResult.xpGained;
+          result.levelUp = rewardResult.levelCheck.leveledUp;
+          result.newLevel = rewardResult.levelCheck.newLevel;
+        }
 
         setCompletionResult(result);
 

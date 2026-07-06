@@ -16,8 +16,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
-import { AnalyticsService } from "../services/analytics.service";
-import type { AnalyticsTimeframe, KeyboardHeatmapData } from "../types";
+import { AnalyticsService } from "@/features/analytics/services/analytics.service";
+import type {
+  AnalyticsTimeframe,
+  KeyboardHeatmapData,
+} from "@/features/analytics/types";
 
 interface KeyboardHeatmapProps {
   userId: string;
