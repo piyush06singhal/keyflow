@@ -1,13 +1,20 @@
 /**
  * AI Snippet Generator
- * 
+ *
  * Generates custom code snippets using Groq/Gemini based on user preferences.
  * Provides dynamic, personalized coding practice content.
  */
 
 import { generateAiText } from "@/lib/ai/ai-service";
-import type { CodeSnippet, ProgrammingLanguage, CodingDifficulty, CodingCategory, Framework } from "./types";
+import type {
+  CodeSnippet,
+  ProgrammingLanguage,
+  CodingDifficulty,
+  CodingCategory,
+  Framework,
+} from "./types";
 import { SnippetProvider } from "./snippet-provider";
+import { generateMetadata } from "./snippet-utils";
 import { getLanguageConfig } from "./languages";
 
 interface GenerateSnippetOptions {
@@ -24,7 +31,7 @@ interface GenerateSnippetOptions {
  * Generate a code snippet using AI
  */
 export async function generateAiCodeSnippet(
-  options: GenerateSnippetOptions
+  options: GenerateSnippetOptions,
 ): Promise<CodeSnippet> {
   const {
     language,
@@ -37,7 +44,7 @@ export async function generateAiCodeSnippet(
   } = options;
 
   const languageConfig = getLanguageConfig(language);
-  
+
   // Build AI prompt
   const prompt = buildSnippetPrompt({
     language: languageConfig.displayName,
@@ -83,7 +90,7 @@ export async function generateAiCodeSnippet(
       difficulty,
       type: determineSnippetType(category),
       code: parsedSnippet.code,
-      metadata: SnippetProvider.generateMetadata(parsedSnippet.code, language),
+      metadata: generateMetadata(parsedSnippet.code, language),
       tags: parsedSnippet.tags || [language, difficulty, style],
     };
 
@@ -107,15 +114,7 @@ function buildSnippetPrompt(params: {
   lineCount: number;
   fileExtension: string;
 }): string {
-  const {
-    language,
-    difficulty,
-    category,
-    framework,
-    topic,
-    style,
-    lineCount,
-  } = params;
+  const { language, difficulty, category, framework, topic, style, lineCount } = params;
 
   let prompt = `Generate a ${difficulty}-level ${language} code snippet`;
 
@@ -136,16 +135,19 @@ function buildSnippetPrompt(params: {
   // Add style-specific requirements
   switch (style) {
     case "tutorial":
-      prompt += "Make it educational with clear examples and comments explaining key concepts.";
+      prompt +=
+        "Make it educational with clear examples and comments explaining key concepts.";
       break;
     case "interview":
-      prompt += "Make it interview-style with a problem-solving focus and optimal solution.";
+      prompt +=
+        "Make it interview-style with a problem-solving focus and optimal solution.";
       break;
     case "project":
       prompt += "Make it production-ready with error handling and best practices.";
       break;
     case "algorithm":
-      prompt += "Focus on algorithmic implementation with time/space complexity analysis.";
+      prompt +=
+        "Focus on algorithmic implementation with time/space complexity analysis.";
       break;
   }
 
@@ -155,7 +157,8 @@ function buildSnippetPrompt(params: {
       prompt += " Use simple, straightforward syntax. Include helpful comments.";
       break;
     case "intermediate":
-      prompt += " Use common patterns and real-world examples. Include moderate complexity.";
+      prompt +=
+        " Use common patterns and real-world examples. Include moderate complexity.";
       break;
     case "advanced":
       prompt += " Use advanced features, nested structures, and complex logic.";
@@ -200,7 +203,7 @@ Always return valid JSON in the specified format. The code field should contain 
  */
 function parseAiResponse(
   aiResponse: string,
-  options: GenerateSnippetOptions
+  options: GenerateSnippetOptions,
 ): {
   title: string;
   description: string;
@@ -239,17 +242,15 @@ function parseAiResponse(
 /**
  * Determine snippet type based on category
  */
-function determineSnippetType(
-  category?: CodingCategory
-): CodeSnippet["type"] {
+function determineSnippetType(category?: CodingCategory): CodeSnippet["type"] {
   if (!category) return "full-code";
 
   const typeMap: Record<string, CodeSnippet["type"]> = {
     "basic-syntax": "syntax",
-    "functions": "function",
-    "classes": "class",
+    functions: "function",
+    classes: "class",
     "react-components": "component",
-    "algorithms": "algorithm",
+    algorithms: "algorithm",
     "sql-queries": "query",
     "config-files": "config",
     "git-commands": "command",
@@ -264,11 +265,9 @@ function determineSnippetType(
  */
 export async function generateMultipleSnippets(
   options: GenerateSnippetOptions,
-  count: number = 3
+  count: number = 3,
 ): Promise<CodeSnippet[]> {
-  const promises = Array.from({ length: count }, () =>
-    generateAiCodeSnippet(options)
-  );
+  const promises = Array.from({ length: count }, () => generateAiCodeSnippet(options));
 
   try {
     const snippets = await Promise.all(promises);
@@ -285,13 +284,13 @@ export async function generateMultipleSnippets(
  * Generate snippet with fallback to static
  */
 export async function generateSnippetWithFallback(
-  options: GenerateSnippetOptions
+  options: GenerateSnippetOptions,
 ): Promise<CodeSnippet> {
   try {
     return await generateAiCodeSnippet(options);
   } catch (error) {
     console.warn("AI generation failed, falling back to static snippet:", error);
-    
+
     // Fallback to static snippet
     const staticSnippet = await SnippetProvider.getSnippet({
       source: "static",
