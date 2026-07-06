@@ -252,6 +252,7 @@ export class TypingEngine {
 
     // Update cursor position
     this.cursorManager.setPosition(action.cursorAfter);
+    this.eventDispatcher.emit("cursor:moved", action.cursorAfter);
 
     // Update statistics
     this.liveStats = this.calculateStatistics();
