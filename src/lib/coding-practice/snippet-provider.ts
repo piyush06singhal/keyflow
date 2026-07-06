@@ -112,7 +112,17 @@ export class SnippetProvider {
     }
 
     if (filtered.length === 0) {
-      return null;
+      console.warn("No static snippets match all filters. Loosening filters...");
+      // Loosen filters by keeping only language if provided, or return a default snippet
+      let loosened = STATIC_SNIPPETS;
+      if (filter && filter.language) {
+        loosened = loosened.filter((s) => s.language === filter.language);
+      }
+      if (loosened.length === 0) {
+        return STATIC_SNIPPETS[0] || null;
+      }
+      const randomIndex = Math.floor(Math.random() * loosened.length);
+      return loosened[randomIndex] || null;
     }
 
     // Return random or first match

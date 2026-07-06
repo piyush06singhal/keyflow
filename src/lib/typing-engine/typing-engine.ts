@@ -94,6 +94,13 @@ export class TypingEngine {
       this.eventDispatcher,
     );
 
+    // Listen for timer expiration
+    this.eventDispatcher.on("timer:expired", () => {
+      if (this.getStatus() === "active") {
+        this.complete();
+      }
+    });
+
     // Update state
     this.sessionState.status = "ready";
     this.liveStats = this.calculateStatistics();

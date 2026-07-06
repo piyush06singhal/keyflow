@@ -221,6 +221,7 @@ export async function getUserStatsForCompletion(
   currentXp: number;
 } | null> {
   try {
+    let stats = null;
     const { data, error } = await supabase
       .from("user_statistics")
       .select("*")
@@ -228,20 +229,42 @@ export async function getUserStatsForCompletion(
       .single();
 
     if (error || !data) {
-      console.error("Failed to get user stats:", error);
-      return null;
+      console.warn("User statistics not found. Initializing profile on-the-fly...");
+      const { data: insertedData, error: insertError } = await supabase
+        .from("user_statistics")
+        .insert({
+          user_id: userId,
+          total_practice_time: 0,
+          total_sessions: 0,
+          current_streak: 0,
+          longest_streak: 0,
+          last_practice_date: null,
+          total_words_typed: 0,
+          total_errors: 0,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Failed to initialize user stats:", insertError);
+        return null;
+      }
+      stats = insertedData;
+    } else {
+      stats = data;
     }
 
     // Use the actual XP stored in the database if available, otherwise fallback
-    const currentXp = data.xp ?? Math.floor((data.total_practice_time || 0) / 60) * 10;
+    const currentXp =
+      stats.xp ?? Math.floor((stats.total_practice_time || 0) / 60000) * 10;
 
     return {
-      bestWpm: data.best_wpm || 0,
-      bestAccuracy: data.best_accuracy || 0,
+      bestWpm: stats.best_wpm || 0,
+      bestAccuracy: stats.best_accuracy || 0,
       longestDuration: 0, // Not tracked in current schema
-      totalSessions: data.total_sessions || 0,
-      currentStreak: data.current_streak || 0,
-      totalWords: data.total_words_typed || 0,
+      totalSessions: stats.total_sessions || 0,
+      currentStreak: stats.current_streak || 0,
+      totalWords: stats.total_words_typed || 0,
       currentXp,
     };
   } catch (error) {

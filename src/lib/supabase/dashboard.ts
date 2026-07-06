@@ -88,9 +88,10 @@ export async function getDashboardData(userId: string): Promise<DashboardData | 
     if (!profile) return null;
 
     // Calculate level and XP based on total practice time
-    const totalMinutes =
+    const totalPracticeTimeMs =
       ((statistics as unknown as Record<string, unknown>)
         ?.total_practice_time as number) || 0;
+    const totalMinutes = Math.floor(totalPracticeTimeMs / 60000);
     const level = Math.floor(totalMinutes / 60) + 1; // 1 level per hour
     const xp = totalMinutes * 10; // 10 XP per minute
 
@@ -153,7 +154,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData | 
               : 0,
         typingTime:
           typeof statsData?.total_practice_time === "number"
-            ? statsData.total_practice_time
+            ? Math.floor(statsData.total_practice_time / 60000)
             : 0,
         totalWords:
           typeof statsData?.total_words_typed === "number"

@@ -58,9 +58,7 @@ export default function CodePracticeClient() {
       }
     }
 
-    if (!snippet) {
-      loadSnippet();
-    }
+    loadSnippet();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.language, config.framework, config.difficulty, config.category]);
 

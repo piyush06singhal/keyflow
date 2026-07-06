@@ -128,8 +128,13 @@ export function useTypingEngine({
 
       // Timer updates
       engine.on("timer:tick", (event) => {
-        const elapsed = event.data as number;
-        setElapsedTime(elapsed);
+        const state = event.data as any;
+        const isCountdown = engine.getConfig().timerMode === "countdown";
+        setElapsedTime(
+          isCountdown && state.remainingTime !== null
+            ? state.remainingTime
+            : state.elapsedTime,
+        );
       }),
 
       // Character/word events trigger word state updates
