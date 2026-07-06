@@ -12,6 +12,8 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import type { Metadata } from "next";
 
+export const revalidate = 86400; // Cache landing page for 24 hours (ISR)
+
 export const metadata: Metadata = {
   title: "KeyFlow - Master Typing & Coding Speed",
   description:

@@ -1,318 +1,223 @@
-"use client";
+import React from "react";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireAuth } from "@/lib/supabase/auth";
+import { Users, UserPlus, Search } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import { FriendRequestActions } from "@/features/social/components/friend-actions";
 
-import { useState } from "react";
-import { PageContainer } from "@/components/app-shell";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Users,
-  UserPlus,
-  UserCheck,
-  MessageSquare,
-  Flame,
-  Check,
-  X,
-  ShieldAlert,
-} from "lucide-react";
+export default async function FriendsPage() {
+  const user = await requireAuth();
+  const supabase = await createSupabaseServerClient();
 
-interface Friend {
-  id: string;
-  name: string;
-  level: number;
-  wpm: number;
-  status: "online" | "offline" | "practicing";
-  streak: number;
-}
+  // Fetch pending friend requests
+  const { data: pendingRequests } = await supabase
+    .from("friendships")
+    .select(
+      `
+      id,
+      user_id,
+      user_profiles!inner (
+        username,
+        display_name,
+        avatar_url
+      )
+    `,
+    )
+    .eq("friend_id", user.id)
+    .eq("status", "pending");
 
-const INITIAL_FRIENDS: Friend[] = [
-  {
-    id: "f1",
-    name: "Alex Mercer",
-    level: 12,
-    wpm: 96,
-    status: "practicing",
-    streak: 12,
-  },
-  { id: "f2", name: "Sofia Chen", level: 8, wpm: 89, status: "online", streak: 8 },
-  { id: "f3", name: "Marcus Brody", level: 5, wpm: 84, status: "offline", streak: 5 },
-  { id: "f4", name: "Elena Rostova", level: 6, wpm: 78, status: "offline", streak: 6 },
-];
+  // Fetch active friends (bidirectional logic handled here or via advanced RLS view)
+  const { data: activeFriends1 } = await supabase
+    .from("friendships")
+    .select(
+      `
+      id,
+      friend_id,
+      user_profiles!friend_id (
+        username,
+        display_name,
+        avatar_url
+      )
+    `,
+    )
+    .eq("user_id", user.id)
+    .eq("status", "accepted");
 
-const INITIAL_REQUESTS = [
-  { id: "r1", name: "Sarah Connor", level: 4, wpm: 68 },
-  { id: "r2", name: "John Doe", level: 9, wpm: 81 },
-];
+  const { data: activeFriends2 } = await supabase
+    .from("friendships")
+    .select(
+      `
+      id,
+      user_id,
+      user_profiles!user_id (
+        username,
+        display_name,
+        avatar_url
+      )
+    `,
+    )
+    .eq("friend_id", user.id)
+    .eq("status", "accepted");
 
-export default function FriendsPage() {
-  const [friends, setFriends] = useState<Friend[]>(INITIAL_FRIENDS);
-  const [requests, setRequests] = useState<any[]>(INITIAL_REQUESTS);
-  const [searchName, setSearchName] = useState("");
-  const [searchStatus, setSearchStatus] = useState<string | null>(null);
-
-  const handleAddFriend = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchName.trim()) return;
-
-    // Simulate search & add
-    const isAlreadyFriend = friends.some(
-      (f) => f.name.toLowerCase() === searchName.toLowerCase(),
-    );
-    if (isAlreadyFriend) {
-      setSearchStatus("User is already in your friends list.");
-      return;
-    }
-
-    const newRequest = {
-      id: Math.random().toString(),
-      name: searchName,
-      level: 1,
-      wpm: 45,
-      status: "offline" as const,
-      streak: 0,
-    };
-
-    setFriends((prev) => [...prev, newRequest]);
-    setSearchStatus(`Success! Added ${searchName} as friend.`);
-    setSearchName("");
-    setTimeout(() => setSearchStatus(null), 3000);
-  };
-
-  const handleAcceptRequest = (id: string, name: string) => {
-    setRequests((prev) => prev.filter((r) => r.id !== id));
-    setFriends((prev) => [
-      ...prev,
-      { id, name, level: 5, wpm: 72, status: "offline", streak: 1 },
-    ]);
-  };
-
-  const handleDeclineRequest = (id: string) => {
-    setRequests((prev) => prev.filter((r) => r.id !== id));
-  };
+  // Merge the two sides of accepted friendships
+  const friendsList = [
+    ...(activeFriends1 || []).map((f: any) => ({ ...f, profile: f.user_profiles })),
+    ...(activeFriends2 || []).map((f: any) => ({ ...f, profile: f.user_profiles })),
+  ].filter((f: any) => f.profile);
 
   return (
-    <PageContainer maxWidth="full">
-      <div className="space-y-6">
-        {/* Header toolbar */}
+    <div className="animate-in fade-in mx-auto max-w-5xl space-y-10 px-4 py-8 duration-500">
+      {/* Header & Search */}
+      <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Friends & Social</h1>
-          <p className="text-muted-foreground text-sm">
-            Find coding peers, track online practice sessions, and compare speed stats.
+          <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold tracking-tight">
+            <Users className="text-primary h-8 w-8" /> Friends & Connections
+          </h1>
+          <p className="text-muted-foreground">
+            Manage your network, challenge friends, and track mutual progress.
           </p>
         </div>
 
-        {/* Action Panel splits */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Main Friends List */}
-          <div className="space-y-6 lg:col-span-2">
-            <Tabs defaultValue="friends" className="w-full">
-              <TabsList className="mb-4 grid w-full max-w-[360px] grid-cols-2">
-                <TabsTrigger value="friends">Friends ({friends.length})</TabsTrigger>
-                <TabsTrigger value="invites">
-                  Pending Invites {requests.length > 0 && `(${requests.length})`}
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="friends">
-                <Card className="surface-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                      <Users className="text-primary h-4.5 w-4.5" />
-                      Active Friends List
-                    </CardTitle>
-                    <CardDescription>
-                      Practice status and network updates
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {friends.map((friend) => {
-                      const isOnline = friend.status === "online";
-                      const isPracticing = friend.status === "practicing";
-
-                      return (
-                        <div
-                          key={friend.id}
-                          className="bg-card border-border/40 hover:border-primary/20 flex flex-col gap-3 rounded-xl border p-4 transition-all duration-300 sm:flex-row sm:items-center sm:justify-between"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="relative">
-                              <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-full border font-bold">
-                                {friend.name.charAt(0)}
-                              </div>
-                              <span
-                                className={`border-background absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 ${
-                                  isPracticing
-                                    ? "animate-pulse bg-amber-500"
-                                    : isOnline
-                                      ? "bg-emerald-500"
-                                      : "bg-muted-foreground"
-                                }`}
-                              />
-                            </div>
-                            <div>
-                              <h5 className="text-foreground flex items-center gap-1.5 text-sm leading-none font-bold">
-                                {friend.name}
-                                <Badge
-                                  variant="secondary"
-                                  className="rounded-md px-2 py-0 font-mono text-[9px]"
-                                >
-                                  Lvl {friend.level}
-                                </Badge>
-                              </h5>
-                              <span className="text-muted-foreground mt-1 flex items-center gap-1 text-[11px] font-semibold">
-                                <Flame className="h-3 w-3 text-orange-500" />
-                                {friend.streak} day streak
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between gap-4 sm:justify-end">
-                            <div className="text-right sm:pr-4">
-                              <p className="text-foreground text-sm font-bold">
-                                {friend.wpm} WPM
-                              </p>
-                              <p className="text-muted-foreground text-[10px] font-semibold">
-                                Average Speed
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8.5 rounded-lg text-xs"
-                              >
-                                Compare
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8.5 w-8.5 rounded-lg"
-                              >
-                                <MessageSquare className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="invites">
-                <Card className="surface-card">
-                  <CardHeader>
-                    <CardTitle className="text-sm font-bold">
-                      Friend Inbound Invites
-                    </CardTitle>
-                    <CardDescription>Respond to incoming requests</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {requests.length === 0 ? (
-                      <p className="text-muted-foreground py-6 text-center text-xs font-semibold">
-                        No pending friend requests.
-                      </p>
-                    ) : (
-                      requests.map((req) => (
-                        <div
-                          key={req.id}
-                          className="bg-card border-border/40 flex items-center justify-between rounded-xl border p-4"
-                        >
-                          <div>
-                            <h5 className="text-foreground text-sm font-bold">
-                              {req.name}
-                            </h5>
-                            <p className="text-muted-foreground text-[10px] font-semibold">
-                              Lvl {req.level} | Speed: {req.wpm} WPM
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              className="h-8 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600"
-                              onClick={() => handleAcceptRequest(req.id, req.name)}
-                            >
-                              <Check className="mr-1 h-4 w-4" />
-                              Accept
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 rounded-lg text-rose-500 hover:text-rose-600"
-                              onClick={() => handleDeclineRequest(req.id)}
-                            >
-                              <X className="mr-1 h-4 w-4" />
-                              Decline
-                            </Button>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          {/* Sidebar - Add Friend action */}
-          <div className="space-y-6">
-            <Card className="surface-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                  <UserPlus className="text-primary h-4.5 w-4.5" />
-                  Follow Friend
-                </CardTitle>
-                <CardDescription>
-                  Enter a username to send a practice connection invitation
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleAddFriend} className="space-y-3">
-                  <Input
-                    placeholder="Username"
-                    value={searchName}
-                    onChange={(e) => setSearchName(e.target.value)}
-                    className="h-9.5 rounded-xl text-xs font-semibold"
-                  />
-                  <Button type="submit" size="sm" className="h-9 w-full rounded-xl">
-                    Send Invitation
-                  </Button>
-                  {searchStatus && (
-                    <div className="text-primary bg-primary/5 border-primary/20 rounded-lg border p-2 text-[10px] font-bold">
-                      {searchStatus}
-                    </div>
-                  )}
-                </form>
-              </CardContent>
-            </Card>
-
-            <Card className="surface-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-1.5 text-sm font-bold">
-                  <UserCheck className="h-4.5 w-4.5 text-purple-500" />
-                  Compare Stats
-                </CardTitle>
-                <CardDescription>
-                  Select friends from list to compare consistency scores and best
-                  speeds.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-muted-foreground text-xs leading-normal font-semibold">
-                Click the &quot;Compare&quot; button next to any friend to pull up
-                side-by-side performance indicators.
-              </CardContent>
-            </Card>
-          </div>
+        <div className="relative w-full md:w-72">
+          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search by username..."
+            className="bg-secondary border-border/50 focus:ring-primary/50 w-full rounded-lg border py-2 pr-4 pl-9 text-sm focus:ring-2 focus:outline-none"
+          />
         </div>
       </div>
-    </PageContainer>
+
+      {/* Pending Requests Section */}
+      {pendingRequests && pendingRequests.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="flex items-center gap-2 text-xl font-semibold">
+            <UserPlus className="h-5 w-5 text-blue-500" /> Pending Requests
+            <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-xs text-blue-500">
+              {pendingRequests.length}
+            </span>
+          </h2>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {pendingRequests.map((req: any) => {
+              const profile = req.user_profiles?.[0] || req.user_profiles;
+              return (
+                <div
+                  key={req.id}
+                  className="border-border/50 bg-card flex items-center justify-between rounded-xl border p-4 shadow-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="bg-secondary h-10 w-10 shrink-0 overflow-hidden rounded-full">
+                      {profile?.avatar_url ? (
+                        <Image
+                          src={profile.avatar_url}
+                          alt=""
+                          width={40}
+                          height={40}
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="text-muted-foreground flex h-full w-full items-center justify-center font-bold">
+                          {profile?.display_name?.charAt(0) || "?"}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <Link
+                        href={`/profile/${profile?.username}`}
+                        className="hover:text-primary font-semibold transition-colors"
+                      >
+                        {profile?.display_name}
+                      </Link>
+                      <div className="text-muted-foreground text-xs">
+                        @{profile?.username}
+                      </div>
+                    </div>
+                  </div>
+
+                  <FriendRequestActions
+                    requestId={req.id}
+                    friendId={profile.user_id || req.user_id}
+                    friendName={profile.display_name}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Friends List Section */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold">Your Friends</h2>
+
+        {friendsList.length === 0 ? (
+          <div className="border-border bg-secondary/20 rounded-xl border border-dashed p-12 text-center">
+            <Users className="text-muted-foreground mx-auto mb-4 h-12 w-12 opacity-50" />
+            <h3 className="text-lg font-medium">No friends added yet</h3>
+            <p className="text-muted-foreground mx-auto mt-2 max-w-md">
+              Search for users by their username above to send friend requests, compare
+              stats, and challenge them!
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {friendsList.map((friend: any) => {
+              const profile = friend.profile?.[0] || friend.profile;
+              return (
+                <div
+                  key={friend.id}
+                  className="border-border/50 bg-card hover:border-primary/50 group rounded-xl border p-5 shadow-sm transition-colors"
+                >
+                  <div className="mb-4 flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-secondary group-hover:ring-primary h-12 w-12 shrink-0 overflow-hidden rounded-full transition-all group-hover:ring-2">
+                        {profile?.avatar_url ? (
+                          <Image
+                            src={profile.avatar_url}
+                            alt=""
+                            width={48}
+                            height={48}
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="text-muted-foreground flex h-full w-full items-center justify-center text-lg font-bold">
+                            {profile?.display_name?.charAt(0) || "?"}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <Link
+                          href={`/profile/${profile?.username}`}
+                          className="hover:text-primary line-clamp-1 text-base font-semibold transition-colors"
+                        >
+                          {profile?.display_name}
+                        </Link>
+                        <div className="text-muted-foreground text-sm">
+                          @{profile?.username}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/profile/${profile?.username}`}
+                      className="bg-secondary hover:bg-secondary/80 flex-1 rounded-lg py-2 text-center text-sm font-medium transition-colors"
+                    >
+                      View Profile
+                    </Link>
+                    <button className="border-primary/20 text-primary hover:bg-primary/5 flex-1 rounded-lg border py-2 text-sm font-medium transition-colors">
+                      Compare
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
   );
 }

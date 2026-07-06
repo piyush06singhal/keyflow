@@ -6,7 +6,7 @@ import { AppLayout } from "@/components/app-shell";
 import { getUserProfile } from "@/lib/supabase/profile";
 
 import { NotificationProvider } from "@/features/notifications/context/notification-provider";
-
+import { SettingsProvider } from "@/features/settings/context/settings-provider";
 export default async function AppLayoutWrapper({
   children,
 }: {
@@ -32,8 +32,10 @@ export default async function AppLayoutWrapper({
   };
 
   return (
-    <NotificationProvider>
-      <AppLayout user={userData}>{children}</AppLayout>
-    </NotificationProvider>
+    <SettingsProvider>
+      <NotificationProvider>
+        <AppLayout user={userData}>{children}</AppLayout>
+      </NotificationProvider>
+    </SettingsProvider>
   );
 }

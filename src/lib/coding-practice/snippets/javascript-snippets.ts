@@ -1,19 +1,17 @@
 /**
  * JavaScript Code Snippets
- * 
+ *
  * Comprehensive collection of JavaScript snippets for coding practice.
  */
 
 import type { CodeSnippet } from "../types";
-import { SnippetProvider } from "../snippet-provider";
+import { generateMetadata } from "../snippet-utils";
 
-function createSnippet(
-  partial: Omit<CodeSnippet, "id" | "metadata">
-): CodeSnippet {
+function createSnippet(partial: Omit<CodeSnippet, "id" | "metadata">): CodeSnippet {
   return {
     id: `js-${Math.random().toString(36).substring(2, 11)}`,
     ...partial,
-    metadata: SnippetProvider.generateMetadata(partial.code, partial.language),
+    metadata: generateMetadata(partial.code, partial.language),
   };
 }
 

@@ -44,6 +44,14 @@ export const metadata: Metadata = {
     description:
       "A premium typing and coding practice platform with optional AI coaching.",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "KeyFlow",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({

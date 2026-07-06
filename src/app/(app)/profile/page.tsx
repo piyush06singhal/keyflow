@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { PageContainer } from "@/components/app-shell";
 import {
   Card,
@@ -38,13 +40,54 @@ export default function ProfilePage() {
 
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
-  const handleSave = (e: React.FormEvent) => {
+  const { user } = useAuth();
+  const supabase = createSupabaseBrowserClient();
+
+  useEffect(() => {
+    async function loadProfile() {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (data && !error) {
+        if (data.display_name) setDisplayName(data.display_name);
+        if (data.bio) setBio(data.bio);
+        if (data.github_url) setGithub(data.github_url);
+        if (data.website_url) setWebsite(data.website_url);
+        if (data.focus_languages) setLanguagePref(data.focus_languages);
+      }
+    }
+    loadProfile();
+  }, [user, supabase]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+
     setSaveStatus("Saving changes...");
-    setTimeout(() => {
+
+    const { error } = await supabase
+      .from("user_profiles")
+      .update({
+        display_name: displayName,
+        bio: bio,
+        github_url: github,
+        website_url: website,
+        focus_languages: languagePref,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", user.id);
+
+    if (!error) {
       setSaveStatus("Profile saved successfully!");
-      setTimeout(() => setSaveStatus(null), 3000);
-    }, 1200);
+    } else {
+      setSaveStatus("Failed to save profile.");
+    }
+
+    setTimeout(() => setSaveStatus(null), 3000);
   };
 
   const handleAddLanguage = (e: React.KeyboardEvent<any>) => {

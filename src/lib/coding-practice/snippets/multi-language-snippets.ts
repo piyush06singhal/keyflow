@@ -1,20 +1,18 @@
 /**
  * Multi-Language Code Snippets
- * 
+ *
  * Python, SQL, HTML, CSS, JSON, YAML, Docker, Bash, and Git snippets.
  */
 
 import type { CodeSnippet } from "../types";
-import { SnippetProvider } from "../snippet-provider";
+import { generateMetadata } from "../snippet-utils";
 
-function createSnippet(
-  partial: Omit<CodeSnippet, "id" | "metadata">
-): CodeSnippet {
+function createSnippet(partial: Omit<CodeSnippet, "id" | "metadata">): CodeSnippet {
   const prefix = partial.language.substring(0, 2);
   return {
-    id: `${prefix}-${Math.random().toString(36).substring(2, 11)}`,
+    id: `multi-${Math.random().toString(36).substring(2, 11)}`,
     ...partial,
-    metadata: SnippetProvider.generateMetadata(partial.code, partial.language),
+    metadata: generateMetadata(partial.code, partial.language),
   };
 }
 

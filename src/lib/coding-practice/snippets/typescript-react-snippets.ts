@@ -1,19 +1,17 @@
 /**
  * TypeScript & React Code Snippets
- * 
+ *
  * TypeScript type definitions, interfaces, and React components.
  */
 
 import type { CodeSnippet } from "../types";
-import { SnippetProvider } from "../snippet-provider";
+import { generateMetadata } from "../snippet-utils";
 
-function createSnippet(
-  partial: Omit<CodeSnippet, "id" | "metadata">
-): CodeSnippet {
+function createSnippet(partial: Omit<CodeSnippet, "id" | "metadata">): CodeSnippet {
   return {
-    id: `ts-${Math.random().toString(36).substring(2, 11)}`,
+    id: `ts-react-${Math.random().toString(36).substring(2, 11)}`,
     ...partial,
-    metadata: SnippetProvider.generateMetadata(partial.code, partial.language),
+    metadata: generateMetadata(partial.code, partial.language),
   };
 }
 

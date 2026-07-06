@@ -1,12 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
-import { AlertTriangle, RotateCcw } from "lucide-react";
+import React, { useEffect } from "react";
+import { AlertCircle, RotateCcw } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { logError } from "@/lib/errors/logger";
-
-export default function GlobalError({
+export default function AppError({
   error,
   reset,
 }: {
@@ -14,29 +11,34 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    logError(error, { boundary: "global", digest: error.digest });
+    // Structured logging hook for standard route errors
+    console.error("Route Error Caught:", {
+      message: error.message,
+      digest: error.digest,
+      stack: error.stack,
+    });
   }, [error]);
 
   return (
-    <html lang="en">
-      <body>
-        <main className="bg-background text-foreground flex min-h-dvh items-center justify-center px-6">
-          <section className="border-border bg-card shadow-key-md w-full max-w-md rounded-2xl border p-8">
-            <div className="bg-destructive/10 text-destructive mb-5 flex size-11 items-center justify-center rounded-lg">
-              <AlertTriangle className="size-5" aria-hidden="true" />
-            </div>
-            <h1 className="text-2xl font-semibold">Something went wrong</h1>
-            <p className="text-muted-foreground mt-3 text-sm leading-6">
-              The application hit an unexpected error. You can retry the current view,
-              and the error will be captured by the logging layer.
-            </p>
-            <Button onClick={reset} className="mt-6">
-              <RotateCcw className="size-4" aria-hidden="true" />
-              Retry
-            </Button>
-          </section>
-        </main>
-      </body>
-    </html>
+    <div className="animate-in fade-in flex h-full min-h-[400px] w-full flex-col items-center justify-center p-6 text-center duration-500">
+      <div className="bg-destructive/10 mb-6 flex h-16 w-16 items-center justify-center rounded-full">
+        <AlertCircle className="text-destructive h-8 w-8" />
+      </div>
+
+      <h2 className="mb-2 text-2xl font-bold tracking-tight">Something went wrong</h2>
+      <p className="text-muted-foreground mb-8 max-w-md">
+        We encountered an unexpected error while trying to load this section.
+        {process.env.NODE_ENV === "development"
+          ? ` Details: ${error.message}`
+          : " Please try refreshing."}
+      </p>
+
+      <button
+        onClick={() => reset()}
+        className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 rounded-lg px-6 py-2.5 font-medium shadow-sm transition-colors"
+      >
+        <RotateCcw className="h-4 w-4" /> Try Again
+      </button>
+    </div>
   );
 }
