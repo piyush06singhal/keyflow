@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
@@ -32,7 +32,7 @@ export default function OnboardingPage() {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<OnboardingInput>({
     resolver: zodResolver(onboardingSchema),
@@ -47,6 +47,11 @@ export default function OnboardingPage() {
       aiEnabled: false,
     },
   });
+
+  const typingExperience = useWatch({ control, name: "typingExperience" });
+  const programmingExperience = useWatch({ control, name: "programmingExperience" });
+  const preferredTheme = useWatch({ control, name: "preferredTheme" });
+  const keyboardLayout = useWatch({ control, name: "keyboardLayout" });
 
   const onSubmit = (data: OnboardingInput) => {
     if (!user) {
@@ -129,7 +134,7 @@ export default function OnboardingPage() {
             <div className="space-y-2">
               <Label htmlFor="typingExperience">Typing Experience</Label>
               <Select
-                value={watch("typingExperience")}
+                value={typingExperience}
                 onValueChange={(value) =>
                   setValue(
                     "typingExperience",
@@ -152,7 +157,7 @@ export default function OnboardingPage() {
             <div className="space-y-2">
               <Label htmlFor="programmingExperience">Programming Experience</Label>
               <Select
-                value={watch("programmingExperience")}
+                value={programmingExperience}
                 onValueChange={(value) =>
                   setValue(
                     "programmingExperience",
@@ -199,7 +204,7 @@ export default function OnboardingPage() {
             <div className="space-y-2">
               <Label htmlFor="preferredTheme">Theme</Label>
               <Select
-                value={watch("preferredTheme")}
+                value={preferredTheme}
                 onValueChange={(value) =>
                   setValue("preferredTheme", value as "light" | "dark" | "system")
                 }
@@ -219,7 +224,7 @@ export default function OnboardingPage() {
             <div className="space-y-2">
               <Label htmlFor="keyboardLayout">Keyboard Layout</Label>
               <Select
-                value={watch("keyboardLayout")}
+                value={keyboardLayout}
                 onValueChange={(value) => setValue("keyboardLayout", value)}
                 disabled={isPending}
               >

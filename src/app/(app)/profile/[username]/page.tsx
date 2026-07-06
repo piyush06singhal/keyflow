@@ -17,15 +17,16 @@ import { AddFriendButton } from "@/features/social/components/friend-actions";
 export default async function PublicProfilePage({
   params,
 }: {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 }) {
+  const { username } = await params;
   const supabase = await createSupabaseServerClient();
 
   // Fetch user profile based on username
   const { data: profile, error } = await supabase
     .from("user_profiles")
     .select("*")
-    .eq("username", params.username)
+    .eq("username", username)
     .single();
 
   if (error || !profile) {
