@@ -6,8 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { OnboardingInput } from "@/lib/validations/auth";
 
 export type ProfileResult =
-  | { success: true; data?: unknown }
-  | { success: false; error: string };
+  { success: true; data?: unknown } | { success: false; error: string };
 
 /**
  * Initialize user profile after registration
@@ -38,7 +37,7 @@ export async function initializeUserProfile(user: User): Promise<ProfileResult> 
         avatar_url: user.user_metadata?.avatar_url ?? null,
         preferred_language: "en",
         onboarding_completed: false,
-      } as any)
+      })
       .select()
       .single();
 
@@ -83,35 +82,31 @@ export async function completeOnboarding(
     }
 
     // Initialize user preferences
-    const { error: preferencesError } = await supabase
-      .from("user_preferences")
-      .upsert({
-        user_id: userId,
-        theme: data.preferredTheme,
-        keyboard_layout: data.keyboardLayout,
-        daily_goal_minutes: data.dailyGoal,
-        ai_enabled: data.aiEnabled,
-        typing_experience: data.typingExperience,
-        programming_experience: data.programmingExperience,
-      } as any);
+    const { error: preferencesError } = await supabase.from("user_preferences").upsert({
+      user_id: userId,
+      theme: data.preferredTheme,
+      keyboard_layout: data.keyboardLayout,
+      daily_goal_minutes: data.dailyGoal,
+      ai_enabled: data.aiEnabled,
+      typing_experience: data.typingExperience,
+      programming_experience: data.programmingExperience,
+    });
 
     if (preferencesError) {
       return { success: false, error: preferencesError.message };
     }
 
     // Initialize user statistics
-    const { error: statsError } = await supabase
-      .from("user_statistics")
-      .upsert({
-        user_id: userId,
-        total_practice_time: 0,
-        total_sessions: 0,
-        current_streak: 0,
-        longest_streak: 0,
-        last_practice_date: null,
-        total_words_typed: 0,
-        total_errors: 0,
-      } as any);
+    const { error: statsError } = await supabase.from("user_statistics").upsert({
+      user_id: userId,
+      total_practice_time: 0,
+      total_sessions: 0,
+      current_streak: 0,
+      longest_streak: 0,
+      last_practice_date: null,
+      total_words_typed: 0,
+      total_errors: 0,
+    });
 
     if (statsError) {
       return { success: false, error: statsError.message };
@@ -162,7 +157,7 @@ export async function hasCompletedOnboarding(userId: string): Promise<boolean> {
       .eq("id", userId)
       .single();
 
-    return (data as any)?.onboarding_completed ?? false;
+    return data?.onboarding_completed ?? false;
   } catch {
     return false;
   }
@@ -202,10 +197,7 @@ export async function updateUserAvatar(
 /**
  * Upload avatar to Supabase Storage
  */
-export async function uploadAvatar(
-  userId: string,
-  file: File,
-): Promise<ProfileResult> {
+export async function uploadAvatar(userId: string, file: File): Promise<ProfileResult> {
   try {
     const supabase = await createSupabaseServerClient();
 
@@ -255,7 +247,7 @@ export async function deleteUserAvatar(userId: string): Promise<ProfileResult> {
     const supabase = await createSupabaseServerClient();
 
     // Get current avatar URL
-    const profile = (await getUserProfile(userId)) as any;
+    const profile = await getUserProfile(userId);
 
     if (!profile?.avatar_url) {
       return { success: true };

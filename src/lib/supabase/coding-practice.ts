@@ -1,18 +1,20 @@
 /**
  * Coding Practice Supabase Integration
- * 
+ *
  * Database operations for coding practice sessions and snippets.
  */
 
 import { createSupabaseBrowserClient } from "./client";
-import type { Database } from "@/types/database";
-import type { 
-  CodeSnippet, 
+import type { Json } from "@/types/database";
+import type {
+  CodeSnippet,
   CodingSessionResult,
   ProgrammingLanguage,
   CodingDifficulty,
   CodingCategory,
   Framework,
+  SnippetType,
+  CodeSnippetMetadata,
 } from "@/lib/coding-practice/types";
 
 // ============================================================================
@@ -24,37 +26,42 @@ import type {
  */
 export async function saveCodingSession(
   userId: string,
-  session: CodingSessionResult
+  session: CodingSessionResult,
 ): Promise<{ success: boolean; sessionId?: string; error?: string }> {
   try {
     const supabase = createSupabaseBrowserClient();
 
     const sessionData = {
       user_id: userId,
-      
+
       // Session metadata
       session_id: session.sessionId,
       session_timestamp: new Date(session.timestamp).toISOString(),
       duration: session.duration,
       mode: session.mode,
       completed: session.completed,
-      
+
       // Coding-specific
       language: session.language,
       framework: session.framework,
       category: session.category,
       snippet_id: session.snippetId,
-      difficulty: session.codingStats?.accuracy ? 
-        (session.codingStats.accuracy > 95 ? "expert" :
-         session.codingStats.accuracy > 85 ? "advanced" :
-         session.codingStats.accuracy > 70 ? "intermediate" : "beginner") : "beginner",
-      
+      difficulty: session.codingStats?.accuracy
+        ? session.codingStats.accuracy > 95
+          ? "expert"
+          : session.codingStats.accuracy > 85
+            ? "advanced"
+            : session.codingStats.accuracy > 70
+              ? "intermediate"
+              : "beginner"
+        : "beginner",
+
       // Performance metrics
       wpm: session.finalStats.wpm,
       raw_wpm: session.finalStats.rawWpm,
       accuracy: session.finalStats.accuracy,
       consistency: session.consistency,
-      
+
       // Coding statistics
       correct_lines: session.codingStats?.correctLines || 0,
       incorrect_lines: session.codingStats?.incorrectLines || 0,
@@ -63,18 +70,17 @@ export async function saveCodingSession(
       bracket_accuracy: session.codingStats?.bracketAccuracy || 0,
       indentation_accuracy: session.codingStats?.indentationAccuracy || 0,
       symbol_accuracy: session.codingStats?.symbolAccuracy || 0,
-      
+
       // Additional data
       mistakes_count: session.mistakes.length,
       text_content: session.textContent,
     };
 
-    const { data, error} = await supabase
+    const { data, error } = await supabase
       .from("coding_sessions")
-      // @ts-expect-error - Table types not properly generated
       .insert([sessionData])
       .select()
-      .single() as { data: Database['public']['Tables']['coding_sessions']['Row'] | null; error: any };
+      .single();
 
     if (error) {
       console.error("Failed to save coding session:", error);
@@ -97,7 +103,7 @@ export async function getCodingSessionHistory(
     language?: ProgrammingLanguage;
     limit?: number;
     offset?: number;
-  }
+  },
 ) {
   try {
     const supabase = createSupabaseBrowserClient();
@@ -144,7 +150,7 @@ export async function getCodingStatistics(userId: string) {
     const { data, error } = await supabase
       .from("coding_sessions")
       .select("*")
-      .eq("user_id", userId) as { data: Array<Database['public']['Tables']['coding_sessions']['Row']> | null; error: any };
+      .eq("user_id", userId);
 
     if (error || !data) {
       return { success: false, data: null, error: error?.message };
@@ -153,24 +159,32 @@ export async function getCodingStatistics(userId: string) {
     // Calculate aggregate statistics
     const stats = {
       totalSessions: data.length,
-      totalDuration: data.reduce((acc, s) => acc + (s.duration || 0), 0),
-      averageWpm: data.reduce((acc, s) => acc + (s.wpm || 0), 0) / data.length,
-      averageAccuracy: data.reduce((acc, s) => acc + (s.accuracy || 0), 0) / data.length,
-      bestWpm: Math.max(...data.map(s => s.wpm || 0)),
-      bestAccuracy: Math.max(...data.map(s => s.accuracy || 0)),
-      
+      totalDuration: data.reduce((acc: number, s: any) => acc + (s.duration || 0), 0),
+      averageWpm:
+        data.reduce((acc: number, s: any) => acc + (s.wpm || 0), 0) / data.length,
+      averageAccuracy:
+        data.reduce((acc: number, s: any) => acc + (s.accuracy || 0), 0) / data.length,
+      bestWpm: Math.max(...data.map((s: any) => s.wpm || 0)),
+      bestAccuracy: Math.max(...data.map((s: any) => s.accuracy || 0)),
+
       // Language breakdown
-      languageStats: data.reduce((acc, s) => {
-        const lang = s.language || "unknown";
-        if (!acc[lang]) {
-          acc[lang] = { count: 0, totalWpm: 0, totalAccuracy: 0 };
-        }
-        acc[lang].count++;
-        acc[lang].totalWpm += s.wpm || 0;
-        acc[lang].totalAccuracy += s.accuracy || 0;
-        return acc;
-      }, {} as Record<string, any>),
-      
+      languageStats: data.reduce(
+        (acc: Record<string, any>, s: any) => {
+          const lang = s.language || "unknown";
+          if (!acc[lang]) {
+            acc[lang] = { count: 0, totalWpm: 0, totalAccuracy: 0 };
+          }
+          acc[lang].count++;
+          acc[lang].totalWpm += s.wpm || 0;
+          acc[lang].totalAccuracy += s.accuracy || 0;
+          return acc;
+        },
+        {} as Record<
+          string,
+          { count: number; totalWpm: number; totalAccuracy: number }
+        >,
+      ),
+
       // Recent improvement
       recentSessions: data.slice(0, 10),
       oldSessions: data.slice(-10),
@@ -192,7 +206,7 @@ export async function getCodingStatistics(userId: string) {
  */
 export async function saveCustomSnippet(
   userId: string,
-  snippet: Omit<CodeSnippet, "id">
+  snippet: Omit<CodeSnippet, "id">,
 ): Promise<{ success: boolean; snippetId?: string; error?: string }> {
   try {
     const supabase = createSupabaseBrowserClient();
@@ -208,16 +222,15 @@ export async function saveCustomSnippet(
       type: snippet.type,
       code: snippet.code,
       tags: snippet.tags,
-      metadata: snippet.metadata,
+      metadata: snippet.metadata as unknown as Json,
       is_public: false, // Private by default
     };
 
     const { data, error } = await supabase
       .from("code_snippets")
-      // @ts-expect-error - Table types not properly generated
       .insert([snippetData])
       .select()
-      .single() as { data: Database['public']['Tables']['code_snippets']['Row'] | null; error: any };
+      .single();
 
     if (error) {
       console.error("Failed to save snippet:", error);
@@ -240,15 +253,12 @@ export async function getUserSnippets(
     language?: ProgrammingLanguage;
     difficulty?: CodingDifficulty;
     category?: CodingCategory;
-  }
+  },
 ) {
   try {
     const supabase = createSupabaseBrowserClient();
 
-    let query = supabase
-      .from("code_snippets")
-      .select("*")
-      .eq("user_id", userId);
+    let query = supabase.from("code_snippets").select("*").eq("user_id", userId);
 
     if (filters?.language) {
       query = query.eq("language", filters.language);
@@ -262,7 +272,7 @@ export async function getUserSnippets(
       query = query.eq("category", filters.category);
     }
 
-    const { data, error } = await query as { data: Array<Database['public']['Tables']['code_snippets']['Row']> | null; error: any };
+    const { data, error } = await query;
 
     if (error) {
       console.error("Failed to fetch snippets:", error);
@@ -270,7 +280,7 @@ export async function getUserSnippets(
     }
 
     // Convert to CodeSnippet format
-    const snippets: CodeSnippet[] = (data || []).map(s => ({
+    const snippets: CodeSnippet[] = (data || []).map((s: any) => ({
       id: s.id,
       title: s.title,
       description: s.description || undefined,
@@ -278,10 +288,10 @@ export async function getUserSnippets(
       framework: s.framework as Framework | undefined,
       category: s.category as CodingCategory,
       difficulty: s.difficulty as CodingDifficulty,
-      type: s.type as any,
+      type: s.type as SnippetType,
       code: s.code,
       tags: s.tags || [],
-      metadata: s.metadata as any,
+      metadata: s.metadata as unknown as CodeSnippetMetadata,
     }));
 
     return { success: true, data: snippets };
@@ -320,13 +330,13 @@ export async function getCommunitySnippets(filters?: {
       query = query.limit(filters.limit);
     }
 
-    const { data, error } = await query as { data: Array<Database['public']['Tables']['code_snippets']['Row']> | null; error: any };
+    const { data, error } = await query;
 
     if (error) {
       return { success: false, data: [], error: error.message };
     }
 
-    const snippets: CodeSnippet[] = (data || []).map(s => ({
+    const snippets: CodeSnippet[] = (data || []).map((s: any) => ({
       id: s.id,
       title: s.title,
       description: s.description || undefined,
@@ -334,14 +344,14 @@ export async function getCommunitySnippets(filters?: {
       framework: s.framework as Framework | undefined,
       category: s.category as CodingCategory,
       difficulty: s.difficulty as CodingDifficulty,
-      type: s.type as any,
+      type: s.type as SnippetType,
       code: s.code,
       tags: s.tags || [],
-      metadata: s.metadata as any,
+      metadata: s.metadata as unknown as CodeSnippetMetadata,
     }));
 
     return { success: true, data: snippets };
-  } catch (error) {
+  } catch {
     return { success: false, data: [], error: "Failed to fetch community snippets" };
   }
 }
@@ -356,7 +366,7 @@ export async function saveAiSnippet(
     model: string;
     prompt: string;
     generationTime: number;
-  }
+  },
 ) {
   try {
     const supabase = createSupabaseBrowserClient();
@@ -378,17 +388,16 @@ export async function saveAiSnippet(
         aiModel: aiMetadata?.model,
         aiPrompt: aiMetadata?.prompt,
         generationTime: aiMetadata?.generationTime,
-      },
+      } as unknown as Json,
       is_public: false,
       is_ai_generated: true,
     };
 
     const { data, error } = await supabase
       .from("code_snippets")
-      // @ts-expect-error - Table types not properly generated
       .insert([snippetData])
       .select()
-      .single() as { data: Database['public']['Tables']['code_snippets']['Row'] | null; error: any };
+      .single();
 
     if (error) {
       console.error("Failed to save AI snippet:", error);

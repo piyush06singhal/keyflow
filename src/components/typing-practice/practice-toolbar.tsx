@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useTypingPracticeStore } from "@/stores/typing-practice-store";
+import type { PracticeMode } from "@/lib/typing-engine/types";
 import { cn } from "@/lib/utils";
 
 /**
@@ -69,7 +70,7 @@ export function PracticeToolbar({ onRestart, disabled = false }: PracticeToolbar
   };
 
   const handleModeChange = (value: string) => {
-    updateConfig({ mode: value as any });
+    updateConfig({ mode: value as PracticeMode });
   };
 
   const toggleFocusMode = () => {

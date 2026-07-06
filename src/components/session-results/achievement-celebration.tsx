@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Achievement } from "@/lib/session-lifecycle";
 import { getAchievementRarityColor } from "@/lib/session-lifecycle";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 export interface AchievementCelebrationProps {
   achievements: Achievement[];
@@ -14,11 +15,20 @@ export interface AchievementCelebrationProps {
   onComplete?: () => void;
 }
 
+// Generate confetti positions outside render
+const generateConfettiPositions = () =>
+  Array.from({ length: 20 }).map(() => ({
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+  }));
+
 export function AchievementCelebration({
   achievements,
   show,
   onComplete,
 }: AchievementCelebrationProps) {
+  const confettiPositions = useMemo(() => generateConfettiPositions(), []);
+
   if (!show || achievements.length === 0) return null;
 
   return (
@@ -40,7 +50,7 @@ export function AchievementCelebration({
             <Card className="relative overflow-hidden p-8">
               {/* Confetti effect */}
               <div className="absolute inset-0 overflow-hidden">
-                {Array.from({ length: 20 }).map((_, i) => (
+                {confettiPositions.map((pos, i) => (
                   <motion.div
                     key={i}
                     className="bg-primary absolute size-2 rounded-full opacity-60"
@@ -50,8 +60,8 @@ export function AchievementCelebration({
                       scale: 0,
                     }}
                     animate={{
-                      x: `${Math.random() * 100}%`,
-                      y: `${Math.random() * 100}%`,
+                      x: `${pos.x}%`,
+                      y: `${pos.y}%`,
                       scale: [0, 1, 0],
                       opacity: [0, 1, 0],
                     }}
@@ -86,7 +96,7 @@ export function AchievementCelebration({
                       : `${achievements.length} Achievements Unlocked!`}
                   </h2>
                   <p className="text-muted-foreground mt-2 text-sm">
-                    You're making great progress!
+                    You&apos;re making great progress!
                   </p>
                 </div>
 

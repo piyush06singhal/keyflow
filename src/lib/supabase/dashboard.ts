@@ -88,7 +88,9 @@ export async function getDashboardData(userId: string): Promise<DashboardData | 
     if (!profile) return null;
 
     // Calculate level and XP based on total practice time
-    const totalMinutes = ((statistics as unknown as Record<string, unknown>)?.total_practice_time as number) || 0;
+    const totalMinutes =
+      ((statistics as unknown as Record<string, unknown>)
+        ?.total_practice_time as number) || 0;
     const level = Math.floor(totalMinutes / 60) + 1; // 1 level per hour
     const xp = totalMinutes * 10; // 10 XP per minute
 
@@ -101,7 +103,9 @@ export async function getDashboardData(userId: string): Promise<DashboardData | 
     const weeklyMinutes = 0;
     const monthlyMinutes = 0;
 
-    const dailyGoalMinutes = ((preferences as unknown as Record<string, unknown>)?.daily_goal_minutes as number) || 30;
+    const dailyGoalMinutes =
+      ((preferences as unknown as Record<string, unknown>)
+        ?.daily_goal_minutes as number) || 30;
     const weeklyGoalMinutes = dailyGoalMinutes * 7;
     const monthlyGoalMinutes = dailyGoalMinutes * 30;
 
@@ -112,10 +116,16 @@ export async function getDashboardData(userId: string): Promise<DashboardData | 
     const statsData = statistics as unknown as Record<string, string | number | null>;
 
     const dashboardData: DashboardData = {
-      displayName: (profileData.display_name as string) || (typeof profileData.email === 'string' ? profileData.email.split("@")[0] : null) || "User",
+      displayName:
+        (profileData.display_name as string) ||
+        (typeof profileData.email === "string"
+          ? profileData.email.split("@")[0]
+          : null) ||
+        "User",
       email: profileData.email as string | null,
       level,
-      streak: (typeof statsData?.current_streak === 'number' ? statsData.current_streak : 0),
+      streak:
+        typeof statsData?.current_streak === "number" ? statsData.current_streak : 0,
       todayGoal: {
         current: todayMinutes,
         target: dailyGoalMinutes,
@@ -123,19 +133,46 @@ export async function getDashboardData(userId: string): Promise<DashboardData | 
       xp,
       rank,
       stats: {
-        avgWpm: (typeof statsData?.average_wpm === 'number' ? statsData.average_wpm : (typeof statsData?.average_wpm === 'string' ? Number(statsData.average_wpm) : 0)),
-        bestWpm: (typeof statsData?.best_wpm === 'number' ? statsData.best_wpm : (typeof statsData?.best_wpm === 'string' ? Number(statsData.best_wpm) : 0)),
-        avgAccuracy: (typeof statsData?.average_accuracy === 'number' ? statsData.average_accuracy : (typeof statsData?.average_accuracy === 'string' ? Number(statsData.average_accuracy) : 0)),
-        typingTime: (typeof statsData?.total_practice_time === 'number' ? statsData.total_practice_time : 0),
-        totalWords: (typeof statsData?.total_words_typed === 'number' ? statsData.total_words_typed : 0),
-        totalCharacters: (typeof statsData?.total_words_typed === 'number' ? statsData.total_words_typed * 5 : 0),
+        avgWpm:
+          typeof statsData?.average_wpm === "number"
+            ? statsData.average_wpm
+            : typeof statsData?.average_wpm === "string"
+              ? Number(statsData.average_wpm)
+              : 0,
+        bestWpm:
+          typeof statsData?.best_wpm === "number"
+            ? statsData.best_wpm
+            : typeof statsData?.best_wpm === "string"
+              ? Number(statsData.best_wpm)
+              : 0,
+        avgAccuracy:
+          typeof statsData?.average_accuracy === "number"
+            ? statsData.average_accuracy
+            : typeof statsData?.average_accuracy === "string"
+              ? Number(statsData.average_accuracy)
+              : 0,
+        typingTime:
+          typeof statsData?.total_practice_time === "number"
+            ? statsData.total_practice_time
+            : 0,
+        totalWords:
+          typeof statsData?.total_words_typed === "number"
+            ? statsData.total_words_typed
+            : 0,
+        totalCharacters:
+          typeof statsData?.total_words_typed === "number"
+            ? statsData.total_words_typed * 5
+            : 0,
         codingSessions: 0, // TODO: Count from sessions table
         currentLevel: level,
         currentXp: xp,
         currentRank: rank,
-        currentStreak: (typeof statsData?.current_streak === 'number' ? statsData.current_streak : 0),
-        longestStreak: (typeof statsData?.longest_streak === 'number' ? statsData.longest_streak : 0),
-        dailyGoalCompletion: dailyGoalMinutes > 0 ? (todayMinutes / dailyGoalMinutes) * 100 : 0,
+        currentStreak:
+          typeof statsData?.current_streak === "number" ? statsData.current_streak : 0,
+        longestStreak:
+          typeof statsData?.longest_streak === "number" ? statsData.longest_streak : 0,
+        dailyGoalCompletion:
+          dailyGoalMinutes > 0 ? (todayMinutes / dailyGoalMinutes) * 100 : 0,
         weeklyImprovement: 0, // TODO: Calculate from historical data
         monthlyImprovement: 0, // TODO: Calculate from historical data
       },
@@ -254,14 +291,14 @@ export async function updateUserStatistics(
     current_streak: number;
     longest_streak: number;
     last_practice_date: string;
-  }>
+  }>,
 ) {
   try {
     const supabase = await createSupabaseServerClient();
 
     const { error } = await supabase
       .from("user_statistics")
-      // @ts-expect-error - Supabase type inference issue with generic table updates
+      // @ts-ignore - Supabase type inference issue with generic table updates
       .update(updates)
       .eq("user_id", userId);
 

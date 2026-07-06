@@ -1,11 +1,11 @@
 /**
  * Mistake Tracker
- * 
+ *
  * Tracks and analyzes typing mistakes.
  */
 
 import type { MistakeRecord } from "../types";
-import { EventDispatcher } from "../core/event-dispatcher";
+import { type EventDispatcher } from "../core/event-dispatcher";
 
 export class MistakeTracker {
   private mistakes: MistakeRecord[];
@@ -25,7 +25,7 @@ export class MistakeTracker {
     wordIndex: number,
     charIndex: number,
     expected: string,
-    typed: string
+    typed: string,
   ): MistakeRecord {
     const mistake: MistakeRecord = {
       id: `mistake-${this.mistakeIdCounter++}`,
@@ -91,10 +91,7 @@ export class MistakeTracker {
     const corrected = this.getCorrectedMistakes();
     if (corrected.length === 0) return 0;
 
-    const totalTime = corrected.reduce(
-      (sum, m) => sum + (m.correctionTime ?? 0),
-      0
-    );
+    const totalTime = corrected.reduce((sum, m) => sum + (m.correctionTime ?? 0), 0);
     return totalTime / corrected.length;
   }
 
@@ -120,7 +117,10 @@ export class MistakeTracker {
     typed: string;
     count: number;
   }> {
-    const mistakeMap = new Map<string, { expected: string; typed: string; count: number }>();
+    const mistakeMap = new Map<
+      string,
+      { expected: string; typed: string; count: number }
+    >();
 
     this.mistakes.forEach((mistake) => {
       const key = `${mistake.expected}-${mistake.typed}`;

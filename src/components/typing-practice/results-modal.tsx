@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { X, Award, TrendingUp, Target, Zap, RotateCcw, Share2 } from "lucide-react";
+import { Award, TrendingUp, Target, Zap, RotateCcw, Share2 } from "lucide-react";
 import type { SessionResult } from "@/lib/typing-engine";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 /**
@@ -96,7 +95,7 @@ export function ResultsModal({
             <Award className="text-primary size-6" />
             Practice Complete!
           </DialogTitle>
-          <DialogDescription>Here's how you performed</DialogDescription>
+          <DialogDescription>Here&apos;s how you performed</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -176,7 +175,7 @@ export function ResultsModal({
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Fastest Word</span>
                   <span className="font-medium">
-                    "{result.wordStats.fastestWord.text}" (
+                    &quot;{result.wordStats.fastestWord.text}&quot; (
                     {(result.wordStats.fastestWord.time / 1000).toFixed(2)}s)
                   </span>
                 </div>
@@ -185,7 +184,7 @@ export function ResultsModal({
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Slowest Word</span>
                   <span className="font-medium">
-                    "{result.wordStats.slowestWord.text}" (
+                    &quot;{result.wordStats.slowestWord.text}&quot; (
                     {(result.wordStats.slowestWord.time / 1000).toFixed(2)}s)
                   </span>
                 </div>

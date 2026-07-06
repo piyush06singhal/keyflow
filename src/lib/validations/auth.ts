@@ -22,7 +22,10 @@ export const usernameSchema = z
   .trim()
   .min(3, "Username must be at least 3 characters")
   .max(30, "Username must be at most 30 characters")
-  .regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, hyphens, and underscores");
+  .regex(
+    /^[a-zA-Z0-9_-]+$/,
+    "Username can only contain letters, numbers, hyphens, and underscores",
+  );
 
 // Display name validation
 export const displayNameSchema = z
@@ -78,13 +81,19 @@ export const onboardingSchema = z.object({
   displayName: displayNameSchema,
   username: usernameSchema.optional(),
   country: z.string().optional(),
-  preferredLanguage: z.string().default("en"),
-  typingExperience: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
-  programmingExperience: z.enum(["none", "beginner", "intermediate", "advanced"]).default("none"),
-  dailyGoal: z.number().min(5).max(240).default(30),
-  preferredTheme: z.enum(["light", "dark", "system"]).default("system"),
-  keyboardLayout: z.string().default("qwerty"),
-  aiEnabled: z.boolean().default(false),
+  preferredLanguage: z.string().optional().default("en"),
+  typingExperience: z
+    .enum(["beginner", "intermediate", "advanced"])
+    .optional()
+    .default("beginner"),
+  programmingExperience: z
+    .enum(["none", "beginner", "intermediate", "advanced"])
+    .optional()
+    .default("none"),
+  dailyGoal: z.number().min(5).max(240).optional().default(30),
+  preferredTheme: z.enum(["light", "dark", "system"]).optional().default("system"),
+  keyboardLayout: z.string().optional().default("qwerty"),
+  aiEnabled: z.boolean().optional().default(false),
 });
 
-export type OnboardingInput = z.infer<typeof onboardingSchema>;
+export type OnboardingInput = z.input<typeof onboardingSchema>;

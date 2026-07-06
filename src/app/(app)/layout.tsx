@@ -23,7 +23,10 @@ export default async function AppLayoutWrapper({
   const profile = await getUserProfile(user.id);
   const userData = {
     email: user.email,
-    display_name: (profile as any)?.display_name || user.email?.split("@")[0] || "User",
+    display_name:
+      (profile as { display_name?: string } | null)?.display_name ||
+      user.email?.split("@")[0] ||
+      "User",
   };
 
   return <AppLayout user={userData}>{children}</AppLayout>;

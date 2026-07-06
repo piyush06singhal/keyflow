@@ -30,12 +30,28 @@ export function AiCoachReportsPage() {
   };
 
   useEffect(() => {
-    load();
+    let isMounted = true;
+
+    const loadInitialData = async () => {
+      if (isMounted) {
+        await load();
+      }
+    };
+
+    void loadInitialData();
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <PageContainer maxWidth="xl">
-      <PageHeader title="Progress Reports" description="Weekly summaries and historical AI analysis.">
+      <PageHeader
+        title="Progress Reports"
+        description="Weekly summaries and historical AI analysis."
+      >
         <Button variant="outline" size="sm" onClick={load} disabled={isLoading}>
           <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
           Refresh
@@ -44,14 +60,18 @@ export function AiCoachReportsPage() {
       <AiCoachNav />
 
       <div className="mt-6 space-y-6">
-        {source && source !== "ai" && <AiErrorFallback source={source} onRetry={load} />}
+        {source && source !== "ai" && (
+          <AiErrorFallback source={source} onRetry={load} />
+        )}
         {error && !report && <AiErrorFallback message={error} onRetry={load} />}
 
         {isLoading && !report ? (
           <AiLoadingSkeleton />
         ) : (
           <>
-            {report && <WeeklySummaryCard report={report} source={source ?? undefined} />}
+            {report && (
+              <WeeklySummaryCard report={report} source={source ?? undefined} />
+            )}
 
             {pastReports.length > 0 && (
               <section className="space-y-3">

@@ -1,6 +1,6 @@
 /**
  * Session Lifecycle Hook
- * 
+ *
  * React hook for managing the complete typing session lifecycle.
  * Handles completion, sync, analytics, and achievements.
  */
@@ -24,14 +24,14 @@ export interface UseSessionLifecycleReturn {
   completionResult: SessionCompletionResult | null;
   isProcessing: boolean;
   syncStatus: SessionSyncStatus | null;
-  
+
   // Actions
   completeSession: (
     sessionResult: SessionResult,
-    practiceMode: string
+    practiceMode: string,
   ) => Promise<SessionCompletionResult>;
   refreshSyncStatus: () => Promise<void>;
-  
+
   // Background sync
   isSyncing: boolean;
 }
@@ -45,12 +45,24 @@ export function useSessionLifecycle(): UseSessionLifecycleReturn {
   const [isSyncing, setIsSyncing] = useState(false);
 
   /**
+   * Refresh sync status
+   */
+  const refreshSyncStatus = useCallback(async () => {
+    try {
+      const status = await getSyncStatus();
+      setSyncStatus(status);
+    } catch (error) {
+      console.error("Failed to refresh sync status:", error);
+    }
+  }, []);
+
+  /**
    * Complete a typing session
    */
   const completeSession = useCallback(
     async (
       sessionResult: SessionResult,
-      practiceMode: string
+      practiceMode: string,
     ): Promise<SessionCompletionResult> => {
       if (!user) {
         return {
@@ -84,11 +96,11 @@ export function useSessionLifecycle(): UseSessionLifecycleReturn {
           user.id,
           sessionResult,
           practiceMode,
-          userStats
+          userStats,
         );
 
         setCompletionResult(result);
-        
+
         // Refresh sync status
         await refreshSyncStatus();
 
@@ -104,9 +116,7 @@ export function useSessionLifecycle(): UseSessionLifecycleReturn {
           xpGained: 0,
           levelUp: false,
           newPersonalBests: [],
-          errors: [
-            error instanceof Error ? error.message : "Unknown error occurred",
-          ],
+          errors: [error instanceof Error ? error.message : "Unknown error occurred"],
           warnings: [],
         };
 
@@ -116,20 +126,8 @@ export function useSessionLifecycle(): UseSessionLifecycleReturn {
         setIsProcessing(false);
       }
     },
-    [user]
+    [user, refreshSyncStatus],
   );
-
-  /**
-   * Refresh sync status
-   */
-  const refreshSyncStatus = useCallback(async () => {
-    try {
-      const status = await getSyncStatus();
-      setSyncStatus(status);
-    } catch (error) {
-      console.error("Failed to refresh sync status:", error);
-    }
-  }, []);
 
   /**
    * Setup background sync
@@ -137,16 +135,28 @@ export function useSessionLifecycle(): UseSessionLifecycleReturn {
   useEffect(() => {
     if (!user) return;
 
-    setIsSyncing(true);
+    let isMounted = true;
+
+    // Defer state update and initial sync check
+    const timer = setTimeout(() => {
+      if (isMounted) {
+        setIsSyncing(true);
+        void refreshSyncStatus();
+      }
+    }, 0);
+
     const cleanup = startBackgroundSync(saveTypingSession);
 
-    // Initial sync status check
-    refreshSyncStatus();
-
     // Periodic sync status check
-    const interval = setInterval(refreshSyncStatus, 60000); // Every minute
+    const interval = setInterval(() => {
+      if (isMounted) {
+        void refreshSyncStatus();
+      }
+    }, 60000); // Every minute
 
     return () => {
+      isMounted = false;
+      clearTimeout(timer);
       cleanup();
       clearInterval(interval);
       setIsSyncing(false);

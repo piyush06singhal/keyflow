@@ -68,27 +68,27 @@ export async function updateSession(request: NextRequest) {
 
   // Check onboarding status for authenticated users
   if (user && !isOnboardingRoute && isProtectedRoute) {
-    const { data: profile } = await supabase
+    const { data: profile } = (await supabase
       .from("profiles")
       .select("onboarding_completed")
       .eq("id", user.id)
-      .single();
+      .single()) as unknown as { data: { onboarding_completed: boolean } | null };
 
     // Redirect to onboarding if not completed
-    if (profile && !(profile as any).onboarding_completed) {
+    if (profile && !profile.onboarding_completed) {
       return NextResponse.redirect(new URL("/onboarding", request.url));
     }
   }
 
   // Redirect from onboarding if already completed
   if (user && isOnboardingRoute) {
-    const { data: profile } = await supabase
+    const { data: profile } = (await supabase
       .from("profiles")
       .select("onboarding_completed")
       .eq("id", user.id)
-      .single();
+      .single()) as unknown as { data: { onboarding_completed: boolean } | null };
 
-    if ((profile as any)?.onboarding_completed) {
+    if (profile?.onboarding_completed) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }

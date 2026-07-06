@@ -1,6 +1,6 @@
 /**
  * Offline Storage Manager
- * 
+ *
  * Manages offline session persistence using IndexedDB.
  * Automatically syncs pending sessions when online.
  */
@@ -42,11 +42,11 @@ function initDB(): Promise<IDBDatabase> {
 export async function storeSessionOffline(
   userId: string,
   sessionData: SessionResult,
-  practiceMode: string
+  practiceMode: string,
 ): Promise<void> {
   try {
     const db = await initDB();
-    
+
     const pendingSession: PendingSession = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       userId,
@@ -59,7 +59,7 @@ export async function storeSessionOffline(
 
     const transaction = db.transaction([STORE_NAME], "readwrite");
     const store = transaction.objectStore(STORE_NAME);
-    
+
     await new Promise<void>((resolve, reject) => {
       const request = store.add(pendingSession);
       request.onsuccess = () => resolve();
@@ -120,7 +120,7 @@ export async function removePendingSession(sessionId: string): Promise<void> {
  */
 export async function updateSessionRetry(
   sessionId: string,
-  attempts: number
+  attempts: number,
 ): Promise<void> {
   try {
     const db = await initDB();
@@ -205,8 +205,8 @@ export async function syncPendingSessions(
   syncFunction: (
     userId: string,
     sessionData: SessionResult,
-    practiceMode: string
-  ) => Promise<{ data: any; error: Error | null }>
+    practiceMode: string,
+  ) => Promise<{ data: unknown; error: Error | null }>,
 ): Promise<SyncResult> {
   const result: SyncResult = {
     successful: 0,
@@ -237,7 +237,7 @@ export async function syncPendingSessions(
         const { error } = await syncFunction(
           session.userId,
           session.sessionData,
-          session.practiceMode
+          session.practiceMode,
         );
 
         if (error) {
@@ -266,7 +266,7 @@ export async function syncPendingSessions(
     if (result.errors.length > 0) {
       localStorage.setItem(
         "last_sync_error",
-        result.errors[0]?.error || "Unknown error"
+        result.errors[0]?.error || "Unknown error",
       );
     } else {
       localStorage.removeItem("last_sync_error");
@@ -285,8 +285,8 @@ export function startBackgroundSync(
   syncFunction: (
     userId: string,
     sessionData: SessionResult,
-    practiceMode: string
-  ) => Promise<{ data: any; error: Error | null }>
+    practiceMode: string,
+  ) => Promise<{ data: unknown; error: Error | null }>,
 ): () => void {
   let intervalId: NodeJS.Timeout | null = null;
 

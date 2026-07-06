@@ -12,9 +12,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "next-themes";
@@ -37,7 +34,7 @@ export function AppTopbar({
   onNotificationsOpen,
 }: AppTopbarProps) {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
   const [notificationCount] = useState(3);
 
   const breadcrumbs = getBreadcrumbs(pathname);

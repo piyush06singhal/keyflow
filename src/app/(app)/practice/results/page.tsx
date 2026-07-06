@@ -17,32 +17,45 @@ import type { SessionCompletionResult } from "@/lib/session-lifecycle";
 
 export default function PracticeResultsPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [sessionResult, setSessionResult] = useState<SessionResult | null>(null);
-  const [completionResult, setCompletionResult] =
-    useState<SessionCompletionResult | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const _searchParams = useSearchParams();
+  const [sessionResult] = useState<SessionResult | null>(() => {
+    if (typeof window === "undefined") return null;
+    const sessionData = sessionStorage.getItem("lastSessionResult");
+    if (sessionData) {
+      try {
+        return JSON.parse(sessionData);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+  const [completionResult] = useState<SessionCompletionResult | null>(() => {
+    if (typeof window === "undefined") return null;
+    const completionData = sessionStorage.getItem("lastCompletionResult");
+    if (completionData) {
+      try {
+        return JSON.parse(completionData);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    // Initial check - if data exists, no need to load
+    if (typeof window === "undefined") return true;
+    const hasSessionData = sessionStorage.getItem("lastSessionResult");
+    const hasCompletionData = sessionStorage.getItem("lastCompletionResult");
+    return !hasSessionData || !hasCompletionData;
+  });
 
   useEffect(() => {
-    // Get session data from sessionStorage
-    const sessionData = sessionStorage.getItem("lastSessionResult");
-    const completionData = sessionStorage.getItem("lastCompletionResult");
-
-    if (sessionData && completionData) {
-      try {
-        setSessionResult(JSON.parse(sessionData));
-        setCompletionResult(JSON.parse(completionData));
-      } catch (error) {
-        console.error("Failed to parse session data:", error);
-        router.push("/practice");
-      }
-    } else {
-      // No session data, redirect to practice
+    // Check if we have the data, if not redirect
+    if (!sessionResult || !completionResult) {
       router.push("/practice");
     }
-
-    setIsLoading(false);
-  }, [router]);
+  }, [router, sessionResult, completionResult]);
 
   const handleRestart = () => {
     router.push("/practice?restart=true");

@@ -1,6 +1,6 @@
 /**
  * Input Manager
- * 
+ *
  * Handles keyboard input, validation, and input action recording.
  */
 
@@ -11,7 +11,7 @@ import type {
   Word,
   TypingEngineConfig,
 } from "../types";
-import { EventDispatcher } from "../core/event-dispatcher";
+import { type EventDispatcher } from "../core/event-dispatcher";
 
 export class InputManager {
   private config: TypingEngineConfig;
@@ -32,7 +32,7 @@ export class InputManager {
   processKeyEvent(
     event: KeyboardEvent,
     currentCursor: CursorPosition,
-    words: Word[]
+    words: Word[],
   ): {
     action: InputAction | null;
     shouldPreventDefault: boolean;
@@ -86,7 +86,7 @@ export class InputManager {
   private handleCharacter(
     char: string,
     currentCursor: CursorPosition,
-    words: Word[]
+    _words: Word[],
   ): {
     action: InputAction;
     shouldPreventDefault: boolean;
@@ -112,7 +112,7 @@ export class InputManager {
    */
   private handleSpace(
     currentCursor: CursorPosition,
-    words: Word[]
+    _words: Word[],
   ): {
     action: InputAction;
     shouldPreventDefault: boolean;
@@ -138,7 +138,7 @@ export class InputManager {
    */
   private handleBackspace(
     currentCursor: CursorPosition,
-    words: Word[]
+    words: Word[],
   ): {
     action: InputAction;
     shouldPreventDefault: boolean;

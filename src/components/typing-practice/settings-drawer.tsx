@@ -76,7 +76,7 @@ export function SettingsDrawer() {
                 <Label htmlFor="font-family">Font Family</Label>
                 <Select
                   value={uiSettings.fontFamily}
-                  onValueChange={(value: any) =>
+                  onValueChange={(value: "mono" | "sans" | "serif") =>
                     updateUISettings({ fontFamily: value })
                   }
                 >
@@ -96,7 +96,7 @@ export function SettingsDrawer() {
                 <Label htmlFor="cursor-style">Cursor Style</Label>
                 <Select
                   value={uiSettings.cursorStyle}
-                  onValueChange={(value: any) =>
+                  onValueChange={(value: "line" | "block" | "underline") =>
                     updateUISettings({ cursorStyle: value })
                   }
                 >

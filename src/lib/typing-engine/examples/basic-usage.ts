@@ -1,11 +1,11 @@
 /**
  * Basic Usage Example
- * 
+ *
  * Demonstrates how to use the Typing Engine in a simple scenario.
  */
 
 import { TypingEngine } from "../typing-engine";
-import type { LiveStatistics, SessionResult } from "../types";
+import type { LiveStatistics, SessionResult, MistakeRecord } from "../types";
 
 /**
  * Example: Basic typing session
@@ -40,7 +40,9 @@ export function basicTypingSession() {
 
   const unsubscribeStats = engine.on("statistics:updated", (event) => {
     const stats = event.data as LiveStatistics;
-    console.log(`📊 WPM: ${stats.wpm} | Accuracy: ${stats.accuracy}% | Progress: ${stats.progress}%`);
+    console.log(
+      `📊 WPM: ${stats.wpm} | Accuracy: ${stats.accuracy}% | Progress: ${stats.progress}%`,
+    );
   });
 
   const unsubscribeCompleted = engine.on("session:completed", (event) => {
@@ -250,12 +252,12 @@ export function mistakeAnalysis() {
 
   // Track mistakes
   engine.on("mistake:recorded", (event) => {
-    const mistake = event.data as any;
+    const mistake = event.data as { expected: string; typed: string };
     console.log(`❌ Mistake: Expected '${mistake.expected}', got '${mistake.typed}'`);
   });
 
   engine.on("mistake:corrected", (event) => {
-    const mistake = event.data as any;
+    const mistake = event.data as { correctionTime: number };
     console.log(`✓ Corrected in ${mistake.correctionTime}ms`);
   });
 
@@ -263,12 +265,16 @@ export function mistakeAnalysis() {
     const result = event.data as SessionResult;
     console.log("\n📊 Mistake Analysis:");
     console.log(`   Total mistakes: ${result.mistakes.length}`);
-    console.log(`   Uncorrected: ${result.mistakes.filter((m: any) => !m.corrected).length}`);
+    console.log(
+      `   Uncorrected: ${result.mistakes.filter((m: MistakeRecord) => !m.corrected).length}`,
+    );
 
     // Character-specific accuracy
     result.characterStats.forEach((stats, char) => {
       if (stats.accuracy < 100) {
-        console.log(`   '${char}': ${stats.accuracy.toFixed(1)}% accuracy (${stats.incorrect} errors)`);
+        console.log(
+          `   '${char}': ${stats.accuracy.toFixed(1)}% accuracy (${stats.incorrect} errors)`,
+        );
       }
     });
   });

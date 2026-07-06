@@ -1,6 +1,6 @@
 /**
  * Statistics Calculator
- * 
+ *
  * Calculates typing statistics following industry standards.
  */
 
@@ -13,7 +13,7 @@ export class StatisticsCalculator {
   static calculateLive(
     words: Word[],
     elapsedTime: number,
-    totalWords: number
+    totalWords: number,
   ): LiveStatistics {
     const { correctChars, incorrectChars, totalChars, extraChars, missedChars } =
       this.countCharacters(words);
@@ -81,7 +81,7 @@ export class StatisticsCalculator {
     let correctChars = 0;
     let incorrectChars = 0;
     let totalChars = 0;
-    let extraChars = 0;
+    const extraChars = 0;
     let missedChars = 0;
 
     words.forEach((word) => {
@@ -158,7 +158,7 @@ export class StatisticsCalculator {
    */
   static calculateAverageWordTime(words: Word[]): number {
     const completedWords = words.filter(
-      (w) => w.isCompleted && w.startTime !== null && w.endTime !== null
+      (w) => w.isCompleted && w.startTime !== null && w.endTime !== null,
     );
 
     if (completedWords.length === 0) return 0;
@@ -178,7 +178,7 @@ export class StatisticsCalculator {
     slowest: { text: string; time: number } | null;
   } {
     const completedWords = words.filter(
-      (w) => w.isCompleted && w.startTime !== null && w.endTime !== null
+      (w) => w.isCompleted && w.startTime !== null && w.endTime !== null,
     );
 
     if (completedWords.length === 0) {
@@ -266,7 +266,7 @@ export class StatisticsCalculator {
    */
   static generateSegments(
     words: Word[],
-    segmentDuration: number = 5000 // 5 seconds
+    segmentDuration: number = 5000, // 5 seconds
   ): TypingSegment[] {
     const segments: TypingSegment[] = [];
     const completedWords = words.filter((w) => w.isCompleted);
@@ -284,26 +284,19 @@ export class StatisticsCalculator {
       const segmentEnd = segmentStart + segmentDuration;
 
       const segmentWords = completedWords.filter(
-        (w) => w.startTime! >= segmentStart && w.endTime! <= segmentEnd
+        (w) => w.startTime! >= segmentStart && w.endTime! <= segmentEnd,
       );
 
       if (segmentWords.length === 0) continue;
 
-      const characterCount = segmentWords.reduce(
-        (sum, w) => sum + w.text.length,
-        0
-      );
+      const characterCount = segmentWords.reduce((sum, w) => sum + w.text.length, 0);
       const correctChars = segmentWords.reduce((sum, w) => {
-        return (
-          sum +
-          w.characters.filter((c) => c.typed && c.isCorrect).length
-        );
+        return sum + w.characters.filter((c) => c.typed && c.isCorrect).length;
       }, 0);
 
       const segmentMinutes = segmentDuration / 60000;
       const wpm = Math.round(correctChars / 5 / segmentMinutes);
-      const accuracy =
-        characterCount > 0 ? (correctChars / characterCount) * 100 : 100;
+      const accuracy = characterCount > 0 ? (correctChars / characterCount) * 100 : 100;
 
       segments.push({
         startTime: segmentStart,

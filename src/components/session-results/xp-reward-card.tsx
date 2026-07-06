@@ -5,7 +5,6 @@ import { Star, TrendingUp, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { LevelInfo } from "@/lib/session-lifecycle";
-import { cn } from "@/lib/utils";
 
 export interface XpRewardCardProps {
   xpGained: number;
@@ -49,8 +48,8 @@ export function XpRewardCard({
               <div>
                 <h3 className="text-primary font-bold tracking-tight">Level Up!</h3>
                 <p className="text-sm leading-relaxed">
-                  You've reached <span className="font-semibold">Level {newLevel}</span>
-                  !
+                  You&apos;ve reached{" "}
+                  <span className="font-semibold">Level {newLevel}</span>!
                 </p>
               </div>
             </div>

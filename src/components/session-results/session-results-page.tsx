@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Zap,
   Target,
@@ -279,7 +279,7 @@ export function SessionResultsPage({
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-sm">Fastest Word</span>
                 <span className="font-mono font-medium">
-                  "{sessionResult.wordStats.fastestWord.text}" (
+                  &quot;{sessionResult.wordStats.fastestWord.text}&quot; (
                   {(sessionResult.wordStats.fastestWord.time / 1000).toFixed(2)}s)
                 </span>
               </div>
@@ -288,7 +288,7 @@ export function SessionResultsPage({
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-sm">Slowest Word</span>
                 <span className="font-mono font-medium">
-                  "{sessionResult.wordStats.slowestWord.text}" (
+                  &quot;{sessionResult.wordStats.slowestWord.text}&quot; (
                   {(sessionResult.wordStats.slowestWord.time / 1000).toFixed(2)}s)
                 </span>
               </div>

@@ -10,7 +10,7 @@ export default function UnauthorizedPage() {
           <h1 className="text-4xl font-bold tracking-tight">401</h1>
           <h2 className="text-2xl font-semibold">Unauthorized</h2>
           <p className="text-muted-foreground text-sm">
-            You don't have permission to access this resource.
+            You don&apos;t have permission to access this resource.
           </p>
         </div>
 

@@ -23,7 +23,7 @@ export interface TypingCanvasProps {
 }
 
 export function TypingCanvas({ typing, className }: TypingCanvasProps) {
-  const { viewMode, uiSettings } = useTypingPracticeStore();
+  const { viewMode, uiSettings: _uiSettings } = useTypingPracticeStore();
   const { status, words, cursorPosition, inputRef, start, pause, resume } = typing;
 
   // Auto-focus when component mounts
@@ -32,7 +32,7 @@ export function TypingCanvas({ typing, className }: TypingCanvasProps) {
   }, [inputRef]);
 
   const isZenMode = viewMode.mode === "zen";
-  const isFocusMode = viewMode.mode === "focus";
+  const _isFocusMode = viewMode.mode === "focus";
 
   const handleClick = () => {
     inputRef.current?.focus();

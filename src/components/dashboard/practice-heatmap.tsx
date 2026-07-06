@@ -10,8 +10,6 @@ import {
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface HeatmapData {
   date: string;
@@ -24,7 +22,7 @@ interface PracticeHeatmapProps {
 }
 
 export function PracticeHeatmap({ data }: PracticeHeatmapProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [_currentMonth, _setCurrentMonth] = useState(new Date());
 
   // Generate grid for the past year
   const generateYearGrid = () => {

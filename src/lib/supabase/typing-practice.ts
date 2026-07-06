@@ -1,6 +1,6 @@
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { SessionResult } from "@/lib/typing-engine";
-import type { Database } from "@/types/database";
+import type { Database, Json } from "@/types/database";
 
 /**
  * Typing Practice Supabase Service
@@ -10,11 +10,15 @@ import type { Database } from "@/types/database";
  */
 
 type TypingSession = Database["public"]["Tables"]["typing_sessions"]["Insert"];
+type TypingSessionRow = Database["public"]["Tables"]["typing_sessions"]["Row"];
 type UserStatisticsRow = Database["public"]["Tables"]["user_statistics"]["Row"];
 type UserStatisticsUpdate = Database["public"]["Tables"]["user_statistics"]["Update"];
-type PracticePreferencesRow = Database["public"]["Tables"]["practice_preferences"]["Row"];
-type PracticePreferencesUpdate = Database["public"]["Tables"]["practice_preferences"]["Update"];
-type PracticePreferencesInsert = Database["public"]["Tables"]["practice_preferences"]["Insert"];
+type PracticePreferencesRow =
+  Database["public"]["Tables"]["practice_preferences"]["Row"];
+type PracticePreferencesUpdate =
+  Database["public"]["Tables"]["practice_preferences"]["Update"];
+type PracticePreferencesInsert =
+  Database["public"]["Tables"]["practice_preferences"]["Insert"];
 
 /**
  * Save a completed typing session to the database
@@ -23,7 +27,7 @@ export async function saveTypingSession(
   userId: string,
   sessionResult: SessionResult,
   practiceMode: string,
-): Promise<{ data: any | null; error: Error | null }> {
+): Promise<{ data: TypingSessionRow | null; error: Error | null }> {
   try {
     const supabase = createSupabaseBrowserClient();
 
@@ -40,15 +44,17 @@ export async function saveTypingSession(
       correct_chars: sessionResult.finalStats.correctChars,
       incorrect_chars: sessionResult.finalStats.incorrectChars,
       total_chars: sessionResult.finalStats.totalChars,
-      mistakes: sessionResult.mistakes as any,
-      character_stats: Object.fromEntries(sessionResult.characterStats) as any,
-      word_stats: sessionResult.wordStats as any,
+      mistakes: sessionResult.mistakes as unknown as Json,
+      character_stats: Object.fromEntries(
+        sessionResult.characterStats,
+      ) as unknown as Json,
+      word_stats: sessionResult.wordStats as unknown as Json,
       completed_at: new Date().toISOString(),
     };
 
     const { data, error } = await supabase
       .from("typing_sessions")
-      .insert(sessionData as any)
+      .insert(sessionData)
       .select()
       .single();
 
@@ -91,22 +97,19 @@ async function updateUserStatistics(
     // Calculate new statistics
     const totalSessions = (stats.total_sessions || 0) + 1;
     const newTotalTime = (stats.total_practice_time || 0) + sessionResult.duration;
-    
+
     // Calculate new averages
     const newAvgWpm =
       ((stats.average_wpm || 0) * (totalSessions - 1)) / totalSessions +
       sessionResult.finalWpm / totalSessions;
-    
+
     const newAvgAccuracy =
       ((stats.average_accuracy || 0) * (totalSessions - 1)) / totalSessions +
       sessionResult.finalAccuracy / totalSessions;
 
     // Check for personal bests
-    const bestWpm = Math.max(
-      stats.best_wpm || 0,
-      sessionResult.finalWpm,
-    );
-    
+    const bestWpm = Math.max(stats.best_wpm || 0, sessionResult.finalWpm);
+
     const bestAccuracy = Math.max(
       stats.best_accuracy || 0,
       sessionResult.finalAccuracy,
@@ -115,13 +118,13 @@ async function updateUserStatistics(
     // Calculate streak
     const today = new Date().toISOString().split("T")[0];
     const lastPracticeDate = stats.last_practice_date?.toString().split("T")[0];
-    
+
     let currentStreak = stats.current_streak || 0;
     if (lastPracticeDate !== today) {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split("T")[0];
-      
+
       if (lastPracticeDate === yesterdayStr) {
         currentStreak += 1;
       } else {
@@ -129,10 +132,7 @@ async function updateUserStatistics(
       }
     }
 
-    const longestStreak = Math.max(
-      stats.longest_streak || 0,
-      currentStreak,
-    );
+    const longestStreak = Math.max(stats.longest_streak || 0, currentStreak);
 
     // Update statistics
     const updateData: UserStatisticsUpdate = {
@@ -147,13 +147,12 @@ async function updateUserStatistics(
       best_accuracy: bestAccuracy,
       total_words_typed:
         (stats.total_words_typed || 0) + sessionResult.finalStats.completedWords,
-      total_errors:
-        (stats.total_errors || 0) + sessionResult.finalStats.incorrectChars,
+      total_errors: (stats.total_errors || 0) + sessionResult.finalStats.incorrectChars,
       updated_at: new Date().toISOString(),
     };
 
-    const { error: updateError } = await (supabase
-      .from("user_statistics") as any)
+    const { error: updateError } = await supabase
+      .from("user_statistics")
       .update(updateData)
       .eq("user_id", userId);
 
@@ -171,7 +170,7 @@ async function updateUserStatistics(
 export async function getTypingSessions(
   userId: string,
   options: { limit?: number; offset?: number } = {},
-): Promise<{ data: any[] | null; error: Error | null }> {
+): Promise<{ data: TypingSessionRow[] | null; error: Error | null }> {
   try {
     const supabase = createSupabaseBrowserClient();
     const { limit = 50, offset = 0 } = options;
@@ -197,7 +196,7 @@ export async function getTypingSessions(
  */
 export async function getPracticePreferences(
   userId: string,
-): Promise<{ data: any | null; error: Error | null }> {
+): Promise<{ data: PracticePreferencesRow | null; error: Error | null }> {
   try {
     const supabase = createSupabaseBrowserClient();
 
@@ -222,7 +221,7 @@ export async function getPracticePreferences(
 export async function savePracticePreferences(
   userId: string,
   preferences: Partial<PracticePreferencesUpdate>,
-): Promise<{ data: any | null; error: Error | null }> {
+): Promise<{ data: PracticePreferencesRow | null; error: Error | null }> {
   try {
     const supabase = createSupabaseBrowserClient();
 
@@ -240,8 +239,8 @@ export async function savePracticePreferences(
         updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await (supabase
-        .from("practice_preferences") as any)
+      const { data, error } = await supabase
+        .from("practice_preferences")
         .update(updateData)
         .eq("user_id", userId)
         .select()
@@ -258,7 +257,7 @@ export async function savePracticePreferences(
 
       const { data, error } = await supabase
         .from("practice_preferences")
-        .insert(insertData as any)
+        .insert(insertData)
         .select()
         .single();
 
@@ -347,22 +346,30 @@ export async function getRecentSessionStats(
     }
 
     const avgWpm =
-      data.reduce((sum: number, session: any) => sum + session.final_wpm, 0) / data.length;
+      data.reduce(
+        (sum: number, session: TypingSessionRow) => sum + session.final_wpm,
+        0,
+      ) / data.length;
     const avgAccuracy =
-      data.reduce((sum: number, session: any) => sum + session.final_accuracy, 0) /
-      data.length;
-    const totalTime = data.reduce((sum: number, session: any) => sum + session.duration, 0);
+      data.reduce(
+        (sum: number, session: TypingSessionRow) => sum + session.final_accuracy,
+        0,
+      ) / data.length;
+    const totalTime = data.reduce(
+      (sum: number, session: TypingSessionRow) => sum + session.duration,
+      0,
+    );
 
     // Calculate improvement (compare first half vs second half)
     const halfPoint = Math.floor(data.length / 2);
     const recentAvg =
       data
         .slice(0, halfPoint)
-        .reduce((sum: number, s: any) => sum + s.final_wpm, 0) / halfPoint;
+        .reduce((sum: number, s: TypingSessionRow) => sum + s.final_wpm, 0) / halfPoint;
     const olderAvg =
       data
         .slice(halfPoint)
-        .reduce((sum: number, s: any) => sum + s.final_wpm, 0) /
+        .reduce((sum: number, s: TypingSessionRow) => sum + s.final_wpm, 0) /
       (data.length - halfPoint);
     const improvement = recentAvg - olderAvg;
 

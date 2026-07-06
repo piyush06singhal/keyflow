@@ -1,6 +1,6 @@
 /**
  * Typing Engine
- * 
+ *
  * Main engine class that orchestrates all typing functionality.
  * Framework-independent and reusable across the entire platform.
  */
@@ -55,7 +55,7 @@ export class TypingEngine {
     this.cursorManager = null;
     this.inputManager = new InputManager(
       this.configManager.getConfig(),
-      this.eventDispatcher
+      this.eventDispatcher,
     );
     this.mistakeTracker = new MistakeTracker(this.eventDispatcher);
 
@@ -76,10 +76,7 @@ export class TypingEngine {
    */
   initialize(): void {
     if (this.sessionState.status !== "idle") {
-      throw new TypingEngineError(
-        "Session already initialized",
-        "ALREADY_INITIALIZED"
-      );
+      throw new TypingEngineError("Session already initialized", "ALREADY_INITIALIZED");
     }
 
     // Generate text content
@@ -94,18 +91,21 @@ export class TypingEngine {
     this.timerManager = new TimerManager(
       config.timerMode,
       config.duration,
-      this.eventDispatcher
+      this.eventDispatcher,
     );
 
     // Update state
     this.sessionState.status = "ready";
     this.liveStats = this.calculateStatistics();
 
-    this.eventDispatcher.emit("session:ready" as EngineEventType, {
-      sessionId: this.sessionId,
-      textContent: this.textContent,
-      wordCount: this.words.length,
-    } as any);
+    this.eventDispatcher.emit(
+      "session:ready" as EngineEventType,
+      {
+        sessionId: this.sessionId,
+        textContent: this.textContent,
+        wordCount: this.words.length,
+      } as unknown as SessionResult,
+    );
   }
 
   /**
@@ -115,7 +115,7 @@ export class TypingEngine {
     if (this.sessionState.status !== "ready") {
       throw new TypingEngineError(
         "Session must be initialized before starting",
-        "NOT_READY"
+        "NOT_READY",
       );
     }
 
@@ -226,7 +226,7 @@ export class TypingEngine {
     const { action, shouldPreventDefault } = this.inputManager.processKeyEvent(
       event,
       currentCursor,
-      this.words
+      this.words,
     );
 
     if (shouldPreventDefault) {
@@ -303,7 +303,7 @@ export class TypingEngine {
         cursor.wordIndex,
         cursor.charIndex,
         expectedChar,
-        char
+        char,
       );
 
       this.eventDispatcher.emit("character:incorrect", {
@@ -381,7 +381,7 @@ export class TypingEngine {
     return StatisticsCalculator.calculateLive(
       this.words,
       elapsedTime,
-      this.words.length
+      this.words.length,
     );
   }
 
@@ -440,14 +440,14 @@ export class TypingEngine {
 
   on<T = unknown>(
     eventType: EngineEventType,
-    listener: EventListener<T>
+    listener: EventListener<T>,
   ): EventUnsubscribe {
     return this.eventDispatcher.on(eventType, listener);
   }
 
   once<T = unknown>(
     eventType: EngineEventType,
-    listener: EventListener<T>
+    listener: EventListener<T>,
   ): EventUnsubscribe {
     return this.eventDispatcher.once(eventType, listener);
   }

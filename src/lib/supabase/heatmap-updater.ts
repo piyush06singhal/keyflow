@@ -1,6 +1,6 @@
 /**
  * Heatmap Updater Service
- * 
+ *
  * Updates practice heatmap data after session completion.
  */
 
@@ -16,7 +16,7 @@ type HeatmapUpdate = Database["public"]["Tables"]["practice_heatmap"]["Update"];
  */
 export async function updateHeatmapForSession(
   userId: string,
-  durationMs: number
+  durationMs: number,
 ): Promise<{ success: boolean; error: Error | null }> {
   try {
     const supabase = createSupabaseBrowserClient();
@@ -44,8 +44,8 @@ export async function updateHeatmapForSession(
         updated_at: new Date().toISOString(),
       };
 
-      const { error: updateError } = await (supabase
-        .from("practice_heatmap") as any)
+      const { error: updateError } = await supabase
+        .from("practice_heatmap")
         .update(updateData)
         .eq("user_id", userId)
         .eq("date", today);
@@ -60,8 +60,8 @@ export async function updateHeatmapForSession(
         minutes,
       };
 
-      const { error: insertError } = await (supabase
-        .from("practice_heatmap") as any)
+      const { error: insertError } = await supabase
+        .from("practice_heatmap")
         .insert(insertData);
 
       if (insertError) throw insertError;
@@ -77,11 +77,7 @@ export async function updateHeatmapForSession(
 /**
  * Get heatmap data for a date range
  */
-export async function getHeatmapData(
-  userId: string,
-  dateFrom: string,
-  dateTo: string
-) {
+export async function getHeatmapData(userId: string, dateFrom: string, dateTo: string) {
   try {
     const supabase = createSupabaseBrowserClient();
 

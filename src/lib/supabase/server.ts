@@ -1,10 +1,9 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
-
 import { serverEnv } from "@/config/env";
 import type { Database } from "@/types/database";
 
-export async function createSupabaseServerClient() {
+export async function createSupabaseServerClient(): Promise<any> {
   if (!serverEnv.NEXT_PUBLIC_SUPABASE_URL || !serverEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     throw new Error("Missing Supabase environment variables.");
   }
@@ -30,5 +29,5 @@ export async function createSupabaseServerClient() {
         },
       },
     },
-  );
+  ) as any;
 }

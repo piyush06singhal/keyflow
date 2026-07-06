@@ -24,7 +24,20 @@ export function AiCoachPlannerPage() {
   };
 
   useEffect(() => {
-    load();
+    let isMounted = true;
+
+    const loadInitialData = async () => {
+      if (isMounted) {
+        await load();
+      }
+    };
+
+    void loadInitialData();
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -33,7 +46,12 @@ export function AiCoachPlannerPage() {
         title="Practice Planner"
         description="Your personalized daily typing and coding practice schedule."
       >
-        <Button variant="outline" size="sm" onClick={() => load(true)} disabled={isLoading}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => load(true)}
+          disabled={isLoading}
+        >
           <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
           Regenerate
         </Button>
@@ -41,8 +59,12 @@ export function AiCoachPlannerPage() {
       <AiCoachNav />
 
       <div className="mt-6 space-y-6">
-        {source && source !== "ai" && <AiErrorFallback source={source} onRetry={() => load(true)} />}
-        {error && !plan && <AiErrorFallback message={error} onRetry={() => load(true)} />}
+        {source && source !== "ai" && (
+          <AiErrorFallback source={source} onRetry={() => load(true)} />
+        )}
+        {error && !plan && (
+          <AiErrorFallback message={error} onRetry={() => load(true)} />
+        )}
 
         {isLoading && !plan ? (
           <AiLoadingSkeleton />

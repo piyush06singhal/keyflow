@@ -76,7 +76,9 @@ export function SyncStatusIndicator({
         <TooltipTrigger asChild>
           <div className={cn("flex items-center gap-2", className)}>
             <Badge
-              variant={status.variant as any}
+              variant={
+                status.variant as "default" | "secondary" | "destructive" | "outline"
+              }
               className="flex items-center gap-1.5"
             >
               <AnimatePresence mode="wait">

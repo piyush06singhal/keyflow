@@ -35,7 +35,6 @@ export default function OnboardingPage() {
     watch,
     formState: { errors },
   } = useForm<OnboardingInput>({
-    // @ts-ignore - Zod schema inference issue with optional fields
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
       displayName: "",
@@ -79,11 +78,11 @@ export default function OnboardingPage() {
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold tracking-tight">Welcome to KeyFlow</h1>
           <p className="text-muted-foreground text-sm">
-            Let's personalize your experience to help you reach your goals
+            Let&apos;s personalize your experience to help you reach your goals
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Basic Information */}
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">Basic Information</h2>

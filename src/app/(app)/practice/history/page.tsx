@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Filter,
   Search,
@@ -19,7 +18,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -48,7 +46,7 @@ export default function SessionHistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
+  const [_hasMore, setHasMore] = useState(false);
   const [filter, setFilter] = useState<SessionHistoryFilter>({
     sortBy: "date",
     sortOrder: "desc",
@@ -179,7 +177,9 @@ export default function SessionHistoryPage() {
 
           <Select
             value={filter.sortBy || "date"}
-            onValueChange={(value: any) => setFilter({ ...filter, sortBy: value })}
+            onValueChange={(value: "date" | "wpm" | "accuracy" | "duration") =>
+              setFilter({ ...filter, sortBy: value })
+            }
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Sort by" />
@@ -194,7 +194,9 @@ export default function SessionHistoryPage() {
 
           <Select
             value={filter.sortOrder || "desc"}
-            onValueChange={(value: any) => setFilter({ ...filter, sortOrder: value })}
+            onValueChange={(value: "asc" | "desc") =>
+              setFilter({ ...filter, sortOrder: value })
+            }
           >
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Order" />

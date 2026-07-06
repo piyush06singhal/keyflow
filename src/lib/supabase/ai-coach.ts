@@ -13,7 +13,10 @@ import type {
   RecommendationStatus,
 } from "@/features/ai-coach/types";
 
-const DEFAULT_PREFERENCES: Omit<AiUserPreferences, "user_id" | "created_at" | "updated_at"> = {
+const DEFAULT_PREFERENCES: Omit<
+  AiUserPreferences,
+  "user_id" | "created_at" | "updated_at"
+> = {
   ai_enabled: true,
   auto_recommendations: true,
   weekly_reports: true,
@@ -58,7 +61,7 @@ export async function upsertAiUserPreferences(
 
   const { data, error } = await supabase
     .from("ai_user_preferences")
-    // @ts-expect-error - Table types not properly generated
+    // @ts-ignore - Table types not properly generated
     .upsert([{ user_id: userId, ...updates }])
     .select("*")
     .single();
@@ -90,7 +93,7 @@ export async function saveRecommendation(
 
   const { data, error } = await supabase
     .from("ai_practice_recommendations")
-    // @ts-expect-error - Table types not properly generated
+    // @ts-ignore - Table types not properly generated
     .insert([{ user_id: userId, ...recommendation }])
     .select("*")
     .single();
@@ -113,7 +116,7 @@ export async function updateRecommendationStatus(
 
   const { data, error } = await supabase
     .from("ai_practice_recommendations")
-    // @ts-expect-error - Table types not properly generated
+    // @ts-ignore - Table types not properly generated
     .update(updates)
     .eq("user_id", userId)
     .eq("id", recommendationId)
@@ -155,7 +158,7 @@ export async function savePerformanceReport(
 
   const { data, error } = await supabase
     .from("ai_performance_reports")
-    // @ts-expect-error - Table types not properly generated
+    // @ts-ignore - Table types not properly generated
     .insert([{ user_id: userId, ...report }])
     .select("*")
     .single();
@@ -187,7 +190,7 @@ export async function saveGeneratedLesson(
 
   const { data, error } = await supabase
     .from("ai_generated_lessons")
-    // @ts-expect-error - Table types not properly generated
+    // @ts-ignore - Table types not properly generated
     .insert([{ user_id: userId, ...lesson }])
     .select("*")
     .single();
@@ -210,12 +213,15 @@ export async function getActiveGoals(userId: string) {
   return data ?? [];
 }
 
-export async function saveAiGoal(userId: string, goal: Omit<AiUserGoalInsert, "user_id">) {
+export async function saveAiGoal(
+  userId: string,
+  goal: Omit<AiUserGoalInsert, "user_id">,
+) {
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from("ai_user_goals")
-    // @ts-expect-error - Table types not properly generated
+    // @ts-ignore - Table types not properly generated
     .insert([{ user_id: userId, ...goal }])
     .select("*")
     .single();

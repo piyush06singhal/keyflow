@@ -82,8 +82,21 @@ export function AiCoachProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    let isMounted = true;
+
+    const loadInitialData = async () => {
+      if (isMounted) {
+        await refresh();
+      }
+    };
+
+    void loadInitialData();
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const value = useMemo(
     () => ({

@@ -42,7 +42,6 @@ export default function PracticePage() {
     viewMode,
     setViewMode,
     setSettingsOpen,
-    setResultsOpen,
     updateUISettings,
   } = useTypingPracticeStore();
 
@@ -53,7 +52,11 @@ export default function PracticePage() {
   const [isResultsOpen, setIsResultsOpen] = useState(false);
 
   // Session lifecycle management
-  const { completeSession, isProcessing, syncStatus } = useSessionLifecycle();
+  const {
+    completeSession,
+    isProcessing: _isProcessing,
+    syncStatus: _syncStatus,
+  } = useSessionLifecycle();
 
   // Initialize typing engine
   const typing = useTypingEngine({

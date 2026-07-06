@@ -1,6 +1,6 @@
 /**
  * Data Aggregation Service
- * 
+ *
  * Aggregates user data from typing sessions, coding sessions, statistics,
  * goals, and preferences for AI analysis.
  */
@@ -39,7 +39,7 @@ export interface UserDataAggregate {
 }
 
 export class DataAggregationService {
-  constructor(private supabase: SupabaseClient<Database>) {}
+  constructor(private supabase: SupabaseClient<any>) {}
 
   /**
    * Aggregate all user data for AI analysis
@@ -91,9 +91,9 @@ export class DataAggregationService {
       query = query.gte("completed_at", thirtyDaysAgo.toISOString());
     }
 
-    const { data: sessions, error } = await query.limit(100) as {
-      data: Array<Database['public']['Tables']['typing_sessions']['Row']> | null;
-      error: any;
+    const { data: sessions, error } = (await query.limit(100)) as {
+      data: Array<Database["public"]["Tables"]["typing_sessions"]["Row"]> | null;
+      error: Error | null;
     };
 
     if (error || !sessions || sessions.length === 0) {
@@ -249,9 +249,9 @@ export class DataAggregationService {
       query = query.gte("session_timestamp", thirtyDaysAgo.toISOString());
     }
 
-    const { data: sessions, error } = await query.limit(100) as {
-      data: Array<Database['public']['Tables']['coding_sessions']['Row']> | null;
-      error: any;
+    const { data: sessions, error } = (await query.limit(100)) as {
+      data: Array<Database["public"]["Tables"]["coding_sessions"]["Row"]> | null;
+      error: Error | null;
     };
 
     if (error || !sessions || sessions.length === 0) {
@@ -375,14 +375,14 @@ export class DataAggregationService {
    * Get user statistics
    */
   private async getUserStatistics(userId: string) {
-    const { data, error } = await this.supabase
+    const { data, error } = (await this.supabase
       .from("user_statistics")
       .select("*")
       .eq("user_id", userId)
-      .single() as {
-        data: Database['public']['Tables']['user_statistics']['Row'] | null;
-        error: any;
-      };
+      .single()) as {
+      data: Database["public"]["Tables"]["user_statistics"]["Row"] | null;
+      error: Error | null;
+    };
 
     if (error || !data) {
       return {
@@ -424,13 +424,13 @@ export class DataAggregationService {
       .select("duration")
       .eq("user_id", userId)
       .gte("completed_at", sevenDaysAgo.toISOString());
-    
+
     const typingSessions30dPromise = this.supabase
       .from("typing_sessions")
       .select("duration")
       .eq("user_id", userId)
       .gte("completed_at", thirtyDaysAgo.toISOString());
-    
+
     const statsPromise = this.supabase
       .from("user_statistics")
       .select("last_practice_date")
@@ -441,18 +441,13 @@ export class DataAggregationService {
       typingSessions7dPromise,
       typingSessions30dPromise,
       statsPromise,
-    ]) as [
-      { data: Array<{ duration: number }> | null; error: any },
-      { data: Array<{ duration: number }> | null; error: any },
-      { data: { last_practice_date: string | null } | null; error: any }
-    ];
+    ]);
 
     const sessions7d = typingSessions7d.data?.length ?? 0;
     const sessions30d = typingSessions30d.data?.length ?? 0;
     const totalDuration30d =
-      typingSessions30d.data?.reduce((sum, s) => sum + s.duration, 0) ?? 0;
-    const averageSessionDuration =
-      sessions30d > 0 ? totalDuration30d / sessions30d : 0;
+      typingSessions30d.data?.reduce((sum: number, s: any) => sum + s.duration, 0) ?? 0;
+    const averageSessionDuration = sessions30d > 0 ? totalDuration30d / sessions30d : 0;
 
     return {
       lastPracticeDate: stats.data?.last_practice_date ?? null,
@@ -471,32 +466,32 @@ export class DataAggregationService {
       .select("typing_experience, programming_experience, ai_enabled")
       .eq("user_id", userId)
       .single();
-    
+
     const aiPrefsPromise = this.supabase
       .from("ai_user_preferences")
       .select("preferred_languages, focus_areas")
       .eq("user_id", userId)
       .single();
 
-    const [userPrefs, aiPrefs] = await Promise.all([
+    const [userPrefs, aiPrefs] = (await Promise.all([
       userPrefsPromise,
       aiPrefsPromise,
-    ]) as [
+    ])) as [
       {
         data: {
           typing_experience: string | null;
           programming_experience: string | null;
           ai_enabled: boolean | null;
         } | null;
-        error: any;
+        error: Error | null;
       },
       {
         data: {
           preferred_languages: string[] | null;
           focus_areas: string[] | null;
         } | null;
-        error: any;
-      }
+        error: Error | null;
+      },
     ];
 
     return {

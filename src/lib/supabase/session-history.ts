@@ -1,6 +1,6 @@
 /**
  * Session History Service
- * 
+ *
  * Handles fetching and filtering typing session history.
  */
 
@@ -10,6 +10,9 @@ import type {
   SessionHistoryFilter,
   SessionHistoryResult,
 } from "@/lib/session-lifecycle";
+import type { Database } from "@/types/database";
+
+type TypingSessionRow = Database["public"]["Tables"]["typing_sessions"]["Row"];
 
 /**
  * Get user's session history with filtering and pagination
@@ -18,11 +21,11 @@ export async function getSessionHistory(
   userId: string,
   filter: SessionHistoryFilter = {},
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 20,
 ): Promise<SessionHistoryResult> {
   try {
     const supabase = createSupabaseBrowserClient();
-    
+
     // Build query
     let query = supabase
       .from("typing_sessions")
@@ -77,18 +80,20 @@ export async function getSessionHistory(
     if (error) throw error;
 
     // Transform to SessionHistoryItem
-    const sessions: SessionHistoryItem[] = (data || []).map((session: any) => ({
-      id: session.id,
-      date: session.completed_at,
-      duration: session.duration,
-      mode: session.practice_mode,
-      wpm: session.final_wpm,
-      accuracy: session.final_accuracy,
-      consistency: session.consistency,
-      peakWpm: session.peak_wpm,
-      mistakes: Array.isArray(session.mistakes) ? session.mistakes.length : 0,
-      isPersonalBest: false, // TODO: Calculate based on user stats
-    }));
+    const sessions: SessionHistoryItem[] = (data || []).map(
+      (session: TypingSessionRow) => ({
+        id: session.id,
+        date: session.completed_at,
+        duration: session.duration,
+        mode: session.practice_mode,
+        wpm: session.final_wpm,
+        accuracy: session.final_accuracy,
+        consistency: session.consistency,
+        peakWpm: session.peak_wpm,
+        mistakes: Array.isArray(session.mistakes) ? session.mistakes.length : 0,
+        isPersonalBest: false, // TODO: Calculate based on user stats
+      }),
+    );
 
     return {
       sessions,
@@ -158,7 +163,7 @@ export async function deleteSession(sessionId: string) {
 export async function getSessionStatsSummary(
   userId: string,
   dateFrom?: string,
-  dateTo?: string
+  dateTo?: string,
 ) {
   try {
     const supabase = createSupabaseBrowserClient();
@@ -191,11 +196,17 @@ export async function getSessionStatsSummary(
       };
     }
 
-    const avgWpm = data.reduce((sum: number, s: any) => sum + s.final_wpm, 0) / data.length;
+    const avgWpm =
+      data.reduce((sum: number, s: TypingSessionRow) => sum + s.final_wpm, 0) /
+      data.length;
     const avgAccuracy =
-      data.reduce((sum: number, s: any) => sum + s.final_accuracy, 0) / data.length;
-    const totalDuration = data.reduce((sum: number, s: any) => sum + s.duration, 0);
-    const bestWpm = Math.max(...data.map((s: any) => s.final_wpm));
+      data.reduce((sum: number, s: TypingSessionRow) => sum + s.final_accuracy, 0) /
+      data.length;
+    const totalDuration = data.reduce(
+      (sum: number, s: TypingSessionRow) => sum + s.duration,
+      0,
+    );
+    const bestWpm = Math.max(...data.map((s: TypingSessionRow) => s.final_wpm));
 
     return {
       avgWpm,

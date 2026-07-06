@@ -6,6 +6,8 @@
 
 import { CodingDashboard } from "@/features/coding/components/coding-dashboard";
 
+export const dynamic = "force-dynamic";
+
 export default function CodingDashboardPage() {
   return (
     <div className="container py-8">

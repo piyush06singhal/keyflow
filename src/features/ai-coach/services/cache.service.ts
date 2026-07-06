@@ -1,16 +1,15 @@
 /**
  * AI Coach Cache Service
- * 
+ *
  * Manages intelligent caching of AI-generated content to reduce API calls
  * and improve response times.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
-import type { CachedInsight, CacheMetadata } from "../types";
+import type { CachedInsight } from "../types";
 
 export class AiCacheService {
-  constructor(private supabase: SupabaseClient<Database>) {}
+  constructor(private supabase: SupabaseClient<any>) {}
 
   /**
    * Generate cache key from parameters
@@ -45,7 +44,7 @@ export class AiCacheService {
       .gt("expires_at", new Date().toISOString())
       .order("computed_at", { ascending: false })
       .limit(1)
-      .single() as { data: Database['public']['Tables']['ai_insights_cache']['Row'] | null; error: any };
+      .single();
 
     if (error || !data) {
       return null;
@@ -54,7 +53,7 @@ export class AiCacheService {
     // Update access tracking
     await this.supabase
       .from("ai_insights_cache")
-      // @ts-expect-error - Table types not properly generated
+      // @ts-ignore - Table types not properly generated
       .update({
         access_count: (data.access_count ?? 0) + 1,
         last_accessed_at: new Date().toISOString(),
@@ -87,28 +86,24 @@ export class AiCacheService {
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + expirationMinutes);
 
-    // @ts-expect-error - Table types not properly generated
-    await this.supabase.from("ai_insights_cache").insert([{
-      user_id: userId,
-      insight_type: insightType,
-      cache_key: cacheKey,
-      insight_data: data as any,
-      ai_provider: provider,
-      expires_at: expiresAt.toISOString(),
-    }]);
+    // @ts-ignore - Table types not properly generated
+    await this.supabase.from("ai_insights_cache").insert([
+      {
+        user_id: userId,
+        insight_type: insightType,
+        cache_key: cacheKey,
+        insight_data: data as unknown,
+        ai_provider: provider,
+        expires_at: expiresAt.toISOString(),
+      },
+    ]);
   }
 
   /**
    * Invalidate cache for specific insight type
    */
-  async invalidate(
-    userId: string,
-    insightType?: string,
-  ): Promise<void> {
-    let query = this.supabase
-      .from("ai_insights_cache")
-      .delete()
-      .eq("user_id", userId);
+  async invalidate(userId: string, insightType?: string): Promise<void> {
+    let query = this.supabase.from("ai_insights_cache").delete().eq("user_id", userId);
 
     if (insightType) {
       query = query.eq("insight_type", insightType);
@@ -143,10 +138,16 @@ export class AiCacheService {
   }> {
     const now = new Date().toISOString();
 
-    const { data: all } = await this.supabase
+    const { data: all } = (await this.supabase
       .from("ai_insights_cache")
       .select("insight_type, access_count, expires_at")
-      .eq("user_id", userId) as { data: Array<{ insight_type: string; access_count: number; expires_at: string }> | null };
+      .eq("user_id", userId)) as {
+      data: Array<{
+        insight_type: string;
+        access_count: number;
+        expires_at: string;
+      }> | null;
+    };
 
     if (!all || all.length === 0) {
       return {

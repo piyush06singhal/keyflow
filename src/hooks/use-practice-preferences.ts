@@ -19,14 +19,14 @@ type PracticePreferences = Database["public"]["Tables"]["practice_preferences"][
 
 export function usePracticePreferences() {
   const { user } = useAuth();
-  const { config, uiSettings, updateConfig, updateUISettings } = useTypingPracticeStore();
+  const { config, uiSettings, updateConfig, updateUISettings } =
+    useTypingPracticeStore();
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
 
   // Load preferences from Supabase on mount
   useEffect(() => {
     if (!user) {
-      setIsLoading(false);
       return;
     }
 

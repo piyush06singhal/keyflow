@@ -14,21 +14,17 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, user }: AppLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const saved = localStorage.getItem("sidebar-open");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [_searchOpen, setSearchOpen] = useState(false);
+  const [_notificationsOpen, setNotificationsOpen] = useState(false);
 
   const isDesktop = useMediaQuery("(min-width: 1024px)");
-
-  // Load sidebar state from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("sidebar-open");
-    if (saved !== null) {
-      setSidebarOpen(JSON.parse(saved));
-    }
-  }, []);
 
   // Save sidebar state to localStorage
   useEffect(() => {
@@ -40,15 +36,15 @@ export function AppLayout({ children, user }: AppLayoutProps) {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setCommandPaletteOpen((open) => !open);
+        setCommandPaletteOpen((open: boolean) => !open);
       }
 
       if (e.key === "b" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         if (isDesktop) {
-          setSidebarOpen((open) => !open);
+          setSidebarOpen((open: boolean) => !open);
         } else {
-          setMobileSidebarOpen((open) => !open);
+          setMobileSidebarOpen((open: boolean) => !open);
         }
       }
 
@@ -66,10 +62,12 @@ export function AppLayout({ children, user }: AppLayoutProps) {
 
   // Close mobile sidebar when switching to desktop
   useEffect(() => {
-    if (isDesktop) {
-      setMobileSidebarOpen(false);
-    }
-  }, [isDesktop]);
+    // Only set if currently open and we switch to desktop
+    if (!isDesktop || !mobileSidebarOpen) return;
+
+    const timer = setTimeout(() => setMobileSidebarOpen(false), 0);
+    return () => clearTimeout(timer);
+  }, [isDesktop, mobileSidebarOpen]);
 
   return (
     <div className="relative min-h-screen">

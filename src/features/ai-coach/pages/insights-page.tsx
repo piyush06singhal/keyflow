@@ -23,12 +23,28 @@ export function AiCoachInsightsPage() {
   };
 
   useEffect(() => {
-    load();
+    let isMounted = true;
+
+    const loadInitialData = async () => {
+      if (isMounted) {
+        await load();
+      }
+    };
+
+    void loadInitialData();
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <PageContainer maxWidth="xl">
-      <PageHeader title="AI Insights" description="Patterns and opportunities from your practice data.">
+      <PageHeader
+        title="AI Insights"
+        description="Patterns and opportunities from your practice data."
+      >
         <Button variant="outline" size="sm" onClick={load} disabled={isLoading}>
           <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
           Refresh
@@ -40,7 +56,9 @@ export function AiCoachInsightsPage() {
         {source && source !== "ai" && (
           <AiErrorFallback source={source} onRetry={load} />
         )}
-        {error && !insights.length && <AiErrorFallback message={error} onRetry={load} />}
+        {error && !insights.length && (
+          <AiErrorFallback message={error} onRetry={load} />
+        )}
 
         {isLoading && !insights.length ? (
           <AiCardSkeleton count={4} />
@@ -57,7 +75,9 @@ export function AiCoachInsightsPage() {
                     {insight.severity}
                   </Badge>
                 </div>
-                <p className="text-muted-foreground mb-3 text-sm">{insight.description}</p>
+                <p className="text-muted-foreground mb-3 text-sm">
+                  {insight.description}
+                </p>
                 {insight.actions && insight.actions.length > 0 && (
                   <ul className="text-muted-foreground space-y-1 text-sm">
                     {insight.actions.map((action) => (

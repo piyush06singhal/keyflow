@@ -112,8 +112,8 @@ export function PerformanceChart({
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
               }}
-              formatter={(value: any, name: any) => [
-                `${value}${config.unit}`,
+              formatter={(value, name) => [
+                value !== undefined ? `${value}${config.unit}` : "N/A",
                 name === "wpm" ? "WPM" : "Raw WPM",
               ]}
             />
@@ -156,7 +156,7 @@ export function PerformanceChart({
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
               }}
-              formatter={(value: any) => [
+              formatter={(value) => [
                 `${typeof value === "number" ? value.toFixed(1) : value}${config.unit}`,
                 config.title.split(" Over")[0],
               ]}
