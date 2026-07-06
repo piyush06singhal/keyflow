@@ -4,8 +4,15 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Menu, X, Keyboard } from "lucide-react";
+import { Menu, X, Keyboard, Sun, Moon, Monitor } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "next-themes";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navLinks = [
   { href: "#features", label: "Features" },
@@ -16,6 +23,7 @@ const navLinks = [
 ];
 
 export function LandingNavbar() {
+  const { setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -67,6 +75,40 @@ export function LandingNavbar() {
 
         {/* Desktop CTA */}
         <div className="hidden items-center gap-3 md:flex">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-xl"
+                aria-label="Toggle theme"
+              >
+                <Sun className="h-5 w-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+                <Moon className="absolute h-5 w-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="rounded-xl">
+              <DropdownMenuItem
+                onClick={() => setTheme("light")}
+                className="rounded-lg"
+              >
+                <Sun className="mr-2 h-4 w-4" />
+                Light
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("dark")} className="rounded-lg">
+                <Moon className="mr-2 h-4 w-4" />
+                Dark
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setTheme("system")}
+                className="rounded-lg"
+              >
+                <Monitor className="mr-2 h-4 w-4" />
+                System
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button variant="ghost" asChild className="rounded-xl">
             <Link href="/login">Login</Link>
           </Button>
@@ -130,6 +172,38 @@ export function LandingNavbar() {
                 <Button asChild className="w-full justify-start rounded-xl">
                   <Link href="#hero">Start Typing</Link>
                 </Button>
+
+                <div className="flex items-center justify-between border-t pt-4">
+                  <span className="text-muted-foreground text-sm font-medium">
+                    Theme
+                  </span>
+                  <div className="bg-muted/60 flex items-center gap-1 rounded-xl p-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setTheme("light")}
+                      className="h-8 w-8 rounded-lg p-0"
+                    >
+                      <Sun className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setTheme("dark")}
+                      className="h-8 w-8 rounded-lg p-0"
+                    >
+                      <Moon className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setTheme("system")}
+                      className="h-8 w-8 rounded-lg p-0"
+                    >
+                      <Monitor className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
