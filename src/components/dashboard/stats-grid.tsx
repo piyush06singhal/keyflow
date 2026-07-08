@@ -174,11 +174,16 @@ function formatNumber(num: number): string {
   return num.toString();
 }
 
-function formatTime(minutes: number): string {
-  if (minutes >= 60) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
+function formatTime(seconds: number): string {
+  if (seconds >= 3600) {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
     return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
   }
-  return `${minutes}m`;
+  if (seconds >= 60) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+  }
+  return `${seconds}s`;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Search, Command, Bell, Flame, Menu, Sun, Moon, Monitor } from "lucide-react";
@@ -18,6 +18,7 @@ import { useTheme } from "next-themes";
 import { routes } from "@/lib/constants/routes";
 import Link from "next/link";
 import { useNotifications } from "@/features/notifications/context/notification-provider";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 interface AppTopbarProps {
   user: { email?: string; display_name?: string };
@@ -37,6 +38,31 @@ export function AppTopbar({
   const pathname = usePathname();
   const { setTheme } = useTheme();
   const { unreadCount } = useNotifications();
+  const [streak, setStreak] = useState<number>(0);
+
+  useEffect(() => {
+    async function loadStreak() {
+      try {
+        const supabase = createSupabaseBrowserClient();
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
+        if (authUser) {
+          const { data, error } = await supabase
+            .from("user_statistics")
+            .select("current_streak")
+            .eq("user_id", authUser.id)
+            .single();
+          if (data && !error) {
+            setStreak(data.current_streak || 0);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load user streak in topbar:", err);
+      }
+    }
+    loadStreak();
+  }, []);
 
   const breadcrumbs = getBreadcrumbs(pathname);
 
@@ -114,7 +140,7 @@ export function AppTopbar({
         <div className="border-border/50 shadow-key-xs hidden items-center gap-1.5 rounded-xl border bg-gradient-to-br from-orange-50 to-orange-100 px-3.5 py-2 sm:flex dark:from-orange-950/20 dark:to-orange-900/20">
           <Flame className="h-4 w-4 text-orange-500 dark:text-orange-400" />
           <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">
-            7
+            {streak}
           </span>
         </div>
 

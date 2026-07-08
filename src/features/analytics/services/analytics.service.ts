@@ -582,7 +582,7 @@ export class AnalyticsService {
 
     const { data } = await supabase
       .from("practice_heatmap")
-      .select("date, session_count, practice_time")
+      .select("date, sessions, minutes")
       .eq("user_id", userId)
       .order("date", { ascending: true });
 
@@ -590,8 +590,8 @@ export class AnalyticsService {
     if (data) {
       data.forEach((item: any) => {
         activity[item.date] = {
-          count: item.session_count || 0,
-          duration: item.practice_time || 0,
+          count: item.sessions || 0,
+          duration: (item.minutes || 0) * 60, // Convert minutes from database to seconds
         };
       });
     }

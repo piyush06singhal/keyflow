@@ -3,7 +3,6 @@ import { useAuth } from "./use-auth";
 import {
   getPracticePreferences,
   savePracticePreferences,
-  subscribeToPracticePreferences,
 } from "@/lib/supabase/typing-practice";
 import { useTypingPracticeStore } from "@/stores/typing-practice-store";
 import type { Database } from "@/types/database";
@@ -72,41 +71,6 @@ export function usePracticePreferences() {
     };
 
     loadPreferences();
-  }, [user?.id]);
-
-  // Subscribe to real-time preference changes
-  useEffect(() => {
-    if (!user) return;
-
-    const unsubscribe = subscribeToPracticePreferences(user.id, (preferences) => {
-      // Update local state when preferences change from another device/tab
-      updateConfig({
-        mode: preferences.practice_mode as any,
-        timerMode: preferences.timer_mode as any,
-        duration: preferences.duration,
-        includePunctuation: preferences.include_punctuation,
-        includeNumbers: preferences.include_numbers,
-        includeCapitalization: preferences.include_capitalization,
-        wordCount: preferences.word_count,
-        allowBackspace: preferences.allow_backspace,
-        blindMode: preferences.blind_mode,
-        strictMode: preferences.strict_mode,
-      });
-
-      updateUISettings({
-        fontSize: preferences.font_size as any,
-        fontFamily: preferences.font_family as any,
-        cursorStyle: preferences.cursor_style as any,
-        showLiveWpm: preferences.show_live_wpm,
-        showKeyboard: preferences.show_keyboard,
-        keyboardLayout: preferences.keyboard_layout as any,
-        soundEnabled: preferences.sound_enabled,
-        reducedMotion: preferences.reduced_motion,
-        highContrast: preferences.high_contrast,
-      });
-    });
-
-    return unsubscribe;
   }, [user?.id]);
 
   // Save preferences to Supabase (debounced)

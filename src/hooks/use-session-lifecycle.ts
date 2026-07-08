@@ -103,6 +103,14 @@ export function useSessionLifecycle(): UseSessionLifecycleReturn {
 
         // Evaluate and save gamification rewards and trigger real-time notifications
         if (result.saved || result.statisticsUpdated) {
+          // Add a notification for the completed practice session
+          const modeLabel = practiceMode === "coding" ? "Coding" : "Typing";
+          addNotification(
+            `${modeLabel} Session Completed! ⌨️`,
+            `Completed with speed: ${sessionResult.finalWpm.toFixed(0)} WPM, Accuracy: ${sessionResult.finalAccuracy.toFixed(0)}%`,
+            "info",
+          );
+
           const rewardResult = await evaluateSessionRewards(
             user.id,
             {

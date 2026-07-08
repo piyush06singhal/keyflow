@@ -87,13 +87,14 @@ export async function getDashboardData(userId: string): Promise<DashboardData | 
 
     if (!profile) return null;
 
-    // Calculate level and XP based on total practice time
-    const totalPracticeTimeMs =
-      ((statistics as unknown as Record<string, unknown>)
-        ?.total_practice_time as number) || 0;
+    const statsData = statistics as unknown as Record<string, any>;
+    const totalPracticeTimeMs = statsData?.total_practice_time || 0;
     const totalMinutes = Math.floor(totalPracticeTimeMs / 60000);
-    const level = Math.floor(totalMinutes / 60) + 1; // 1 level per hour
-    const xp = totalMinutes * 10; // 10 XP per minute
+    const level =
+      typeof statsData?.level === "number"
+        ? statsData.level
+        : Math.floor(totalMinutes / 60) + 1;
+    const xp = typeof statsData?.xp === "number" ? statsData.xp : totalMinutes * 10;
 
     // Calculate today's practice time
     // TODO: Query sessions for today when sessions table is created
@@ -114,7 +115,6 @@ export async function getDashboardData(userId: string): Promise<DashboardData | 
     const rank = 1234;
 
     const profileData = profile as unknown as Record<string, string | null>;
-    const statsData = statistics as unknown as Record<string, string | number | null>;
 
     const dashboardData: DashboardData = {
       displayName:
@@ -154,7 +154,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData | 
               : 0,
         typingTime:
           typeof statsData?.total_practice_time === "number"
-            ? Math.floor(statsData.total_practice_time / 60000)
+            ? Math.floor(statsData.total_practice_time / 1000) // Convert to seconds
             : 0,
         totalWords:
           typeof statsData?.total_words_typed === "number"

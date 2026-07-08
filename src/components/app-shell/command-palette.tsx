@@ -182,13 +182,8 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     },
   ];
 
-  const filteredCommands = commands.filter(
-    (command) =>
-      command.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      command.description?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const groupedCommands = filteredCommands.reduce(
+  // Group all commands statically so cmdk can index and filter them in real-time
+  const groupedCommands = commands.reduce(
     (acc, command) => {
       if (!acc[command.group]) acc[command.group] = [];
       acc[command.group]!.push(command);
@@ -233,6 +228,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
               {groupedCommands.navigation.map((command) => (
                 <CommandItem
                   key={command.id}
+                  value={command.label}
                   onSelect={() => handleSelect(command)}
                   className="flex items-center gap-3"
                 >
@@ -263,6 +259,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
               {groupedCommands.actions.map((command) => (
                 <CommandItem
                   key={command.id}
+                  value={command.label}
                   onSelect={() => handleSelect(command)}
                   className="flex items-center gap-3"
                 >
@@ -287,6 +284,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
             {groupedCommands.settings.map((command) => (
               <CommandItem
                 key={command.id}
+                value={command.label}
                 onSelect={() => handleSelect(command)}
                 className="flex items-center gap-3"
               >

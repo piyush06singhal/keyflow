@@ -22,8 +22,12 @@ export function OverviewCards({ summary, typingOnly, codingOnly }: OverviewCards
 
   // Formatting helpers
   const formatTime = (seconds: number) => {
+    if (seconds < 60) return `${Math.round(seconds)}s`;
     const mins = Math.floor(seconds / 60);
-    if (mins < 60) return `${mins}m`;
+    if (mins < 60) {
+      const remSecs = Math.round(seconds % 60);
+      return remSecs > 0 ? `${mins}m ${remSecs}s` : `${mins}m`;
+    }
     const hrs = Math.floor(mins / 60);
     const remMins = mins % 60;
     return `${hrs}h ${remMins}m`;
