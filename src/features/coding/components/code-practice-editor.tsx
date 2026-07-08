@@ -7,11 +7,15 @@
  * Displays code with proper indentation, line numbers, and real-time feedback.
  */
 
-import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { useCodingPracticeStore } from "@/stores/coding-practice-store";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
+import { useSessionLifecycle } from "@/hooks/use-session-lifecycle";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 import type { CodeSnippet } from "@/lib/coding-practice/types";
 import type { Character } from "@/lib/typing-engine";
 
@@ -22,9 +26,12 @@ interface CodePracticeEditorProps {
 export function CodePracticeEditor({ snippet }: CodePracticeEditorProps) {
   const { config } = useCodingPracticeStore();
   const containerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const { user } = useAuth();
+  const { completeSession, isProcessing } = useSessionLifecycle();
 
   // Initialize typing engine with code snippet
-  const { words, cursorPosition, status, start, restart } = useTypingEngine({
+  const { words, cursorPosition, status, start } = useTypingEngine({
     config: {
       mode: "coding",
       customText: snippet.code,
@@ -36,9 +43,35 @@ export function CodePracticeEditor({ snippet }: CodePracticeEditorProps) {
       includeNumbers: true,
       includeCapitalization: true,
     },
-    onComplete: (result) => {
-      console.log("Practice completed:", result);
-      // TODO: Handle completion, show results
+    onComplete: async (result) => {
+      if (user) {
+        try {
+          const completionResult = await completeSession(result, "coding");
+
+          // Store results for results page
+          sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
+          sessionStorage.setItem(
+            "lastCompletionResult",
+            JSON.stringify(completionResult),
+          );
+
+          if (completionResult.saved) {
+            toast.success("Coding Session Complete! 🎉", {
+              description: `+${completionResult.xpGained} XP${completionResult.levelUp ? ` • Level ${completionResult.newLevel}!` : ""}`,
+            });
+          }
+
+          router.push("/practice/results");
+        } catch (error) {
+          console.error("Error processing session:", error);
+          toast.error("Session processing failed");
+        }
+      } else {
+        toast.info("Session Complete!", {
+          description: "Log in to save your results.",
+        });
+        router.push("/practice");
+      }
     },
     autoStart: false,
   });
@@ -53,16 +86,20 @@ export function CodePracticeEditor({ snippet }: CodePracticeEditorProps) {
   // Split code into lines for rendering
   const codeLines = snippet.code.split("\n");
 
-  // Get character state for rendering
-  const getCharacterState = (charIndex: number): Character | null => {
+  // Memoize character states by absolute index for O(1) constant-time lookups
+  const characterMap = useMemo(() => {
+    const map = new Map<number, Character>();
     for (const word of words) {
       for (const char of word.characters) {
-        if (char.index === charIndex) {
-          return char;
-        }
+        map.set(char.index, char);
       }
     }
-    return null;
+    return map;
+  }, [words]);
+
+  // Get character state for rendering
+  const getCharacterState = (charIndex: number): Character | null => {
+    return characterMap.get(charIndex) || null;
   };
 
   // Calculate current line based on cursor position
@@ -193,6 +230,29 @@ export function CodePracticeEditor({ snippet }: CodePracticeEditorProps) {
             </div>
           </div>
         )}
+
+        {/* Processing / Completion Loading Overlay */}
+        <AnimatePresence>
+          {(status === "completed" || isProcessing) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="bg-background/85 fixed inset-0 z-50 flex flex-col items-center justify-center backdrop-blur-md"
+            >
+              <div className="max-w-sm space-y-4 px-6 text-center">
+                <div className="border-primary mx-auto h-16 w-16 animate-spin rounded-full border-4 border-t-transparent" />
+                <h3 className="text-foreground text-2xl font-bold tracking-tight">
+                  Time&apos;s Up! 🎉
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  Analyzing code syntax correctness, evaluating speed, and updating your
+                  profile statistics...
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </Card>
   );

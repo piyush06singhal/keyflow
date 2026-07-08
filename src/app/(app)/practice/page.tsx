@@ -210,8 +210,8 @@ export default function PracticePage() {
           {/* Main Content */}
           <div
             className={cn("grid gap-6", {
-              "lg:grid-cols-[1fr_350px]": showUI && !isFocusMode,
-              "lg:grid-cols-1": isFocusMode || isZenMode,
+              "xl:grid-cols-[1fr_350px]": showUI && !isFocusMode,
+              "xl:grid-cols-1": isFocusMode || isZenMode,
             })}
           >
             {/* Left Column: Typing Area */}
@@ -259,25 +259,10 @@ export default function PracticePage() {
               animate={{ opacity: 1 }}
               className="bg-background/80 fixed bottom-8 left-1/2 -translate-x-1/2 rounded-full border px-6 py-3 backdrop-blur-sm"
             >
-              <div className="flex items-center gap-6 text-sm">
-                <div>
-                  <span className="text-muted-foreground">WPM: </span>
-                  <span className="font-mono font-bold">
-                    {typing.statistics?.wpm.toFixed(0) ?? 0}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Acc: </span>
-                  <span className="font-mono font-bold">
-                    {typing.statistics?.accuracy.toFixed(0) ?? 0}%
-                  </span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Time: </span>
-                  <span className="font-mono font-bold">
-                    {Math.floor(typing.elapsedTime / 1000)}s
-                  </span>
-                </div>
+              <div className="flex items-center gap-6 text-sm font-medium">
+                <div>WPM: {typing.statistics?.wpm.toFixed(0) || 0}</div>
+                <div>ACC: {typing.statistics?.accuracy.toFixed(0) || 0}%</div>
+                <div>TIME: {Math.floor(typing.elapsedTime / 1000)}s</div>
               </div>
             </motion.div>
           )}
@@ -315,6 +300,29 @@ export default function PracticePage() {
           showKeyboard={uiSettings.showKeyboard}
         />
       )}
+
+      {/* Processing / Completion Loading Overlay */}
+      <AnimatePresence>
+        {(typing.status === "completed" || _isProcessing) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="bg-background/85 fixed inset-0 z-50 flex flex-col items-center justify-center backdrop-blur-md"
+          >
+            <div className="max-w-sm space-y-4 px-6 text-center">
+              <div className="border-primary mx-auto h-16 w-16 animate-spin rounded-full border-4 border-t-transparent" />
+              <h3 className="text-foreground text-2xl font-bold tracking-tight">
+                Time&apos;s Up! 🎉
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Evaluating WPM accuracy, tracking mistakes, and syncing your progress
+                database...
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

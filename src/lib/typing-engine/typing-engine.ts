@@ -258,8 +258,17 @@ export class TypingEngine {
     }
 
     // Update cursor position
+    const previousCursor = this.cursorManager.getPosition();
     this.cursorManager.setPosition(action.cursorAfter);
     this.eventDispatcher.emit("cursor:moved", action.cursorAfter);
+
+    // Track word start times for duration and consistency metrics
+    if (action.cursorAfter.wordIndex > previousCursor.wordIndex) {
+      const nextWord = this.words[action.cursorAfter.wordIndex];
+      if (nextWord && nextWord.startTime === null) {
+        nextWord.startTime = Date.now();
+      }
+    }
 
     // Update statistics
     this.liveStats = this.calculateStatistics();
@@ -271,7 +280,7 @@ export class TypingEngine {
     }
 
     // Check for timer expiration
-    if (this.timerManager?.isExpired()) {
+    if (this.sessionState.status === "active" && this.timerManager?.isExpired()) {
       this.complete();
     }
   }

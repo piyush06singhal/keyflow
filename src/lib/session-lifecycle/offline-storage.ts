@@ -84,8 +84,14 @@ export async function getPendingSessions(): Promise<PendingSession[]> {
 
     return new Promise((resolve, reject) => {
       const request = store.getAll();
-      request.onsuccess = () => resolve(request.result as PendingSession[]);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        db.close();
+        resolve(request.result as PendingSession[]);
+      };
+      request.onerror = () => {
+        db.close();
+        reject(request.error);
+      };
     });
   } catch (error) {
     console.error("Failed to get pending sessions:", error);
