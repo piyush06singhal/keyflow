@@ -3,90 +3,146 @@
 /**
  * Code Practice Editor
  *
- * Main code editor interface with syntax highlighting and typing engine integration.
- * Displays code with proper indentation, line numbers, and real-time feedback.
+ * Fully interactive code typing editor.
+ * - Keyboard input works via window keydown listener in useTypingEngine
+ * - Shows real-time cursor, correct/incorrect highlighting
+ * - Timer bar at top counts down
+ * - Restart button works and uses latest config
+ * - TimeUpModal appears on completion
  */
 
-import { useEffect, useRef, useMemo } from "react";
+import { useRef, useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { RotateCcw, Play, Timer } from "lucide-react";
 import { useCodingPracticeStore } from "@/stores/coding-practice-store";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { useSessionLifecycle } from "@/hooks/use-session-lifecycle";
 import { useAuth } from "@/hooks/use-auth";
+import { TimeUpModal } from "@/components/typing-practice/time-up-modal";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import type { CodeSnippet } from "@/lib/coding-practice/types";
-import type { Character } from "@/lib/typing-engine";
+import type { Character, SessionResult, LiveStatistics } from "@/lib/typing-engine";
 
 interface CodePracticeEditorProps {
   snippet: CodeSnippet;
+  onStatsUpdate?: (stats: LiveStatistics, elapsedMs: number) => void;
 }
 
-export function CodePracticeEditor({ snippet }: CodePracticeEditorProps) {
+export function CodePracticeEditor({
+  snippet,
+  onStatsUpdate,
+}: CodePracticeEditorProps) {
   const { config } = useCodingPracticeStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { user } = useAuth();
   const { completeSession, isProcessing } = useSessionLifecycle();
+  const [sessionResult, setSessionResult] = useState<SessionResult | null>(null);
+  const [timeUpOpen, setTimeUpOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  // Initialize typing engine with code snippet
-  const { words, cursorPosition, status, start } = useTypingEngine({
-    config: {
+  const handleComplete = useCallback(
+    async (result: SessionResult) => {
+      setSessionResult(result);
+      setTimeUpOpen(true);
+
+      if (user) {
+        try {
+          const completionResult = await completeSession(result, "coding");
+          sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
+          sessionStorage.setItem(
+            "lastCompletionResult",
+            JSON.stringify(completionResult),
+          );
+          if (completionResult.saved) {
+            toast.success("Coding session saved! 🎉", {
+              description: `+${completionResult.xpGained} XP`,
+            });
+          }
+        } catch {
+          sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
+          sessionStorage.setItem(
+            "lastCompletionResult",
+            JSON.stringify({
+              saved: false,
+              xpGained: 0,
+              levelUp: false,
+              newLevel: 0,
+              warnings: [],
+              statisticsUpdated: false,
+            }),
+          );
+        }
+      } else {
+        sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
+        sessionStorage.setItem(
+          "lastCompletionResult",
+          JSON.stringify({
+            saved: false,
+            xpGained: 0,
+            levelUp: false,
+            newLevel: 0,
+            warnings: [],
+            statisticsUpdated: false,
+          }),
+        );
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user],
+  );
+
+  // Initialize typing engine with code snippet text
+  const { words, cursorPosition, status, start, restart, elapsedTime } =
+    useTypingEngine({
+      config: {
+        mode: "coding",
+        customText: snippet.code,
+        timerMode: config.timerMode,
+        duration: config.duration,
+        allowBackspace: config.allowBackspace,
+        strictMode: config.strictMode,
+        includePunctuation: true,
+        includeNumbers: true,
+        includeCapitalization: true,
+      },
+      onComplete: handleComplete,
+      onStatisticsUpdate: (stats) => onStatsUpdate?.(stats, elapsedTime),
+      autoStart: false,
+    });
+
+  // Note: session starts via first keypress (handled in useTypingEngine keydown listener)
+  // or by clicking the Start Coding button in the overlay.
+
+  // Restart handler
+  const handleRestart = useCallback(() => {
+    setTimeUpOpen(false);
+    setSessionResult(null);
+    setIsNavigating(false);
+    restart({
       mode: "coding",
       customText: snippet.code,
       timerMode: config.timerMode,
       duration: config.duration,
       allowBackspace: config.allowBackspace,
       strictMode: config.strictMode,
-      includePunctuation: true,
-      includeNumbers: true,
-      includeCapitalization: true,
-    },
-    onComplete: async (result) => {
-      if (user) {
-        try {
-          const completionResult = await completeSession(result, "coding");
+    });
+  }, [restart, snippet.code, config]);
 
-          // Store results for results page
-          sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
-          sessionStorage.setItem(
-            "lastCompletionResult",
-            JSON.stringify(completionResult),
-          );
-
-          if (completionResult.saved) {
-            toast.success("Coding Session Complete! 🎉", {
-              description: `+${completionResult.xpGained} XP${completionResult.levelUp ? ` • Level ${completionResult.newLevel}!` : ""}`,
-            });
-          }
-
-          router.push("/practice/results");
-        } catch (error) {
-          console.error("Error processing session:", error);
-          toast.error("Session processing failed");
-        }
-      } else {
-        toast.info("Session Complete!", {
-          description: "Log in to save your results.",
-        });
-        router.push("/practice");
-      }
-    },
-    autoStart: false,
-  });
-
-  // Auto-start on mount
-  useEffect(() => {
-    if (status === "idle") {
-      start();
-    }
-  }, [status, start]);
+  const handleViewResults = useCallback(() => {
+    setIsNavigating(true);
+    setTimeUpOpen(false);
+    router.push("/practice/results");
+  }, [router]);
 
   // Split code into lines for rendering
   const codeLines = snippet.code.split("\n");
 
-  // Memoize character states by absolute index for O(1) constant-time lookups
+  // Memoize character states by absolute index for O(1) lookups
   const characterMap = useMemo(() => {
     const map = new Map<number, Character>();
     for (const word of words) {
@@ -97,16 +153,11 @@ export function CodePracticeEditor({ snippet }: CodePracticeEditorProps) {
     return map;
   }, [words]);
 
-  // Get character state for rendering
-  const getCharacterState = (charIndex: number): Character | null => {
-    return characterMap.get(charIndex) || null;
-  };
-
-  // Calculate current line based on cursor position
+  // Calculate which line the cursor is on
   let charsSoFar = 0;
   let currentLine = 0;
   for (let i = 0; i < codeLines.length; i++) {
-    const lineLength = codeLines[i]!.length + 1; // +1 for newline
+    const lineLength = (codeLines[i]?.length ?? 0) + 1; // +1 for newline
     if (cursorPosition && charsSoFar + lineLength > cursorPosition.absoluteIndex) {
       currentLine = i;
       break;
@@ -114,146 +165,221 @@ export function CodePracticeEditor({ snippet }: CodePracticeEditorProps) {
     charsSoFar += lineLength;
   }
 
+  // Timer calculations
+  const isCountdown = config.timerMode === "countdown";
+  const totalMs = (config.duration ?? 300) * 1000;
+  const timerMs = elapsedTime;
+  const progressPct = isCountdown
+    ? Math.max(0, Math.min(100, (timerMs / totalMs) * 100))
+    : 0;
+  const displaySec = Math.ceil(timerMs / 1000);
+  const isLowTime = isCountdown && timerMs < 10_000;
+
+  const isStarted =
+    status === "active" || status === "paused" || status === "completed";
+
   return (
-    <Card className="overflow-hidden">
-      <div
-        ref={containerRef}
-        className="relative"
-        style={{
-          fontFamily: config.fontFamily,
-          fontSize: `${config.fontSize}px`,
-          lineHeight: config.lineHeight,
-        }}
-      >
-        {/* Code Display */}
-        <div className="max-h-[calc(100vh-300px)] overflow-auto bg-[#1e1e1e] p-6 text-[#d4d4d4]">
-          <div className="font-mono">
-            {codeLines.map((line, lineIndex) => {
-              const lineStartIndex = codeLines
-                .slice(0, lineIndex)
-                .reduce((acc, l) => acc + l.length + 1, 0);
-
-              return (
-                <div
-                  key={lineIndex}
-                  className={`flex items-start gap-4 py-1 ${
-                    lineIndex === currentLine ? "bg-[#2a2a2a]" : ""
-                  }`}
-                >
-                  {/* Line Numbers */}
-                  {config.showLineNumbers && (
-                    <div
-                      className="text-right text-[#858585] select-none"
-                      style={{ minWidth: "3ch" }}
-                    >
-                      {lineIndex + 1}
-                    </div>
-                  )}
-
-                  {/* Line Content */}
-                  <div className="flex-1 whitespace-pre">
-                    {line.split("").map((char, charIndex) => {
-                      const absoluteIndex = lineStartIndex + charIndex;
-                      const charState = getCharacterState(absoluteIndex);
-
-                      let className = "inline-block";
-                      let bgColor = "transparent";
-
-                      if (charState) {
-                        if (charState.typed) {
-                          if (charState.isCorrect) {
-                            className += " text-green-400";
-                          } else if (charState.isCorrect === false) {
-                            className += " text-red-400 underline decoration-wavy";
-                            bgColor = "#ff000020";
-                          }
-                        } else if (
-                          cursorPosition &&
-                          absoluteIndex === cursorPosition.absoluteIndex
-                        ) {
-                          className += " bg-blue-500/30 animate-pulse";
-                        }
-                      }
-
-                      return (
-                        <span
-                          key={charIndex}
-                          className={className}
-                          style={{ backgroundColor: bgColor }}
-                        >
-                          {char}
-                        </span>
-                      );
-                    })}
-                    {/* Render newline cursor if at end of line */}
-                    {cursorPosition &&
-                      lineStartIndex + line.length === cursorPosition.absoluteIndex && (
-                        <span className="inline-block h-5 w-2 animate-pulse bg-blue-500/50" />
-                      )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Floating Status */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-background/95 absolute right-4 bottom-4 rounded-lg border px-4 py-2 shadow-lg backdrop-blur-sm"
-        >
-          <div className="text-sm font-medium">
-            Status:{" "}
-            <span
-              className={`${
-                status === "active"
-                  ? "text-green-500"
-                  : status === "paused"
-                    ? "text-yellow-500"
-                    : "text-muted-foreground"
-              }`}
-            >
-              {status.toUpperCase()}
-            </span>
-          </div>
-        </motion.div>
-
-        {/* Instructions Overlay (shown before start) */}
-        {status === "idle" && (
-          <div className="bg-background/80 absolute inset-0 flex items-center justify-center backdrop-blur-sm">
-            <div className="space-y-4 text-center">
-              <h3 className="text-2xl font-bold">Ready to Start?</h3>
-              <p className="text-muted-foreground">
-                Start typing to begin. The timer will start automatically.
-              </p>
-            </div>
+    <>
+      <Card className="overflow-hidden">
+        {/* Timer bar at top */}
+        {isCountdown && isStarted && (
+          <div className="bg-secondary/50 relative h-1.5 w-full">
+            <motion.div
+              className={cn("h-full", isLowTime ? "bg-red-500" : "bg-primary")}
+              style={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.1 }}
+            />
           </div>
         )}
 
-        {/* Processing / Completion Loading Overlay */}
-        <AnimatePresence>
-          {(status === "completed" || isProcessing) && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="bg-background/85 fixed inset-0 z-50 flex flex-col items-center justify-center backdrop-blur-md"
-            >
-              <div className="max-w-sm space-y-4 px-6 text-center">
-                <div className="border-primary mx-auto h-16 w-16 animate-spin rounded-full border-4 border-t-transparent" />
-                <h3 className="text-foreground text-2xl font-bold tracking-tight">
-                  Time&apos;s Up! 🎉
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  Analyzing code syntax correctness, evaluating speed, and updating your
-                  profile statistics...
-                </p>
+        <div
+          ref={containerRef}
+          className="relative"
+          style={{
+            fontFamily: config.fontFamily,
+            fontSize: `${config.fontSize}px`,
+            lineHeight: config.lineHeight,
+          }}
+        >
+          {/* Header bar with timer and restart */}
+          <div className="flex items-center justify-between border-b border-white/5 bg-[#1e1e1e] px-4 py-2">
+            <div className="flex items-center gap-2">
+              {/* Status dot */}
+              <div
+                className={cn("h-2 w-2 rounded-full", {
+                  "animate-pulse bg-green-500": status === "active",
+                  "bg-yellow-500": status === "paused",
+                  "bg-gray-500": status === "ready" || status === "idle",
+                  "bg-blue-500": status === "completed",
+                })}
+              />
+              <span className="font-mono text-xs text-[#858585]">
+                {status === "active"
+                  ? "TYPING"
+                  : status === "paused"
+                    ? "PAUSED"
+                    : status === "completed"
+                      ? "COMPLETE"
+                      : "READY"}
+              </span>
+            </div>
+
+            {/* Timer display */}
+            {isStarted && (
+              <div
+                className={cn(
+                  "flex items-center gap-1.5 font-mono text-sm font-bold",
+                  isLowTime ? "text-red-400" : "text-[#858585]",
+                )}
+              >
+                <Timer className="h-3.5 w-3.5" />
+                {isCountdown ? `${displaySec}s` : `${Math.floor(elapsedTime / 1000)}s`}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </Card>
+            )}
+
+            {/* Restart button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRestart}
+              className="h-7 gap-1.5 text-xs text-[#858585] hover:text-white"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Restart
+            </Button>
+          </div>
+
+          {/* Code Display */}
+          <div className="max-h-[calc(100vh-340px)] min-h-[300px] overflow-auto bg-[#1e1e1e] p-6 text-[#d4d4d4]">
+            <div className="font-mono">
+              {codeLines.map((line, lineIndex) => {
+                const lineStartIndex = codeLines
+                  .slice(0, lineIndex)
+                  .reduce((acc, l) => acc + l.length + 1, 0);
+
+                return (
+                  <div
+                    key={lineIndex}
+                    className={`flex items-start gap-4 py-0.5 ${
+                      lineIndex === currentLine && isStarted
+                        ? "rounded bg-[#2a2a2a]"
+                        : ""
+                    }`}
+                  >
+                    {/* Line Numbers */}
+                    {config.showLineNumbers && (
+                      <div
+                        className="text-right text-[#858585] select-none"
+                        style={{ minWidth: "3ch" }}
+                      >
+                        {lineIndex + 1}
+                      </div>
+                    )}
+
+                    {/* Line Content */}
+                    <div className="flex-1 whitespace-pre">
+                      {line.split("").map((char, charIndex) => {
+                        const absoluteIndex = lineStartIndex + charIndex;
+                        const charState = characterMap.get(absoluteIndex);
+
+                        let textColor = "text-[#858585]"; // untyped — dimmed
+                        let bgStyle = "";
+
+                        const isCursor =
+                          cursorPosition !== null &&
+                          absoluteIndex === cursorPosition.absoluteIndex &&
+                          isStarted;
+
+                        if (charState) {
+                          if (charState.typed) {
+                            if (charState.isCorrect) {
+                              textColor = "text-[#d4d4d4]"; // correct — normal
+                            } else {
+                              textColor = "text-red-400 underline decoration-wavy";
+                              bgStyle = "rgba(255,0,0,0.15)";
+                            }
+                          }
+                        }
+
+                        return (
+                          <span
+                            key={charIndex}
+                            className={cn("relative inline-block", textColor, {
+                              "rounded-[2px] bg-blue-500/40": isCursor,
+                            })}
+                            style={bgStyle ? { backgroundColor: bgStyle } : undefined}
+                          >
+                            {char === " " ? "\u00A0" : char}
+                          </span>
+                        );
+                      })}
+                      {/* Cursor at end of line */}
+                      {cursorPosition !== null &&
+                        lineStartIndex + line.length === cursorPosition.absoluteIndex &&
+                        isStarted && (
+                          <span className="inline-block h-5 w-2 animate-pulse rounded-sm bg-blue-500/50 align-bottom" />
+                        )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Click-to-start overlay */}
+          <AnimatePresence>
+            {!isStarted && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 flex items-center justify-center bg-[#1e1e1e]/80 backdrop-blur-sm"
+              >
+                <div className="space-y-3 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/20">
+                    <Play className="h-7 w-7 text-blue-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Ready to type?</h3>
+                  <p className="text-sm text-[#858585]">
+                    Click here or press any key to start
+                  </p>
+                  <Button
+                    onClick={() => start()}
+                    className="bg-blue-600 text-white hover:bg-blue-500"
+                  >
+                    Start Coding
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </Card>
+
+      {/* Processing overlay */}
+      <AnimatePresence>
+        {isNavigating && isProcessing && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="bg-background/60 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+          >
+            <div className="flex flex-col items-center gap-3">
+              <div className="border-primary h-10 w-10 animate-spin rounded-full border-4 border-t-transparent" />
+              <p className="text-muted-foreground text-sm">Saving results…</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Time-Up Modal */}
+      <TimeUpModal
+        open={timeUpOpen}
+        result={sessionResult}
+        onRestart={handleRestart}
+        onViewResults={handleViewResults}
+      />
+    </>
   );
 }

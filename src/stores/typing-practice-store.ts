@@ -3,7 +3,7 @@ import type { PracticeMode, TimerMode } from "@/lib/typing-engine";
 
 /**
  * Typing Practice Store
- * 
+ *
  * Centralized state management for typing practice UI configuration.
  * The actual typing logic lives in TypingEngine - this store only manages UI preferences.
  */
@@ -15,14 +15,15 @@ export interface PracticeConfig {
   mode: PracticeMode;
   timerMode: TimerMode;
   duration: number;
-  
+
   // Content settings
   includePunctuation: boolean;
   includeNumbers: boolean;
   includeCapitalization: boolean;
   wordCount: number;
   customText?: string;
-  
+  useAiText: boolean;
+
   // Features
   allowBackspace: boolean;
   blindMode: boolean;
@@ -34,12 +35,12 @@ export interface PracticeUISettings {
   fontSize: "sm" | "base" | "lg" | "xl";
   fontFamily: "mono" | "sans" | "serif";
   cursorStyle: "line" | "block" | "underline";
-  
+
   // Display options
   showLiveWpm: boolean;
   showKeyboard: boolean;
   keyboardLayout: KeyboardLayoutVariant;
-  
+
   // Accessibility
   soundEnabled: boolean;
   reducedMotion: boolean;
@@ -55,11 +56,11 @@ interface TypingPracticeState {
   config: PracticeConfig;
   uiSettings: PracticeUISettings;
   viewMode: PracticeViewMode;
-  
+
   // UI state
   settingsOpen: boolean;
   resultsOpen: boolean;
-  
+
   // Actions
   updateConfig: (config: Partial<PracticeConfig>) => void;
   updateUISettings: (settings: Partial<PracticeUISettings>) => void;
@@ -77,6 +78,7 @@ const defaultConfig: PracticeConfig = {
   includeNumbers: false,
   includeCapitalization: false,
   wordCount: 50,
+  useAiText: true,
   allowBackspace: true,
   blindMode: false,
   strictMode: false,
@@ -101,27 +103,24 @@ export const useTypingPracticeStore = create<TypingPracticeState>((set) => ({
   viewMode: { mode: "default" },
   settingsOpen: false,
   resultsOpen: false,
-  
+
   // Actions
   updateConfig: (config) =>
     set((state) => ({
       config: { ...state.config, ...config },
     })),
-  
+
   updateUISettings: (settings) =>
     set((state) => ({
       uiSettings: { ...state.uiSettings, ...settings },
     })),
-  
-  setViewMode: (mode) =>
-    set({ viewMode: { mode } }),
-  
-  setSettingsOpen: (open) =>
-    set({ settingsOpen: open }),
-  
-  setResultsOpen: (open) =>
-    set({ resultsOpen: open }),
-  
+
+  setViewMode: (mode) => set({ viewMode: { mode } }),
+
+  setSettingsOpen: (open) => set({ settingsOpen: open }),
+
+  setResultsOpen: (open) => set({ resultsOpen: open }),
+
   resetToDefaults: () =>
     set({
       config: defaultConfig,

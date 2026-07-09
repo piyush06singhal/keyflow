@@ -10,37 +10,67 @@ import { Card } from "@/components/ui/card";
 /**
  * Live Statistics Component
  *
- * Displays real-time typing statistics in a premium card layout.
- * Updates smoothly as the user types.
+ * Displays real-time typing statistics.
+ * For countdown mode: shows remaining time prominently.
+ * For elapsed mode: shows elapsed time.
  */
 
 export interface LiveStatisticsProps {
   statistics: Stats | null;
+  /** Milliseconds — either remaining (countdown) or elapsed (other modes) */
   elapsedTime: number;
+  timerMode?: "countdown" | "elapsed" | "untimed";
+  duration?: number; // seconds
   className?: string;
 }
 
 export const LiveStatistics = memo(function LiveStatistics({
   statistics,
   elapsedTime,
+  timerMode = "countdown",
+  duration = 60,
   className,
 }: LiveStatisticsProps) {
+  // elapsedTime is ms; for countdown it's remaining ms
+  const totalMs = duration * 1000;
+  const isCountdown = timerMode === "countdown";
+  const progressPct = isCountdown
+    ? Math.max(0, Math.min(100, (elapsedTime / totalMs) * 100))
+    : Math.max(0, Math.min(100, (elapsedTime / totalMs) * 100));
+
+  const displaySeconds = Math.ceil(elapsedTime / 1000);
+  const displayMinutes = Math.floor(displaySeconds / 60);
+  const displaySec = displaySeconds % 60;
+  const timeStr =
+    displayMinutes > 0
+      ? `${displayMinutes}:${String(displaySec).padStart(2, "0")}`
+      : `${displaySeconds}s`;
+
+  const isLowTime = isCountdown && elapsedTime < 10_000; // under 10 sec remaining
+
   if (!statistics) {
     return (
       <Card className={cn("p-6", className)}>
+        {/* Timer always visible even before typing starts */}
+        <div className="mb-4 text-center">
+          <div
+            className={cn(
+              "font-mono text-5xl font-black tracking-tight tabular-nums",
+              isLowTime ? "text-red-500" : "text-foreground",
+            )}
+          >
+            {isCountdown ? `${duration}s` : "0s"}
+          </div>
+          <p className="text-muted-foreground mt-1 text-xs">
+            {isCountdown ? "time remaining" : "elapsed"}
+          </p>
+        </div>
         <div className="text-muted-foreground flex items-center justify-center text-sm">
           Start typing to see statistics
         </div>
       </Card>
     );
   }
-
-  const formatTime = (ms: number) => {
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
 
   const stats = [
     {
@@ -71,7 +101,7 @@ export const LiveStatistics = memo(function LiveStatistics({
       icon: Activity,
       label: "CPM",
       value: statistics.cpm.toFixed(0),
-      subValue: `${statistics.correctChars} chars`,
+      subValue: `${statistics.correctChars} correct`,
       color: "text-orange-500",
       bgColor: "bg-orange-500/10",
     },
@@ -79,17 +109,46 @@ export const LiveStatistics = memo(function LiveStatistics({
 
   return (
     <Card className={cn("border-border/40 shadow-key-md rounded-2xl p-6", className)}>
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-muted-foreground text-sm font-semibold tracking-tight">
-          Live Statistics
-        </h3>
-        <div className="bg-primary/10 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm">
-          <Timer className="text-primary size-4" />
-          <span className="text-primary font-mono font-semibold tabular-nums">
-            {formatTime(elapsedTime)}
-          </span>
+      {/* Timer — big and prominent at the top */}
+      <div className="mb-6">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Timer
+              className={cn("h-4 w-4", isLowTime ? "text-red-500" : "text-primary")}
+            />
+            <span className="text-muted-foreground text-xs font-medium">
+              {isCountdown ? "Time Remaining" : "Time Elapsed"}
+            </span>
+          </div>
         </div>
+
+        {/* Timer number */}
+        <motion.div
+          key={displaySeconds}
+          initial={{ scale: isLowTime ? 1.15 : 1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.15 }}
+          className={cn(
+            "font-mono text-5xl leading-none font-black tracking-tight tabular-nums",
+            isLowTime ? "text-red-500" : "text-foreground",
+          )}
+        >
+          {timeStr}
+        </motion.div>
+
+        {/* Progress bar */}
+        {isCountdown && (
+          <div className="bg-secondary/50 mt-3 h-1.5 w-full overflow-hidden rounded-full">
+            <motion.div
+              className={cn(
+                "h-full rounded-full transition-all",
+                isLowTime ? "bg-red-500" : "bg-primary",
+              )}
+              style={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.1 }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Stats Grid */}
@@ -99,7 +158,7 @@ export const LiveStatistics = memo(function LiveStatistics({
         ))}
       </div>
 
-      {/* Progress Bar */}
+      {/* Progress */}
       <div className="mt-6 space-y-2.5">
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground font-medium">Progress</span>
@@ -152,9 +211,9 @@ const StatCard = memo(function StatCard({
         </p>
         <motion.p
           key={value}
-          initial={{ scale: 1.2, opacity: 0 }}
+          initial={{ scale: 1.1, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.15 }}
           className="text-2xl leading-none font-bold tracking-tight"
         >
           {value}

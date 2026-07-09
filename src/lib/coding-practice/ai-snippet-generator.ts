@@ -2,10 +2,9 @@
  * AI Snippet Generator
  *
  * Generates custom code snippets using Groq/Gemini based on user preferences.
- * Provides dynamic, personalized coding practice content.
+ * Runs on the server (calling Groq directly) or on the client (calling the server API).
  */
 
-import { generateAiText } from "@/lib/ai/ai-service";
 import type {
   CodeSnippet,
   ProgrammingLanguage,
@@ -13,7 +12,6 @@ import type {
   CodingCategory,
   Framework,
 } from "./types";
-import { SnippetProvider } from "./snippet-provider";
 import { generateMetadata } from "./snippet-utils";
 import { getLanguageConfig } from "./languages";
 
@@ -33,6 +31,30 @@ interface GenerateSnippetOptions {
 export async function generateAiCodeSnippet(
   options: GenerateSnippetOptions,
 ): Promise<CodeSnippet> {
+  // If running in browser, delegate to the API route to keep API keys secure on the server
+  if (typeof window !== "undefined") {
+    const response = await fetch("/api/generate-snippet", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(options),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to generate snippet: ${response.statusText}`);
+    }
+
+    const json = await response.json();
+    if (!json.success) {
+      throw new Error(json.error || "Failed to generate snippet");
+    }
+
+    return json.data;
+  }
+
+  // Server-side generation using Groq Provider
+  const { generateAiText } = await import("@/lib/ai/ai-service");
   const {
     language,
     difficulty,
@@ -59,22 +81,26 @@ export async function generateAiCodeSnippet(
 
   try {
     // Generate using AI service
-    const result = await generateAiText({
-      kind: "coding_exercise_generation",
-      model: "groq",
-      messages: [
-        {
-          role: "system",
-          content: SYSTEM_PROMPT,
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      maxOutputTokens: 2000,
-    });
+    const result = await generateAiText(
+      {
+        kind: "coding_exercise_generation",
+        messages: [
+          {
+            role: "system",
+            content: SYSTEM_PROMPT,
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+        maxOutputTokens: 2000,
+      },
+      {
+        provider: "groq",
+      },
+    );
 
     // Parse AI response
     const parsedSnippet = parseAiResponse(result.text, options);
@@ -196,7 +222,7 @@ Your snippets should be:
 5. Educational and practical
 6. Free of syntax errors or typos
 
-Always return valid JSON in the specified format. The code field should contain the actual code as a single string with newlines (\n) for line breaks.`;
+Always return valid JSON in the specified format. The code field should contain the actual code as a single string with newlines (\\n) for line breaks.`;
 
 /**
  * Parse AI response and extract snippet data
@@ -255,9 +281,10 @@ function determineSnippetType(category?: CodingCategory): CodeSnippet["type"] {
     "config-files": "config",
     "git-commands": "command",
     "terminal-commands": "command",
+    "terminal-inputs": "command",
   };
 
-  return typeMap[category] || "full-code";
+  return typeMap[category || ""] || "full-code";
 }
 
 /**
@@ -291,6 +318,7 @@ export async function generateSnippetWithFallback(
   } catch (error) {
     console.warn("AI generation failed, falling back to static snippet:", error);
 
+    const { SnippetProvider } = await import("./snippet-provider");
     // Fallback to static snippet
     const staticSnippet = await SnippetProvider.getSnippet({
       source: "static",

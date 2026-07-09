@@ -1,6 +1,5 @@
 "use client";
 
-import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -210,6 +209,21 @@ export function SettingsDrawer() {
                   id="strict-mode"
                   checked={config.strictMode}
                   onCheckedChange={(checked) => updateConfig({ strictMode: checked })}
+                />
+              </div>
+
+              {/* AI Text Generation */}
+              <div className="flex items-center justify-between">
+                <Label htmlFor="ai-text" className="flex-1">
+                  AI Text Generation ✨
+                  <span className="text-muted-foreground ml-2 text-xs">
+                    Groq generates fresh text (Quote/Paragraph modes)
+                  </span>
+                </Label>
+                <Switch
+                  id="ai-text"
+                  checked={config.useAiText}
+                  onCheckedChange={(checked) => updateConfig({ useAiText: checked })}
                 />
               </div>
             </div>

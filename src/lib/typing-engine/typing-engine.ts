@@ -37,6 +37,7 @@ export class TypingEngine {
   private cursorManager: CursorManager | null;
   private inputManager: InputManager;
   private mistakeTracker: MistakeTracker;
+  private timerExpiredUnsubscribe: (() => void) | null = null;
 
   // Session state
   private sessionId: string;
@@ -72,12 +73,25 @@ export class TypingEngine {
   // ============================================================================
 
   /**
-   * Initialize the session with text content
+   * Initialize the session with text content.
+   * Safe to call multiple times — resets all state for a fresh session.
    */
   initialize(): void {
-    if (this.sessionState.status !== "idle") {
-      throw new TypingEngineError("Session already initialized", "ALREADY_INITIALIZED");
-    }
+    // Stop any running timer/intervals first
+    this.timerManager?.destroy();
+    this.timerManager = null;
+
+    // Reset session state to idle
+    this.sessionId = this.generateSessionId();
+    this.sessionState = this.createInitialSessionState();
+    this.words = [];
+    this.textContent = "";
+    this.liveStats = null;
+    this.mistakeTracker = new MistakeTracker(this.eventDispatcher);
+    this.inputManager = new InputManager(
+      this.configManager.getConfig(),
+      this.eventDispatcher,
+    );
 
     // Generate text content
     const config = this.configManager.getConfig();
@@ -94,8 +108,9 @@ export class TypingEngine {
       this.eventDispatcher,
     );
 
-    // Listen for timer expiration
-    this.eventDispatcher.on("timer:expired", () => {
+    // Listen for timer expiration — clean up previous listener first
+    this.timerExpiredUnsubscribe?.();
+    this.timerExpiredUnsubscribe = this.eventDispatcher.on("timer:expired", () => {
       if (this.getStatus() === "active") {
         this.complete();
       }
@@ -449,6 +464,13 @@ export class TypingEngine {
 
   getConfig(): Readonly<TypingEngineConfig> {
     return this.configManager.getConfig();
+  }
+
+  /**
+   * Update configuration (takes effect on next initialize)
+   */
+  updateConfig(updates: Partial<TypingEngineConfig>): void {
+    this.configManager.updateConfig(updates);
   }
 
   // ============================================================================

@@ -38,7 +38,7 @@ export interface UseTypingEngineReturn {
   start: () => void;
   pause: () => void;
   resume: () => void;
-  restart: () => void;
+  restart: (newConfig?: Partial<TypingEngineConfig>) => void;
   cancel: () => void;
 
   // Refs
@@ -53,6 +53,20 @@ export function useTypingEngine({
 }: UseTypingEngineOptions): UseTypingEngineReturn {
   const engineRef = useRef<TypingEngine | null>(null);
   const inputRef = useRef<HTMLDivElement>(null);
+  const configRef = useRef(config);
+  const onCompleteRef = useRef(onComplete);
+  const onStatisticsUpdateRef = useRef(onStatisticsUpdate);
+
+  // Keep refs current
+  useEffect(() => {
+    configRef.current = config;
+  });
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  });
+  useEffect(() => {
+    onStatisticsUpdateRef.current = onStatisticsUpdate;
+  });
 
   // Local state
   const [status, setStatus] = useState<SessionStatus>("idle");
@@ -61,74 +75,40 @@ export function useTypingEngine({
   const [cursorPosition, setCursorPosition] = useState<CursorPosition | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
 
-  // Initialize engine
+  // Initialize engine once on mount
   useEffect(() => {
     const engine = new TypingEngine(config);
     engine.initialize();
     engineRef.current = engine;
 
-    // Update initial state from the engine after initialization - wrapped in requestAnimationFrame to avoid setState in effect warning
-    requestAnimationFrame(() => {
-      setWords(engine.getWords());
-      setCursorPosition(engine.getCursorPosition());
-    });
-
-    // Auto-start if requested
-    if (autoStart) {
-      engine.start();
-    }
-
-    return () => {
-      engine.destroy();
-      engineRef.current = null;
-    };
-  }, []); // Only initialize once
-
-  // Event subscriptions
-  useEffect(() => {
-    const engine = engineRef.current;
-    if (!engine) return;
-
+    // Subscribe to events
     const unsubscribers = [
-      // Session events
-      engine.on("session:started", () => {
-        setStatus("active");
-      }),
-
-      engine.on("session:paused", () => {
-        setStatus("paused");
-      }),
-
-      engine.on("session:resumed", () => {
-        setStatus("active");
-      }),
-
+      engine.on("session:started", () => setStatus("active")),
+      engine.on("session:paused", () => setStatus("paused")),
+      engine.on("session:resumed", () => setStatus("active")),
       engine.on("session:completed", (event) => {
         setStatus("completed");
         const result = event.data as SessionResult;
-        onComplete?.(result);
+        onCompleteRef.current?.(result);
       }),
+      engine.on("session:cancelled", () => setStatus("idle")),
 
-      engine.on("session:cancelled", () => {
-        setStatus("cancelled");
-      }),
-
-      // Statistics updates
       engine.on("statistics:updated", (event) => {
         const stats = event.data as LiveStatistics;
         setStatistics(stats);
-        onStatisticsUpdate?.(stats);
+        onStatisticsUpdateRef.current?.(stats);
       }),
 
-      // Cursor updates
       engine.on("cursor:moved", (event) => {
         const position = event.data as CursorPosition;
         setCursorPosition(position);
       }),
 
-      // Timer updates
       engine.on("timer:tick", (event) => {
-        const state = event.data as any;
+        const state = event.data as {
+          elapsedTime: number;
+          remainingTime: number | null;
+        };
         const isCountdown = engine.getConfig().timerMode === "countdown";
         setElapsedTime(
           isCountdown && state.remainingTime !== null
@@ -137,44 +117,92 @@ export function useTypingEngine({
         );
       }),
 
-      // Character/word events trigger word state updates
-      engine.on("character:typed", () => {
-        setWords([...engine.getWords()]);
-      }),
-
-      engine.on("character:deleted", () => {
-        setWords([...engine.getWords()]);
-      }),
+      engine.on("character:typed", () => setWords([...engine.getWords()])),
+      engine.on("character:deleted", () => setWords([...engine.getWords()])),
     ];
+
+    // Update initial state from engine
+    requestAnimationFrame(() => {
+      setWords(engine.getWords());
+      setCursorPosition(engine.getCursorPosition());
+      setStatus(engine.getStatus());
+    });
+
+    if (autoStart) {
+      engine.start();
+    }
 
     return () => {
       unsubscribers.forEach((unsub) => unsub());
+      engine.destroy();
+      engineRef.current = null;
     };
-  }, [onComplete, onStatisticsUpdate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Keyboard event handler
+  // Keyboard event handler — attached to window for global input capture
   useEffect(() => {
-    const engine = engineRef.current;
-    if (!engine) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only process if engine is active
-      if (engine.getStatus() === "active") {
+      const engine = engineRef.current;
+      if (!engine) return;
+
+      const engineStatus = engine.getStatus();
+
+      // If ready, start the session on first real keypress
+      if (engineStatus === "ready") {
+        const isModifier = [
+          "Control",
+          "Alt",
+          "Shift",
+          "Meta",
+          "Escape",
+          "F1",
+          "F2",
+          "F3",
+          "F4",
+          "F5",
+          "F6",
+          "F7",
+          "F8",
+          "F9",
+          "F10",
+          "F11",
+          "F12",
+          "Tab",
+          "CapsLock",
+          "ArrowLeft",
+          "ArrowRight",
+          "ArrowUp",
+          "ArrowDown",
+        ].includes(e.key);
+        const isShortcut = e.ctrlKey || e.metaKey;
+        if (!isModifier && !isShortcut) {
+          engine.start();
+          // Now process the key as well
+          if (engine.getStatus() === "active") {
+            engine.processInput(e);
+          }
+        }
+        return;
+      }
+
+      // Normal active state processing
+      if (engineStatus === "active") {
         engine.processInput(e);
       }
     };
 
-    // Attach to window for global keyboard handling
     window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Actions
   const start = useCallback(() => {
-    engineRef.current?.start();
+    const engine = engineRef.current;
+    if (!engine) return;
+    if (engine.getStatus() === "ready") {
+      engine.start();
+    }
   }, []);
 
   const pause = useCallback(() => {
@@ -185,31 +213,29 @@ export function useTypingEngine({
     engineRef.current?.resume();
   }, []);
 
-  const restart = useCallback(() => {
+  const restart = useCallback((newConfig?: Partial<TypingEngineConfig>) => {
     const engine = engineRef.current;
     if (!engine) return;
 
-    // Cancel current session
-    if (engine.getStatus() !== "idle") {
-      engine.cancel();
-    }
+    // Update config if provided (merge with current)
+    const latestConfig = { ...configRef.current, ...newConfig };
+    engine.updateConfig(latestConfig);
 
-    // Reinitialize
+    // Re-initialize (now safe to call multiple times)
     engine.initialize();
-    setWords(engine.getWords());
+
+    // Reset React state
+    setWords([...engine.getWords()]);
     setCursorPosition(engine.getCursorPosition());
     setStatistics(null);
     setElapsedTime(0);
-
-    // Auto-start
-    engine.start();
+    setStatus("ready");
   }, []);
 
   const cancel = useCallback(() => {
     engineRef.current?.cancel();
   }, []);
 
-  // Create a stable reference getter instead of accessing .current during render
   const getEngine = useCallback(() => engineRef.current, []);
 
   return {

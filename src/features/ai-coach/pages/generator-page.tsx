@@ -27,7 +27,9 @@ import { toast } from "sonner";
 export function AiCoachGeneratorPage() {
   const { generateLesson, isLoading, error } = useAiCoach();
   const [lessonType, setLessonType] = useState<LessonType>("typing_drill");
-  const [difficulty, setDifficulty] = useState<"beginner" | "intermediate" | "advanced" | "expert">("intermediate");
+  const [difficulty, setDifficulty] = useState<
+    "beginner" | "intermediate" | "advanced" | "expert"
+  >("intermediate");
   const [language, setLanguage] = useState("javascript");
   const [skills, setSkills] = useState("accuracy, speed");
   const [lesson, setLesson] = useState<GeneratedLessonContent | null>(null);
@@ -37,7 +39,10 @@ export function AiCoachGeneratorPage() {
       lessonType,
       difficulty,
       language,
-      targetSkills: skills.split(",").map((s) => s.trim()).filter(Boolean),
+      targetSkills: skills
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
     });
     if (result) {
       setLesson(result);
@@ -59,7 +64,10 @@ export function AiCoachGeneratorPage() {
         <div className="border-border/50 space-y-4 rounded-2xl border p-6">
           <div className="space-y-2">
             <Label>Lesson Type</Label>
-            <Select value={lessonType} onValueChange={(v) => setLessonType(v as LessonType)}>
+            <Select
+              value={lessonType}
+              onValueChange={(v) => setLessonType(v as LessonType)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -74,7 +82,10 @@ export function AiCoachGeneratorPage() {
 
           <div className="space-y-2">
             <Label>Difficulty</Label>
-            <Select value={difficulty} onValueChange={(v) => setDifficulty(v as typeof difficulty)}>
+            <Select
+              value={difficulty}
+              onValueChange={(v) => setDifficulty(v as typeof difficulty)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -112,11 +123,35 @@ export function AiCoachGeneratorPage() {
             <LessonPreviewCard
               lesson={{ ...lesson, difficulty, language }}
               onStart={() => {
-                const href =
-                  lessonType === "coding_practice" || lessonType === "syntax_practice"
-                    ? routes.codingPractice
-                    : routes.typingPractice;
-                window.location.href = href;
+                if (
+                  lessonType === "coding_practice" ||
+                  lessonType === "syntax_practice"
+                ) {
+                  const customSnippet = {
+                    id: `ai-${Date.now()}`,
+                    title: lesson.title,
+                    description: lesson.description,
+                    language: language,
+                    difficulty: difficulty,
+                    category: "full-snippets",
+                    type: "full-code",
+                    code: lesson.content,
+                    metadata: {
+                      lineCount: lesson.content.split("\n").length,
+                      charCount: lesson.content.length,
+                    },
+                    tags: ["ai-generated", language],
+                  };
+                  sessionStorage.setItem(
+                    "customPracticeSnippet",
+                    JSON.stringify(customSnippet),
+                  );
+                  window.location.href = "/practice/code";
+                } else {
+                  sessionStorage.setItem("customPracticeText", lesson.content);
+                  sessionStorage.setItem("customPracticeTitle", lesson.title);
+                  window.location.href = routes.typingPractice;
+                }
               }}
             />
           ) : (

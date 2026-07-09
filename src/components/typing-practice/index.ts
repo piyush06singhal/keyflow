@@ -1,6 +1,6 @@
 /**
  * Typing Practice Components
- * 
+ *
  * Centralized exports for all typing practice UI components.
  */
 
@@ -28,3 +28,6 @@ export { QuickStartGuide } from "./quick-start-guide";
 
 export { PracticeFAB } from "./practice-fab";
 export type { PracticeFABProps } from "./practice-fab";
+
+export { TimeUpModal } from "./time-up-modal";
+export type { TimeUpModalProps } from "./time-up-modal";

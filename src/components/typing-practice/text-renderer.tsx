@@ -74,11 +74,13 @@ const WordRenderer = memo(function WordRenderer({
   cursorStyle,
 }: WordRendererProps) {
   const isActiveWord = cursorPosition?.wordIndex === word.index;
+  const isCompleted = word.isCompleted;
 
   return (
     <span
       className={cn("relative inline-flex", {
-        "opacity-50": !word.isCompleted && !isActiveWord,
+        "opacity-40": !isCompleted && !isActiveWord,
+        "opacity-100": isCompleted || isActiveWord,
       })}
     >
       {word.characters.map((char, charIdx) => (
@@ -106,59 +108,49 @@ const CharacterRenderer = memo(function CharacterRenderer({
 }: CharacterRendererProps) {
   const { char, isCorrect, typed } = character;
 
-  // Determine character state
   const getCharacterColor = () => {
-    if (!typed) return "text-muted-foreground";
-    if (isCorrect) return "text-foreground";
+    if (!typed) return "text-muted-foreground/70";
+    if (isCorrect === true) return "text-foreground";
     return "text-destructive";
   };
 
   const getBgColor = () => {
     if (!typed) return "";
-    if (isCorrect) return "";
-    return "bg-destructive/10";
+    if (isCorrect === false) return "bg-destructive/15";
+    return "";
   };
 
   return (
     <span className="relative inline-block">
       {/* Character */}
-      <motion.span
+      <span
         className={cn(
-          "relative inline-block min-w-[0.6em] transition-colors",
+          "relative inline-block min-w-[0.5em] transition-colors duration-75",
           getCharacterColor(),
           getBgColor(),
-          {
-            "rounded px-0.5": !typed || !isCorrect,
-          },
         )}
-        initial={typed ? { scale: 0.8, opacity: 0 } : false}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.1 }}
       >
         {char === " " ? "\u00A0" : char}
-      </motion.span>
+      </span>
 
-      {/* Cursor */}
+      {/* Cursor — blinking */}
       <AnimatePresence>
         {showCursor && (
           <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className={cn("absolute", {
-              // Line cursor
-              "bg-primary top-0 left-0 h-full w-0.5": cursorStyle === "line",
-              // Block cursor
-              "bg-primary/20 ring-primary inset-0 ring-2 ring-inset":
-                cursorStyle === "block",
-              // Underline cursor
-              "bg-primary bottom-0 left-0 h-0.5 w-full": cursorStyle === "underline",
-            })}
+            key="cursor"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: [1, 1, 0, 0] }}
             transition={{
               repeat: Infinity,
-              repeatType: "reverse",
-              duration: 0.8,
+              duration: 1,
+              times: [0, 0.5, 0.5, 1],
             }}
+            className={cn("pointer-events-none absolute", {
+              "bg-primary top-0 left-[-1px] h-full w-[2px]": cursorStyle === "line",
+              "bg-primary/25 ring-primary inset-0 rounded-sm ring-1 ring-inset":
+                cursorStyle === "block",
+              "bg-primary bottom-0 left-0 h-[2px] w-full": cursorStyle === "underline",
+            })}
             aria-hidden="true"
           />
         )}

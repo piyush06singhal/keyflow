@@ -120,7 +120,7 @@ export function CodingDashboard() {
   const [selectedDuration, setSelectedDuration] = useState(config.duration || 300);
   const [snippetSource, setSnippetSource] = useState<
     "static" | "ai-generated" | "database" | "community"
-  >("static");
+  >((config.snippetSource as any) || "static");
 
   const languages = getAllLanguages();
   const currentLanguageConfig = getLanguageConfig(selectedLanguage);
@@ -133,6 +133,7 @@ export function CodingDashboard() {
       difficulty: selectedDifficulty,
       category: selectedCategory,
       duration: selectedDuration,
+      snippetSource: snippetSource,
     });
     router.push("/practice/code");
   };
@@ -298,6 +299,38 @@ export function CodingDashboard() {
                   ).map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
                       {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Content Source Selection */}
+            <div className="space-y-3">
+              <Label>Content Source</Label>
+              <Select
+                value={snippetSource}
+                onValueChange={(value) =>
+                  setSnippetSource(
+                    value as "static" | "ai-generated" | "database" | "community",
+                  )
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SNIPPET_SOURCES.map((src) => (
+                    <SelectItem key={src.value} value={src.value}>
+                      <div className="flex items-center gap-2">
+                        <span>{src.icon}</span>
+                        <div className="text-left">
+                          <div className="font-medium">{src.label}</div>
+                          <div className="text-xs text-[#858585]">
+                            {src.description}
+                          </div>
+                        </div>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>

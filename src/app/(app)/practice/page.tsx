@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageContainer } from "@/components/app-shell";
@@ -10,10 +10,10 @@ import {
   LiveStatistics,
   VirtualKeyboard,
   SettingsDrawer,
-  ResultsModal,
   QuickStartGuide,
   PracticeFAB,
 } from "@/components/typing-practice";
+import { TimeUpModal } from "@/components/typing-practice/time-up-modal";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { useKeyboardShortcuts, TYPING_SHORTCUTS } from "@/hooks/use-keyboard-shortcuts";
 import { useTypingPracticeStore } from "@/stores/typing-practice-store";
@@ -27,9 +27,11 @@ import { toast } from "sonner";
 /**
  * Typing Practice Page
  *
- * Main page for typing practice sessions.
- * Orchestrates all typing practice components and handles user interactions.
- * Syncs preferences and saves sessions to Supabase in real-time.
+ * Orchestrates all typing practice components.
+ * - First keypress automatically starts the session
+ * - Timer counts down visually; when it hits 0 a beautiful popup appears
+ * - Restart uses the latest config (duration, mode, toggles)
+ * - Support dynamic AI text generation using Groq
  */
 
 export default function PracticePage() {
@@ -43,20 +45,72 @@ export default function PracticePage() {
     setViewMode,
     setSettingsOpen,
     updateUISettings,
+    updateConfig,
   } = useTypingPracticeStore();
 
   const { user } = useAuth();
   usePracticePreferences();
 
   const [sessionResult, setSessionResult] = useState<SessionResult | null>(null);
-  const [isResultsOpen, setIsResultsOpen] = useState(false);
+  const [timeUpOpen, setTimeUpOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [isGeneratingText, setIsGeneratingText] = useState(false);
 
   // Session lifecycle management
-  const {
-    completeSession,
-    isProcessing: _isProcessing,
-    syncStatus: _syncStatus,
-  } = useSessionLifecycle();
+  const { completeSession, isProcessing } = useSessionLifecycle();
+
+  // Stable onComplete callback
+  const handleComplete = useCallback(
+    async (result: SessionResult) => {
+      setSessionResult(result);
+      setTimeUpOpen(true);
+
+      if (user) {
+        try {
+          const completionResult = await completeSession(result, config.mode);
+          sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
+          sessionStorage.setItem(
+            "lastCompletionResult",
+            JSON.stringify(completionResult),
+          );
+
+          if (completionResult.saved) {
+            toast.success("Session saved! 🎉", {
+              description: `+${completionResult.xpGained} XP${completionResult.levelUp ? ` • Level ${completionResult.newLevel}!` : ""}`,
+            });
+          }
+        } catch {
+          sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
+          sessionStorage.setItem(
+            "lastCompletionResult",
+            JSON.stringify({
+              saved: false,
+              xpGained: 0,
+              levelUp: false,
+              newLevel: 0,
+              warnings: [],
+              statisticsUpdated: false,
+            }),
+          );
+        }
+      } else {
+        sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
+        sessionStorage.setItem(
+          "lastCompletionResult",
+          JSON.stringify({
+            saved: false,
+            xpGained: 0,
+            levelUp: false,
+            newLevel: 0,
+            warnings: [],
+            statisticsUpdated: false,
+          }),
+        );
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user, config.mode],
+  );
 
   // Initialize typing engine
   const typing = useTypingEngine({
@@ -78,90 +132,150 @@ export default function PracticePage() {
       soundEnabled: uiSettings.soundEnabled,
       hapticEnabled: false,
     },
-    onComplete: async (result) => {
-      setSessionResult(result);
-
-      // Process session completion through lifecycle
-      if (user) {
-        try {
-          const completionResult = await completeSession(result, config.mode);
-
-          // Store results for results page
-          sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
-          sessionStorage.setItem(
-            "lastCompletionResult",
-            JSON.stringify(completionResult),
-          );
-
-          // Show appropriate toast based on result
-          if (completionResult.saved) {
-            toast.success("Session Complete! 🎉", {
-              description: `+${completionResult.xpGained} XP${completionResult.levelUp ? ` • Level ${completionResult.newLevel}!` : ""}`,
-            });
-          } else if (completionResult.warnings.length > 0) {
-            toast.warning("Session saved offline", {
-              description: "Will sync when connection is restored",
-            });
-          }
-
-          // Navigate to results page
-          router.push("/practice/results");
-        } catch (error) {
-          console.error("Error processing session:", error);
-          toast.error("Session processing failed", {
-            description: "Your session data may not have been saved properly",
-          });
-        }
-      } else {
-        // Not logged in - show basic results modal
-        setIsResultsOpen(true);
-      }
-    },
+    onComplete: handleComplete,
     autoStart: false,
   });
 
-  // Check for restart param
+  // Fetch dynamic text from Groq API route
+  const getPracticeText = async (mode: string, duration: number) => {
+    try {
+      const res = await fetch("/api/generate-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode, duration, difficulty: "intermediate" }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.text) {
+          return json.text;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to generate AI text:", err);
+    }
+    return null;
+  };
+
+  // Handle restart — pass latest config so duration/mode changes take effect
+  const handleRestart = useCallback(async () => {
+    setTimeUpOpen(false);
+    setSessionResult(null);
+    setIsNavigating(false);
+
+    let finalMode = config.mode;
+    let finalText = config.customText;
+
+    if (config.useAiText && (config.mode === "quote" || config.mode === "paragraph")) {
+      setIsGeneratingText(true);
+      const text = await getPracticeText(config.mode, config.duration);
+      setIsGeneratingText(false);
+      if (text) {
+        finalMode = "custom";
+        finalText = text;
+      }
+    }
+
+    typing.restart({
+      mode: finalMode,
+      timerMode: config.timerMode,
+      duration: config.duration,
+      language: "english",
+      includePunctuation: config.includePunctuation,
+      includeNumbers: config.includeNumbers,
+      includeCapitalization: config.includeCapitalization,
+      wordCount: config.wordCount,
+      customText: finalText,
+      allowBackspace: config.allowBackspace,
+      blindMode: config.blindMode,
+      strictMode: config.strictMode,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    typing,
+    config.mode,
+    config.duration,
+    config.includePunctuation,
+    config.includeNumbers,
+    config.includeCapitalization,
+    config.wordCount,
+    config.customText,
+    config.allowBackspace,
+    config.blindMode,
+    config.strictMode,
+    config.useAiText,
+  ]);
+
+  // Load custom lesson text from AI coach if present in sessionStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const customText = sessionStorage.getItem("customPracticeText");
+    const customTitle = sessionStorage.getItem("customPracticeTitle");
+    if (customText) {
+      sessionStorage.removeItem("customPracticeText");
+      sessionStorage.removeItem("customPracticeTitle");
+      toast.success(`Loaded AI Lesson: ${customTitle || "Practice"}`);
+      updateConfig({
+        mode: "custom",
+        customText,
+      });
+    }
+  }, [updateConfig]);
+
+  // Auto-restart when settings change, but only if the session is not running
+  useEffect(() => {
+    if (typing.status === "ready" || typing.status === "idle") {
+      const t = setTimeout(() => handleRestart(), 0);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    config.mode,
+    config.duration,
+    config.includePunctuation,
+    config.includeNumbers,
+    config.includeCapitalization,
+    config.wordCount,
+    config.useAiText,
+  ]);
+
+  // Navigate to full results page
+  const handleViewResults = useCallback(() => {
+    setIsNavigating(true);
+    setTimeUpOpen(false);
+    router.push("/practice/results");
+  }, [router]);
+
+  // Check for restart query param (coming back from results page)
   useEffect(() => {
     if (searchParams?.get("restart") === "true") {
-      typing.restart();
+      const t = setTimeout(() => handleRestart(), 0);
+      return () => clearTimeout(t);
     }
-  }, [searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
     shortcuts: [
-      {
-        ...TYPING_SHORTCUTS.RESTART,
-        action: typing.restart,
-      },
+      { ...TYPING_SHORTCUTS.RESTART, action: handleRestart },
       {
         ...TYPING_SHORTCUTS.PAUSE,
         action: () => {
-          if (typing.status === "active") {
-            typing.pause();
-          } else if (typing.status === "paused") {
-            typing.resume();
-          }
+          if (typing.status === "active") typing.pause();
+          else if (typing.status === "paused") typing.resume();
         },
       },
-      {
-        ...TYPING_SHORTCUTS.SETTINGS,
-        action: () => setSettingsOpen(true),
-      },
+      { ...TYPING_SHORTCUTS.SETTINGS, action: () => setSettingsOpen(true) },
       {
         ...TYPING_SHORTCUTS.FOCUS_MODE,
-        action: () => {
-          setViewMode(viewMode.mode === "focus" ? "default" : "focus");
-        },
+        action: () => setViewMode(viewMode.mode === "focus" ? "default" : "focus"),
       },
       {
         ...TYPING_SHORTCUTS.ZEN_MODE,
-        action: () => {
-          setViewMode(viewMode.mode === "zen" ? "default" : "zen");
-        },
+        action: () => setViewMode(viewMode.mode === "zen" ? "default" : "zen"),
       },
     ],
-    enabled: typing.status !== "active", // Disable during active typing
+    enabled: typing.status !== "active",
   });
 
   const isZenMode = viewMode.mode === "zen";
@@ -172,9 +286,7 @@ export default function PracticePage() {
     <>
       <PageContainer
         maxWidth={isZenMode ? "full" : "2xl"}
-        className={cn({
-          "p-0": isZenMode,
-        })}
+        className={cn({ "p-0": isZenMode })}
       >
         <div className="space-y-6">
           {/* Quick Start Guide */}
@@ -200,8 +312,8 @@ export default function PracticePage() {
                 transition={{ duration: 0.3 }}
               >
                 <PracticeToolbar
-                  onRestart={typing.restart}
-                  disabled={typing.status === "active"}
+                  onRestart={handleRestart}
+                  disabled={typing.status === "active" || isGeneratingText}
                 />
               </motion.div>
             )}
@@ -210,13 +322,32 @@ export default function PracticePage() {
           {/* Main Content */}
           <div
             className={cn("grid gap-6", {
-              "xl:grid-cols-[1fr_350px]": showUI && !isFocusMode,
+              "xl:grid-cols-[1fr_320px]": showUI && !isFocusMode,
               "xl:grid-cols-1": isFocusMode || isZenMode,
             })}
           >
-            {/* Left Column: Typing Area */}
+            {/* Left: Typing Area */}
             <div className="space-y-6">
-              <TypingCanvas typing={typing} />
+              <div className="relative">
+                <TypingCanvas typing={typing} />
+
+                {/* AI Text generation overlay */}
+                <AnimatePresence>
+                  {isGeneratingText && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="bg-background/80 absolute inset-0 z-20 flex flex-col items-center justify-center rounded-2xl backdrop-blur-md"
+                    >
+                      <div className="border-primary mb-3 h-10 w-10 animate-spin rounded-full border-4 border-t-transparent" />
+                      <p className="text-sm font-medium text-white">
+                        Generating dynamic practice text using Groq AI…
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* Virtual Keyboard */}
               <AnimatePresence>
@@ -233,9 +364,9 @@ export default function PracticePage() {
               </AnimatePresence>
             </div>
 
-            {/* Right Column: Statistics (not in focus/zen mode) */}
+            {/* Right: Live Statistics */}
             <AnimatePresence>
-              {showUI && !isFocusMode && (
+              {showUI && !isFocusMode && typing.status !== "completed" && (
                 <motion.div
                   initial={{ x: 20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
@@ -246,13 +377,15 @@ export default function PracticePage() {
                   <LiveStatistics
                     statistics={typing.statistics}
                     elapsedTime={typing.elapsedTime}
+                    timerMode={config.timerMode}
+                    duration={config.duration}
                   />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Zen Mode Minimal Stats */}
+          {/* Zen Mode stats */}
           {isZenMode && typing.status === "active" && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -262,7 +395,11 @@ export default function PracticePage() {
               <div className="flex items-center gap-6 text-sm font-medium">
                 <div>WPM: {typing.statistics?.wpm.toFixed(0) || 0}</div>
                 <div>ACC: {typing.statistics?.accuracy.toFixed(0) || 0}%</div>
-                <div>TIME: {Math.floor(typing.elapsedTime / 1000)}s</div>
+                <div>
+                  {config.timerMode === "countdown"
+                    ? `${Math.ceil(typing.elapsedTime / 1000)}s left`
+                    : `${Math.floor(typing.elapsedTime / 1000)}s`}
+                </div>
               </div>
             </motion.div>
           )}
@@ -272,26 +409,15 @@ export default function PracticePage() {
       {/* Settings Drawer */}
       <SettingsDrawer />
 
-      {/* Results Modal */}
-      <ResultsModal
-        result={sessionResult}
-        open={isResultsOpen}
-        onOpenChange={setIsResultsOpen}
-        onRestart={typing.restart}
-      />
-
-      {/* Floating Action Button (for quick actions) */}
+      {/* FAB */}
       {(isFocusMode || isZenMode) && (
         <PracticeFAB
           isActive={typing.status === "active"}
           isPaused={typing.status === "paused"}
-          onRestart={typing.restart}
+          onRestart={handleRestart}
           onPauseToggle={() => {
-            if (typing.status === "active") {
-              typing.pause();
-            } else if (typing.status === "paused") {
-              typing.resume();
-            }
+            if (typing.status === "active") typing.pause();
+            else if (typing.status === "paused") typing.resume();
           }}
           onSettings={() => setSettingsOpen(true)}
           onKeyboardToggle={() =>
@@ -301,28 +427,30 @@ export default function PracticePage() {
         />
       )}
 
-      {/* Processing / Completion Loading Overlay */}
+      {/* Processing saving overlay */}
       <AnimatePresence>
-        {(typing.status === "completed" || _isProcessing) && (
+        {isNavigating && isProcessing && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="bg-background/85 fixed inset-0 z-50 flex flex-col items-center justify-center backdrop-blur-md"
+            className="bg-background/60 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
           >
-            <div className="max-w-sm space-y-4 px-6 text-center">
-              <div className="border-primary mx-auto h-16 w-16 animate-spin rounded-full border-4 border-t-transparent" />
-              <h3 className="text-foreground text-2xl font-bold tracking-tight">
-                Time&apos;s Up! 🎉
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                Evaluating WPM accuracy, tracking mistakes, and syncing your progress
-                database...
-              </p>
+            <div className="flex flex-col items-center gap-4">
+              <div className="border-primary h-10 w-10 animate-spin rounded-full border-4 border-t-transparent" />
+              <p className="text-muted-foreground text-sm">Saving results…</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Time-Up Modal */}
+      <TimeUpModal
+        open={timeUpOpen}
+        result={sessionResult}
+        onRestart={handleRestart}
+        onViewResults={handleViewResults}
+      />
     </>
   );
 }
