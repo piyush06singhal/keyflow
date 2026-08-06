@@ -1,6 +1,6 @@
 /**
  * Coding Practice Store
- * 
+ *
  * Global state management for coding practice module using Zustand.
  */
 
@@ -19,12 +19,12 @@ import type {
 interface CodingPracticeStore {
   // Configuration
   config: CodingPracticeConfig;
-  
+
   // UI State
   selectedSnippet: CodeSnippet | null;
   isConfigDrawerOpen: boolean;
   isLoading: boolean;
-  
+
   // Actions
   setLanguage: (language: ProgrammingLanguage) => void;
   setFramework: (framework: Framework | undefined) => void;
@@ -43,42 +43,44 @@ const DEFAULT_CONFIG: CodingPracticeConfig = {
   mode: "coding",
   timerMode: "countdown",
   duration: 300, // 5 minutes default
-  
+
   // Content settings (from typing engine)
   includePunctuation: true,
   includeNumbers: true,
   includeCapitalization: true,
-  
+
   // Feature flags
   allowBackspace: true,
   allowSkip: false,
   blindMode: false,
   instantDeath: false,
   strictMode: true,
-  
+
   // Accessibility
   soundEnabled: true,
   hapticEnabled: false,
-  
+
   // Coding-specific settings
   language: "javascript",
   framework: undefined,
   category: undefined,
   difficulty: "beginner",
-  
+  // Matches typing practice's default of AI-generated content (useAiText: true)
+  snippetSource: "ai-generated",
+
   // Code display
   showLineNumbers: true,
   showIndentation: true,
   showMinimap: false,
   enableSyntaxHighlighting: true,
-  
+
   // Code theme
   codeTheme: "vs-dark",
-  
+
   // Indentation
   indentWithTabs: false,
   tabSize: 2,
-  
+
   // Typography
   fontFamily: "JetBrains Mono, Fira Code, Consolas, monospace",
   fontSize: 14,
@@ -93,47 +95,44 @@ export const useCodingPracticeStore = create<CodingPracticeStore>()(
       selectedSnippet: null,
       isConfigDrawerOpen: false,
       isLoading: false,
-      
+
       // Actions
       setLanguage: (language) =>
         set((state) => ({
           config: { ...state.config, language },
         })),
-      
+
       setFramework: (framework) =>
         set((state) => ({
           config: { ...state.config, framework },
         })),
-      
+
       setDifficulty: (difficulty) =>
         set((state) => ({
           config: { ...state.config, difficulty },
         })),
-      
+
       setCategory: (category) =>
         set((state) => ({
           config: { ...state.config, category },
         })),
-      
+
       setCodeTheme: (codeTheme) =>
         set((state) => ({
           config: { ...state.config, codeTheme },
         })),
-      
+
       updateConfig: (newConfig) =>
         set((state) => ({
           config: { ...state.config, ...newConfig },
         })),
-      
-      setSelectedSnippet: (snippet) =>
-        set({ selectedSnippet: snippet }),
-      
-      setConfigDrawerOpen: (open) =>
-        set({ isConfigDrawerOpen: open }),
-      
-      setLoading: (loading) =>
-        set({ isLoading: loading }),
-      
+
+      setSelectedSnippet: (snippet) => set({ selectedSnippet: snippet }),
+
+      setConfigDrawerOpen: (open) => set({ isConfigDrawerOpen: open }),
+
+      setLoading: (loading) => set({ isLoading: loading }),
+
       resetConfig: () =>
         set({
           config: DEFAULT_CONFIG,
@@ -145,6 +144,6 @@ export const useCodingPracticeStore = create<CodingPracticeStore>()(
       partialize: (state) => ({
         config: state.config,
       }),
-    }
-  )
+    },
+  ),
 );

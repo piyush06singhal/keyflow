@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar, TrendingUp, Clock, Zap } from "lucide-react";
 import {
@@ -15,6 +15,7 @@ import {
 import { PageContainer, PageHeader } from "@/components/app-shell";
 import { SessionHistoryCard } from "@/components/session-results";
 import { Card } from "@/components/ui/card";
+import { TiltCard } from "@/components/motion";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -43,9 +44,34 @@ export default function SessionHistoryPage() {
   const [sortBy, setSortBy] = useState<SortKey>("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  const sessions = useMemo(() => getSessionHistory(), []);
-  const bests = useMemo(() => getPersonalBests(), []);
-  const analytics = useMemo(() => getAggregatedAnalytics(), []);
+  // localStorage is written to by the practice pages, not this one, so it
+  // can't be read once on mount — re-read whenever this page becomes
+  // visible again (tab focus, back-navigation) so a session completed
+  // elsewhere actually shows up without a hard reload.
+  const [sessions, setSessions] = useState<ReturnType<typeof getSessionHistory>>([]);
+  const [bests, setBests] = useState<ReturnType<typeof getPersonalBests> | null>(null);
+  const [analytics, setAnalytics] = useState<ReturnType<
+    typeof getAggregatedAnalytics
+  > | null>(null);
+
+  useEffect(() => {
+    const refresh = () => {
+      setSessions(getSessionHistory());
+      setBests(getPersonalBests());
+      setAnalytics(getAggregatedAnalytics());
+    };
+
+    refresh();
+    window.addEventListener("focus", refresh);
+    window.addEventListener("storage", refresh);
+    document.addEventListener("visibilitychange", refresh);
+
+    return () => {
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("storage", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, []);
 
   const sortedSessions = useMemo(() => {
     const sortValue = (s: (typeof sessions)[number]) => {
@@ -101,41 +127,50 @@ export default function SessionHistoryPage() {
 
       {/* Summary Stats */}
       <div className="mb-6 grid gap-4 md:grid-cols-3 lg:grid-cols-5">
-        <Card className="p-4">
+        <TiltCard maxTilt={6} className="surface-card border-t-4 border-t-blue-500 p-4">
           <div className="text-muted-foreground flex items-center gap-2 text-xs">
             <TrendingUp className="size-3" />
             <span>Average WPM</span>
           </div>
           <p className="mt-2 font-mono text-2xl font-bold">{avgWpm.toFixed(0)}</p>
-        </Card>
+        </TiltCard>
 
-        <Card className="p-4">
+        <TiltCard
+          maxTilt={6}
+          className="surface-card border-t-4 border-t-green-500 p-4"
+        >
           <div className="text-muted-foreground flex items-center gap-2 text-xs">
             <Zap className="size-3" />
             <span>Best WPM</span>
           </div>
           <p className="mt-2 font-mono text-2xl font-bold text-green-500">
-            {bests.bestWpm.toFixed(0)}
+            {(bests?.bestWpm ?? 0).toFixed(0)}
           </p>
-        </Card>
+        </TiltCard>
 
-        <Card className="p-4">
+        <TiltCard
+          maxTilt={6}
+          className="surface-card border-t-4 border-t-purple-500 p-4"
+        >
           <div className="text-muted-foreground flex items-center gap-2 text-xs">
             <TrendingUp className="size-3" />
             <span>Average Accuracy</span>
           </div>
           <p className="mt-2 font-mono text-2xl font-bold">{avgAccuracy.toFixed(1)}%</p>
-        </Card>
+        </TiltCard>
 
-        <Card className="p-4">
+        <TiltCard
+          maxTilt={6}
+          className="surface-card border-t-4 border-t-orange-500 p-4"
+        >
           <div className="text-muted-foreground flex items-center gap-2 text-xs">
             <Calendar className="size-3" />
             <span>Total Sessions</span>
           </div>
           <p className="mt-2 font-mono text-2xl font-bold">{sessions.length}</p>
-        </Card>
+        </TiltCard>
 
-        <Card className="p-4">
+        <TiltCard maxTilt={6} className="surface-card border-t-4 border-t-pink-500 p-4">
           <div className="text-muted-foreground flex items-center gap-2 text-xs">
             <Clock className="size-3" />
             <span>Total Time</span>
@@ -143,7 +178,7 @@ export default function SessionHistoryPage() {
           <p className="mt-2 font-mono text-2xl font-bold">
             {formatDuration(totalDuration)}
           </p>
-        </Card>
+        </TiltCard>
       </div>
 
       <Tabs defaultValue="sessions">
@@ -207,7 +242,7 @@ export default function SessionHistoryPage() {
                   key={session.id}
                   session={session}
                   isPersonalBest={
-                    session.finalWpm >= bests.bestWpm && bests.bestWpm > 0
+                    (bests?.bestWpm ?? 0) > 0 && session.finalWpm >= bests!.bestWpm
                   }
                   delay={index * 0.05}
                 />

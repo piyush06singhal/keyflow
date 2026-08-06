@@ -436,6 +436,19 @@ p {
   }
 }
 
+/* Layout density (Settings → Appearance) — scales vertical breathing room
+   on the page-level container. Compact/spacious only; "comfortable" is the
+   default already set on that element. */
+[data-density="compact"] .page-container {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+[data-density="spacious"] .page-container {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
 .skeleton {
   animation: shimmer 2s infinite linear;
   background: linear-gradient(

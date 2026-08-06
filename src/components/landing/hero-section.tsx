@@ -26,7 +26,7 @@ export function HeroSection() {
         >
           <div className="border-border bg-card shadow-pop-sm inline-flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-bold">
             <Zap className="text-primary h-4 w-4" />
-            <span>Free forever • No credit card required</span>
+            <span>Free forever • No account needed</span>
           </div>
         </motion.div>
 

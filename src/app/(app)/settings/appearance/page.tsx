@@ -1,10 +1,13 @@
 "use client";
 
 import React from "react";
+import { useTheme } from "next-themes";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useMounted } from "@/hooks/use-mounted";
 import type { LucideIcon } from "lucide-react";
 import { Palette, Monitor, Sun, Moon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { TiltCard } from "@/components/motion";
 
 interface ThemeOptionProps {
   value: string;
@@ -23,27 +26,36 @@ const ThemeOption = ({
 }: ThemeOptionProps) => {
   const isSelected = currentTheme === value;
   return (
-    <Card
-      className={`cursor-pointer transition-all ${isSelected ? "bg-primary/10" : ""}`}
-      onClick={() => onClick(value)}
-    >
-      <CardContent className="flex flex-col items-center justify-center gap-3 p-6">
-        <Icon
-          className={`h-8 w-8 ${isSelected ? "text-primary" : "text-muted-foreground"}`}
-        />
-        <span
-          className={`text-sm font-bold ${isSelected ? "text-foreground" : "text-muted-foreground"}`}
-        >
-          {label}
-        </span>
-      </CardContent>
-    </Card>
+    <TiltCard maxTilt={8}>
+      <Card
+        className={`cursor-pointer transition-all ${isSelected ? "bg-primary/10" : ""}`}
+        onClick={() => onClick(value)}
+      >
+        <CardContent className="flex flex-col items-center justify-center gap-3 p-6">
+          <Icon
+            className={`h-8 w-8 ${isSelected ? "text-primary" : "text-muted-foreground"}`}
+          />
+          <span
+            className={`text-sm font-bold ${isSelected ? "text-foreground" : "text-muted-foreground"}`}
+          >
+            {label}
+          </span>
+        </CardContent>
+      </Card>
+    </TiltCard>
   );
 };
 
 export default function AppearanceSettingsPage() {
   const appearance = useSettingsStore((state) => state.appearance);
   const updateAppearance = useSettingsStore((state) => state.updateAppearance);
+  const { theme, setTheme } = useTheme();
+
+  // next-themes resolves the real theme only after mount (it needs to read
+  // localStorage/media query client-side) — avoid a hydration flash by
+  // falling back to "system" until then.
+  const mounted = useMounted();
+  const currentTheme = mounted ? (theme ?? "system") : "system";
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 space-y-10 duration-500">
@@ -65,22 +77,22 @@ export default function AppearanceSettingsPage() {
             value="light"
             icon={Sun}
             label="Light"
-            currentTheme={appearance.theme}
-            onClick={(val) => updateAppearance({ theme: val })}
+            currentTheme={currentTheme}
+            onClick={(val) => setTheme(val)}
           />
           <ThemeOption
             value="dark"
             icon={Moon}
             label="Dark"
-            currentTheme={appearance.theme}
-            onClick={(val) => updateAppearance({ theme: val })}
+            currentTheme={currentTheme}
+            onClick={(val) => setTheme(val)}
           />
           <ThemeOption
             value="system"
             icon={Monitor}
             label="System Default"
-            currentTheme={appearance.theme}
-            onClick={(val) => updateAppearance({ theme: val })}
+            currentTheme={currentTheme}
+            onClick={(val) => setTheme(val)}
           />
         </div>
       </section>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { TypingEngine } from "@/lib/typing-engine";
+import { playKeystrokeSound } from "@/lib/audio/keystroke-sound";
 import type {
   TypingEngineConfig,
   LiveStatistics,
@@ -117,7 +118,13 @@ export function useTypingEngine({
         );
       }),
 
-      engine.on("character:typed", () => setWords([...engine.getWords()])),
+      engine.on("character:typed", (event) => {
+        setWords([...engine.getWords()]);
+        if (engine.getConfig().soundEnabled) {
+          const data = event.data as { isCorrect: boolean };
+          playKeystrokeSound(data.isCorrect);
+        }
+      }),
       engine.on("character:deleted", () => setWords([...engine.getWords()])),
     ];
 

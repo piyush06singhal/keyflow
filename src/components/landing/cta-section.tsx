@@ -59,8 +59,7 @@ export function CTASection() {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg text-pretty sm:text-xl"
             >
-              No account, no credit card, nothing to install — just open the page and
-              start typing.
+              No account, nothing to install — just open the page and start typing.
             </motion.p>
 
             <motion.div
@@ -94,7 +93,7 @@ export function CTASection() {
               <div className="bg-border hidden h-4 w-px sm:block" />
               <div className="flex items-center gap-2">
                 <span className="text-success">✓</span>
-                <span>No credit card</span>
+                <span>Local-first, no tracking</span>
               </div>
               <div className="bg-border hidden h-4 w-px sm:block" />
               <div className="flex items-center gap-2">

@@ -70,6 +70,7 @@ export function CodePracticeEditor({
         duration: config.duration,
         allowBackspace: config.allowBackspace,
         strictMode: config.strictMode,
+        soundEnabled: config.soundEnabled,
         includePunctuation: true,
         includeNumbers: true,
         includeCapitalization: true,
@@ -103,8 +104,13 @@ export function CodePracticeEditor({
     router.push("/practice/results");
   }, [router]);
 
-  // Split code into lines for rendering
-  const codeLines = snippet.code.split("\n");
+  // Derived from the engine's live word list (one word = one line in coding
+  // mode) rather than the static `snippet.code` prop — if the buffer runs
+  // out before a countdown timer expires, the engine appends fresh lines
+  // (see extendContent() in typing-engine.ts) and this needs to reflect
+  // that, or the extended content would never actually become visible.
+  const codeLines =
+    words.length > 0 ? words.map((w) => w.text) : snippet.code.split("\n");
 
   // Memoize character states by absolute index for O(1) lookups.
   // `char.index` is only the position *within its line* (word), so it

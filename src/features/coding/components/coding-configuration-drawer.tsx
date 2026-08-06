@@ -175,15 +175,6 @@ export function CodingConfigurationDrawer({
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="minimap">Show Minimap</Label>
-              <Switch
-                id="minimap"
-                checked={config.showMinimap}
-                onCheckedChange={(checked) => updateConfig({ showMinimap: checked })}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
               <Label htmlFor="syntax">Syntax Highlighting</Label>
               <Switch
                 id="syntax"

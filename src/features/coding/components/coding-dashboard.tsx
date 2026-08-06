@@ -105,7 +105,7 @@ export function CodingDashboard() {
   );
   const [selectedDuration, setSelectedDuration] = useState(config.duration || 300);
   const [snippetSource, setSnippetSource] = useState<"static" | "ai-generated">(
-    (config.snippetSource as "static" | "ai-generated") || "static",
+    (config.snippetSource as "static" | "ai-generated") || "ai-generated",
   );
 
   const languages = getAllLanguages();

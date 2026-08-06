@@ -1,15 +1,23 @@
 "use client";
 
 import React from "react";
-import { useSettingsStore } from "@/stores/settings-store";
+import { useCodingPracticeStore } from "@/stores/coding-practice-store";
 import { getAccentColor } from "@/lib/accent-colors";
-import { Hash, Sidebar, FileCode2 } from "lucide-react";
+import { Hash, FileCode2 } from "lucide-react";
+import type { ProgrammingLanguage } from "@/lib/coding-practice/types";
 
 export default function CodingSettingsPage() {
-  const coding = useSettingsStore((state) => state.coding);
-  const updateCoding = useSettingsStore((state) => state.updateCoding);
+  const config = useCodingPracticeStore((state) => state.config);
+  const updateConfig = useCodingPracticeStore((state) => state.updateConfig);
 
-  const languages = ["typescript", "javascript", "python", "rust", "go", "cpp"];
+  const languages: ProgrammingLanguage[] = [
+    "typescript",
+    "javascript",
+    "python",
+    "rust",
+    "go",
+    "cpp",
+  ];
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 space-y-10 duration-500">
@@ -41,9 +49,9 @@ export default function CodingSettingsPage() {
             {languages.map((lang) => (
               <button
                 key={lang}
-                onClick={() => updateCoding({ defaultLanguage: lang })}
+                onClick={() => updateConfig({ language: lang })}
                 className={`rounded-full border-2 px-4 py-2 font-bold capitalize transition-all ${
-                  coding.defaultLanguage === lang
+                  config.language === lang
                     ? "border-border bg-primary text-primary-foreground shadow-pop-sm"
                     : "border-border hover:bg-secondary/50 text-muted-foreground"
                 }`}
@@ -74,9 +82,9 @@ export default function CodingSettingsPage() {
             {[2, 4, 8].map((spaces) => (
               <button
                 key={spaces}
-                onClick={() => updateCoding({ tabWidth: spaces })}
+                onClick={() => updateConfig({ tabSize: spaces })}
                 className={`rounded-full px-6 py-2 text-sm font-bold transition-all ${
-                  coding.tabWidth === spaces
+                  config.tabSize === spaces
                     ? "border-border bg-primary text-primary-foreground shadow-pop-sm border-2"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -89,7 +97,7 @@ export default function CodingSettingsPage() {
 
         {/* Editor Toggles */}
         <section className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4">
             {/* Line Numbers Toggle */}
             <div className="border-border bg-secondary/40 shadow-pop-sm flex items-center justify-between rounded-2xl border-2 p-4">
               <div className="flex items-center gap-3">
@@ -104,41 +112,16 @@ export default function CodingSettingsPage() {
                 </div>
               </div>
               <button
-                onClick={() => updateCoding({ lineNumbers: !coding.lineNumbers })}
+                onClick={() =>
+                  updateConfig({ showLineNumbers: !config.showLineNumbers })
+                }
                 className={`border-border relative inline-flex h-6 w-11 items-center rounded-full border-2 transition-colors ${
-                  coding.lineNumbers ? "bg-primary" : "bg-muted"
+                  config.showLineNumbers ? "bg-primary" : "bg-muted"
                 }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    coding.lineNumbers ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Minimap Toggle */}
-            <div className="border-border bg-secondary/40 shadow-pop-sm flex items-center justify-between rounded-2xl border-2 p-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`border-border shadow-pop-sm rounded-xl border-2 p-2 ${getAccentColor(3).bg} ${getAccentColor(3).fg}`}
-                >
-                  <Sidebar className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-base">Editor Minimap</h3>
-                  <p className="text-muted-foreground text-xs">Show overview</p>
-                </div>
-              </div>
-              <button
-                onClick={() => updateCoding({ minimap: !coding.minimap })}
-                className={`border-border relative inline-flex h-6 w-11 items-center rounded-full border-2 transition-colors ${
-                  coding.minimap ? "bg-primary" : "bg-muted"
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    coding.minimap ? "translate-x-6" : "translate-x-1"
+                    config.showLineNumbers ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
               </button>

@@ -55,6 +55,7 @@ export const TextRenderer = memo(function TextRenderer({
   }[uiSettings.fontFamily];
 
   const activeWordIndex = cursorPosition?.wordIndex ?? 0;
+  const activeCharIndex = cursorPosition?.charIndex ?? null;
 
   // Keep the active line in view: measure the real line height (accounts
   // for font size + gap) and translate the word flow so the active word
@@ -82,7 +83,11 @@ export const TextRenderer = memo(function TextRenderer({
     const translateY = -(targetLine * effectiveLineHeight);
 
     inner.style.transform = `translateY(${translateY}px)`;
-  }, [activeWordIndex, words, fontSizeClass, fontFamilyClass]);
+    // `words` deliberately excluded — this only needs to re-run when the
+    // active word/line changes (ref lookups are always current), not on
+    // every keystroke. Including it would force a synchronous layout read
+    // (getComputedStyle) on every character typed.
+  }, [activeWordIndex, fontSizeClass, fontFamilyClass]);
 
   return (
     <div ref={containerRef} className="relative overflow-hidden">
@@ -101,7 +106,8 @@ export const TextRenderer = memo(function TextRenderer({
           <WordRenderer
             key={word.index}
             word={word}
-            cursorPosition={cursorPosition}
+            isActiveWord={word.index === activeWordIndex}
+            activeCharIndex={word.index === activeWordIndex ? activeCharIndex : null}
             cursorStyle={uiSettings.cursorStyle}
             registerRef={registerWordRef}
           />
@@ -113,18 +119,19 @@ export const TextRenderer = memo(function TextRenderer({
 
 interface WordRendererProps {
   word: Readonly<Word>;
-  cursorPosition: CursorPosition | null;
+  isActiveWord: boolean;
+  activeCharIndex: number | null;
   cursorStyle: "line" | "block" | "underline";
   registerRef: (index: number, el: HTMLSpanElement | null) => void;
 }
 
 const WordRenderer = memo(function WordRenderer({
   word,
-  cursorPosition,
+  isActiveWord,
+  activeCharIndex,
   cursorStyle,
   registerRef,
 }: WordRendererProps) {
-  const isActiveWord = cursorPosition?.wordIndex === word.index;
   const isCompleted = word.isCompleted;
 
   return (
@@ -139,7 +146,7 @@ const WordRenderer = memo(function WordRenderer({
         <CharacterRenderer
           key={char.index}
           character={char}
-          showCursor={isActiveWord && cursorPosition?.charIndex === charIdx}
+          showCursor={isActiveWord && activeCharIndex === charIdx}
           cursorStyle={cursorStyle}
         />
       ))}

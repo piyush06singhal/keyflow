@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { TiltCard } from "@/components/motion";
 import { cn } from "@/lib/utils";
 
 export interface StatisticCardProps {
@@ -62,52 +63,54 @@ export function StatisticCard({
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
     >
-      <Card className={cn("transition-all duration-200", classes.card)}>
-        <div className="flex items-start gap-3">
-          <div
-            className={cn(
-              "border-border shadow-pop-sm rounded-xl border-2",
-              bgColor,
-              classes.iconWrapper,
-            )}
-          >
-            <Icon className={cn(classes.icon, color)} />
-          </div>
-          <div className="flex-1 space-y-1">
-            <p
+      <TiltCard maxTilt={6}>
+        <Card className={cn("transition-all duration-200", classes.card)}>
+          <div className="flex items-start gap-3">
+            <div
               className={cn(
-                "text-muted-foreground font-medium tracking-tight",
-                classes.label,
+                "border-border shadow-pop-sm rounded-xl border-2",
+                bgColor,
+                classes.iconWrapper,
               )}
             >
-              {label}
-            </p>
-            <div className="flex items-baseline gap-2">
-              <p className={cn("font-mono font-bold tracking-tight", classes.value)}>
-                {value}
+              <Icon className={cn(classes.icon, color)} />
+            </div>
+            <div className="flex-1 space-y-1">
+              <p
+                className={cn(
+                  "text-muted-foreground font-medium tracking-tight",
+                  classes.label,
+                )}
+              >
+                {label}
               </p>
-              {trend && trendValue && (
-                <span
-                  className={cn("text-xs font-semibold", {
-                    "text-success": trend === "up",
-                    "text-destructive": trend === "down",
-                    "text-muted-foreground": trend === "neutral",
-                  })}
-                >
-                  {trend === "up" && "↑"}
-                  {trend === "down" && "↓"}
-                  {trendValue}
-                </span>
+              <div className="flex items-baseline gap-2">
+                <p className={cn("font-mono font-bold tracking-tight", classes.value)}>
+                  {value}
+                </p>
+                {trend && trendValue && (
+                  <span
+                    className={cn("text-xs font-semibold", {
+                      "text-success": trend === "up",
+                      "text-destructive": trend === "down",
+                      "text-muted-foreground": trend === "neutral",
+                    })}
+                  >
+                    {trend === "up" && "↑"}
+                    {trend === "down" && "↓"}
+                    {trendValue}
+                  </span>
+                )}
+              </div>
+              {subValue && (
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  {subValue}
+                </p>
               )}
             </div>
-            {subValue && (
-              <p className="text-muted-foreground text-xs leading-relaxed">
-                {subValue}
-              </p>
-            )}
           </div>
-        </div>
-      </Card>
+        </Card>
+      </TiltCard>
     </motion.div>
   );
 }

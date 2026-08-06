@@ -344,7 +344,19 @@ export class TypingEngine {
     if (!this.cursorManager) return;
 
     const config = this.configManager.getConfig();
-    const additionalText = TextGenerator.generate(config);
+    // Modes with fixed, externally-supplied text (AI-generated prose, a
+    // pasted/loaded custom text, or a specific code snippet) would just
+    // repeat the exact same content verbatim if regenerated as-is — fall
+    // back to fresh procedural content instead so a fast typist gets new
+    // material to keep typing, not a duplicate of what they just finished.
+    const extensionConfig: TypingEngineConfig =
+      config.mode === "custom"
+        ? { ...config, mode: "word" }
+        : config.mode === "coding"
+          ? { ...config, customText: undefined }
+          : config;
+
+    const additionalText = TextGenerator.generate(extensionConfig);
     const freshWords = this.parseContent(additionalText);
 
     if (freshWords.length === 0) {

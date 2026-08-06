@@ -1,13 +1,15 @@
 "use client";
 
 import React from "react";
-import { useSettingsStore } from "@/stores/settings-store";
+import { useTypingPracticeStore } from "@/stores/typing-practice-store";
 import { getAccentColor } from "@/lib/accent-colors";
 import { Type, Timer, Volume2 } from "lucide-react";
 
 export default function TypingSettingsPage() {
-  const typing = useSettingsStore((state) => state.typing);
-  const updateTyping = useSettingsStore((state) => state.updateTyping);
+  const config = useTypingPracticeStore((state) => state.config);
+  const uiSettings = useTypingPracticeStore((state) => state.uiSettings);
+  const updateConfig = useTypingPracticeStore((state) => state.updateConfig);
+  const updateUISettings = useTypingPracticeStore((state) => state.updateUISettings);
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 space-y-10 duration-500">
@@ -36,17 +38,23 @@ export default function TypingSettingsPage() {
           </div>
 
           <div className="bg-muted flex w-fit rounded-full p-1.5">
-            {["time", "words", "quote"].map((mode) => (
+            {(
+              [
+                { value: "word", label: "Words" },
+                { value: "paragraph", label: "Paragraphs" },
+                { value: "quote", label: "Quotes" },
+              ] as const
+            ).map((mode) => (
               <button
-                key={mode}
-                onClick={() => updateTyping({ preferredMode: mode as any })}
+                key={mode.value}
+                onClick={() => updateConfig({ mode: mode.value })}
                 className={`rounded-full px-6 py-2 text-sm font-bold capitalize transition-all ${
-                  typing.preferredMode === mode
+                  config.mode === mode.value
                     ? "border-border bg-primary text-primary-foreground shadow-pop-sm border-2"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {mode}
+                {mode.label}
               </button>
             ))}
           </div>
@@ -72,9 +80,9 @@ export default function TypingSettingsPage() {
             {[15, 30, 60, 120].map((time) => (
               <button
                 key={time}
-                onClick={() => updateTyping({ defaultDuration: time })}
+                onClick={() => updateConfig({ timerMode: "countdown", duration: time })}
                 className={`rounded-full border-2 px-4 py-2 font-bold transition-all ${
-                  typing.defaultDuration === time
+                  config.timerMode === "countdown" && config.duration === time
                     ? "border-border bg-primary text-primary-foreground shadow-pop-sm"
                     : "border-border hover:bg-secondary/50 text-muted-foreground"
                 }`}
@@ -102,14 +110,16 @@ export default function TypingSettingsPage() {
               </div>
             </div>
             <button
-              onClick={() => updateTyping({ soundsEnabled: !typing.soundsEnabled })}
+              onClick={() =>
+                updateUISettings({ soundEnabled: !uiSettings.soundEnabled })
+              }
               className={`border-border relative inline-flex h-6 w-11 items-center rounded-full border-2 transition-colors ${
-                typing.soundsEnabled ? "bg-primary" : "bg-muted"
+                uiSettings.soundEnabled ? "bg-primary" : "bg-muted"
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  typing.soundsEnabled ? "translate-x-6" : "translate-x-1"
+                  uiSettings.soundEnabled ? "translate-x-6" : "translate-x-1"
                 }`}
               />
             </button>
