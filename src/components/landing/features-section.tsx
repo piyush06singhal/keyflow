@@ -33,7 +33,7 @@ const features = [
     icon: Code2,
     title: "Coding Practice",
     description:
-      "Practice typing real code in JavaScript, Python, TypeScript, React, and more with syntax highlighting.",
+      "Practice typing real code in JavaScript, Python, TypeScript, React, and more — real indentation, real line breaks.",
     gradient: "from-violet-500 to-purple-500",
   },
   {

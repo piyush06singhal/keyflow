@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Keyboard, Mail } from "lucide-react";
+import { Keyboard, Mail, ExternalLink, ShieldCheck } from "lucide-react";
 
 const footerLinks = {
   practice: [
@@ -35,6 +35,10 @@ export function SiteFooter() {
               A local-first typing and coding practice arena. No accounts, no tracking —
               your stats stay on your device.
             </p>
+            <div className="text-muted-foreground mt-4 flex items-center gap-1.5 text-xs font-medium">
+              <ShieldCheck className="text-success h-3.5 w-3.5" />
+              <span>Nothing you type is ever sent to a server</span>
+            </div>
           </div>
 
           <div>
@@ -74,13 +78,24 @@ export function SiteFooter() {
           <p className="text-muted-foreground text-sm">
             © {new Date().getFullYear()} KeyFlow.
           </p>
-          <a
-            href="mailto:piyush.singhal.2004@gmail.com"
-            className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm transition-colors"
-          >
-            <Mail className="h-4 w-4" />
-            Get in touch
-          </a>
+          <div className="flex items-center gap-5">
+            <a
+              href="https://github.com/piyush06singhal/keyflow"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm transition-colors"
+            >
+              <ExternalLink className="h-4 w-4" />
+              GitHub
+            </a>
+            <a
+              href="mailto:piyush.singhal.2004@gmail.com"
+              className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm transition-colors"
+            >
+              <Mail className="h-4 w-4" />
+              Get in touch
+            </a>
+          </div>
         </div>
       </div>
     </footer>

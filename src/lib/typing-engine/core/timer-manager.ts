@@ -1,6 +1,6 @@
 /**
  * Timer Manager
- * 
+ *
  * Manages precise timing for typing sessions with support for
  * countdown, elapsed, and untimed modes.
  */
@@ -209,7 +209,13 @@ export class TimerManager {
       // Check for expiration
       if (this.isExpired()) {
         this.stopTicking();
-        this.eventDispatcher.emit("timer:expired", this.getState());
+        // Defer past this macrotask so the "0s" tick above actually paints
+        // before the (synchronous, and non-trivial) session-completion work
+        // runs — otherwise the countdown visibly freezes on the last second
+        // while completion/stat-generation/persistence blocks the thread.
+        window.setTimeout(() => {
+          this.eventDispatcher.emit("timer:expired", this.getState());
+        }, 0);
       }
     }, 100);
   }

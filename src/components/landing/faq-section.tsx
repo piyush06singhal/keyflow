@@ -118,10 +118,10 @@ export function FAQSection() {
           <p className="text-muted-foreground">
             Still have questions?{" "}
             <a
-              href="mailto:support@keyflow.com"
+              href="mailto:piyush.singhal.2004@gmail.com"
               className="text-primary hover:text-primary/80 font-medium transition-colors"
             >
-              Contact our support team
+              Get in touch
             </a>
           </p>
         </motion.div>

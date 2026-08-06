@@ -96,7 +96,7 @@ export class TypingEngine {
     // Generate text content
     const config = this.configManager.getConfig();
     this.textContent = TextGenerator.generate(config);
-    this.words = TextGenerator.parseText(this.textContent);
+    this.words = this.parseContent(this.textContent);
 
     // Initialize cursor
     this.cursorManager = new CursorManager(this.words);
@@ -289,15 +289,81 @@ export class TypingEngine {
     this.liveStats = this.calculateStatistics();
     this.eventDispatcher.emit("statistics:updated", this.liveStats);
 
-    // Check for completion
+    // Check for completion — if a countdown timer is still running, generate
+    // more content instead of ending the session early on a fast finish.
     if (this.cursorManager.isAtEnd()) {
-      this.complete();
+      if (this.shouldExtendContent()) {
+        this.extendContent();
+      } else {
+        this.complete();
+      }
     }
 
     // Check for timer expiration
     if (this.sessionState.status === "active" && this.timerManager?.isExpired()) {
       this.complete();
     }
+  }
+
+  /**
+   * The character that marks the end of a "word" and advances the cursor
+   * to the next one. Coding mode types literal inline spaces as regular
+   * characters, so lines are only completed by a newline (Enter).
+   */
+  private getBoundaryChar(): string {
+    return this.configManager.get("mode") === "coding" ? "\n" : " ";
+  }
+
+  /**
+   * Parse generated text into words using the mode-appropriate strategy.
+   */
+  private parseContent(text: string): Word[] {
+    return this.configManager.get("mode") === "coding"
+      ? TextGenerator.parseCodeText(text)
+      : TextGenerator.parseText(text);
+  }
+
+  /**
+   * Whether to generate more content instead of completing when the
+   * buffer runs out — only makes sense for an active countdown timer
+   * that still has time left; otherwise the session should just end.
+   */
+  private shouldExtendContent(): boolean {
+    return (
+      this.timerManager !== null &&
+      this.timerManager.getMode() === "countdown" &&
+      !this.timerManager.isExpired()
+    );
+  }
+
+  /**
+   * Append freshly generated content to the current word list so a fast
+   * typist never runs out of text before a countdown timer expires.
+   */
+  private extendContent(): void {
+    if (!this.cursorManager) return;
+
+    const config = this.configManager.getConfig();
+    const additionalText = TextGenerator.generate(config);
+    const freshWords = this.parseContent(additionalText);
+
+    if (freshWords.length === 0) {
+      this.complete();
+      return;
+    }
+
+    const offset = this.words.length;
+    const reindexed = freshWords.map((word) => ({
+      ...word,
+      index: word.index + offset,
+      characters: word.characters.map((character) => ({
+        ...character,
+        wordIndex: character.wordIndex + offset,
+      })),
+    }));
+
+    this.words = [...this.words, ...reindexed];
+    this.cursorManager.updateWords(this.words);
   }
 
   /**
@@ -310,8 +376,10 @@ export class TypingEngine {
     const word = this.words[cursor.wordIndex];
     if (!word) return;
 
-    // Handle space (word completion)
-    if (char === " ") {
+    // Handle the word/line boundary character. In coding mode this is a
+    // newline (Enter) since inline spaces are literal characters to type;
+    // everywhere else it's a space.
+    if (char === this.getBoundaryChar()) {
       this.completeWord(word);
       return;
     }

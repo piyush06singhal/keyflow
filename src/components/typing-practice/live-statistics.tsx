@@ -81,6 +81,7 @@ export const LiveStatistics = memo(function LiveStatistics({
       subValue: `${statistics.rawWpm.toFixed(0)} raw`,
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
+      accent: "var(--chart-speed)",
     },
     {
       icon: Target,
@@ -89,6 +90,7 @@ export const LiveStatistics = memo(function LiveStatistics({
       subValue: `${statistics.correctChars}/${statistics.totalChars}`,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
+      accent: "var(--chart-accuracy)",
     },
     {
       icon: TrendingUp,
@@ -97,6 +99,7 @@ export const LiveStatistics = memo(function LiveStatistics({
       subValue: `${statistics.errorRate.toFixed(1)}% errors`,
       color: "text-purple-500",
       bgColor: "bg-purple-500/10",
+      accent: "var(--chart-consistency)",
     },
     {
       icon: Activity,
@@ -105,6 +108,7 @@ export const LiveStatistics = memo(function LiveStatistics({
       subValue: `${statistics.correctChars} correct`,
       color: "text-orange-500",
       bgColor: "bg-orange-500/10",
+      accent: "var(--chart-time)",
     },
   ];
 
@@ -195,6 +199,7 @@ interface StatCardProps {
   subValue: string;
   color: string;
   bgColor: string;
+  accent: string;
 }
 
 const StatCard = memo(function StatCard({
@@ -204,11 +209,13 @@ const StatCard = memo(function StatCard({
   subValue,
   color,
   bgColor,
+  accent,
 }: StatCardProps) {
   return (
     <TiltCard
       maxTilt={6}
-      className="bg-card border-border shadow-pop-sm hover:shadow-pop-md flex items-start gap-3 rounded-xl border-2 p-4 transition-all duration-200"
+      className="bg-card border-border shadow-pop-sm hover:shadow-pop-md flex items-start gap-3 rounded-xl border-2 border-t-4 p-4 transition-all duration-200"
+      style={{ borderTopColor: accent }}
     >
       <div
         className={cn("border-border shadow-pop-sm rounded-xl border-2 p-2.5", bgColor)}

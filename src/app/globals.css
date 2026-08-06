@@ -280,6 +280,18 @@ body {
     ),
     var(--background);
   color: var(--foreground);
+}
+
+.dark body {
+  background:
+    radial-gradient(circle at top left, rgba(155, 132, 255, 0.16), transparent 38rem),
+    radial-gradient(
+      circle at bottom right,
+      rgba(255, 138, 212, 0.12),
+      transparent 34rem
+    ),
+    radial-gradient(circle at bottom left, rgba(255, 197, 97, 0.07), transparent 30rem),
+    var(--background);
   font-feature-settings:
     "rlig" 1,
     "calt" 1;

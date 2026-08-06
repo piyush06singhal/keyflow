@@ -55,7 +55,10 @@ export class TextGenerator {
       case "custom":
         return config.customText ?? "";
       case "coding":
-        return this.generateCode(config);
+        // Prefer the caller-supplied snippet (e.g. from the coding-practice
+        // snippet provider) — it must match whatever text is rendered on
+        // screen, or scoring desyncs from what the user sees and types.
+        return config.customText ?? this.generateCode(config);
       default:
         return this.generateWords(config);
     }
@@ -226,6 +229,48 @@ function memoize(fn) {
     });
 
     return words;
+  }
+
+  /**
+   * Parse code text into structured lines for coding-practice mode.
+   *
+   * Unlike `parseText` (which collapses whitespace runs into single-space
+   * word boundaries), code needs literal indentation and newlines to be
+   * typeable and scoreable. Each line becomes one "word": its full text
+   * including leading indentation is the literal character sequence the
+   * user must type, and the boundary between words is a newline (Enter)
+   * instead of a space — so inline spaces stay literal characters.
+   */
+  static parseCodeText(text: string): Word[] {
+    const lines = text.split("\n");
+
+    return lines.map((lineText, wordIndex) => {
+      const characters: Character[] = [];
+
+      for (let charIndex = 0; charIndex < lineText.length; charIndex++) {
+        const char = lineText[charIndex] ?? "";
+        characters.push({
+          char,
+          index: charIndex,
+          wordIndex,
+          isSpace: char === " ",
+          isCorrect: null,
+          typed: false,
+          skipped: false,
+          timestamp: null,
+        });
+      }
+
+      return {
+        text: lineText,
+        index: wordIndex,
+        characters,
+        isCompleted: false,
+        isCorrect: null,
+        startTime: null,
+        endTime: null,
+      };
+    });
   }
 
   /**

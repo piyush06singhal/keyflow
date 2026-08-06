@@ -106,13 +106,20 @@ export function CodePracticeEditor({
   // Split code into lines for rendering
   const codeLines = snippet.code.split("\n");
 
-  // Memoize character states by absolute index for O(1) lookups
+  // Memoize character states by absolute index for O(1) lookups.
+  // `char.index` is only the position *within its line* (word), so it
+  // collides across lines — track a running absolute index instead,
+  // matching the +1-per-newline scheme used for cursorPosition.absoluteIndex
+  // and the line-start offsets below.
   const characterMap = useMemo(() => {
     const map = new Map<number, Character>();
+    let absoluteIndex = 0;
     for (const word of words) {
       for (const char of word.characters) {
-        map.set(char.index, char);
+        map.set(absoluteIndex, char);
+        absoluteIndex++;
       }
+      absoluteIndex++; // newline between lines
     }
     return map;
   }, [words]);

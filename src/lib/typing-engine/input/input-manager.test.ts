@@ -197,3 +197,56 @@ describe("InputManager.processKeyEvent — backspace", () => {
     });
   });
 });
+
+describe("InputManager.processKeyEvent — coding mode", () => {
+  const codingConfig: TypingEngineConfig = { ...baseConfig, mode: "coding" };
+
+  it("treats space as a literal character instead of a word boundary", () => {
+    const manager = makeManager(codingConfig);
+    const cursor: CursorPosition = { wordIndex: 0, charIndex: 3, absoluteIndex: 3 };
+    const { action } = manager.processKeyEvent(
+      keyEvent(" "),
+      cursor,
+      makeWords("let x = 1;"),
+    );
+
+    expect(action!.value).toBe(" ");
+    // stays on the same word/line — only charIndex/absoluteIndex advance
+    expect(action!.cursorAfter).toEqual({
+      wordIndex: 0,
+      charIndex: 4,
+      absoluteIndex: 4,
+    });
+  });
+
+  it("treats Enter as the line boundary, advancing to the next line", () => {
+    const manager = makeManager(codingConfig);
+    const cursor: CursorPosition = { wordIndex: 0, charIndex: 10, absoluteIndex: 10 };
+    const { action, shouldPreventDefault } = manager.processKeyEvent(
+      keyEvent("Enter"),
+      cursor,
+      makeWords("let x = 1;", "let y = 2;"),
+    );
+
+    expect(shouldPreventDefault).toBe(true);
+    expect(action!.value).toBe("\n");
+    expect(action!.cursorAfter).toEqual({
+      wordIndex: 1,
+      charIndex: 0,
+      absoluteIndex: 11,
+    });
+  });
+
+  it("ignores Enter outside of coding mode", () => {
+    const manager = makeManager();
+    const cursor: CursorPosition = { wordIndex: 0, charIndex: 5, absoluteIndex: 5 };
+    const { action, shouldPreventDefault } = manager.processKeyEvent(
+      keyEvent("Enter"),
+      cursor,
+      makeWords("hello", "world"),
+    );
+
+    expect(action).toBeNull();
+    expect(shouldPreventDefault).toBe(false);
+  });
+});

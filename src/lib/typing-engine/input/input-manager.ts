@@ -62,14 +62,29 @@ export class InputManager {
       return { action: null, shouldPreventDefault: true };
     }
 
+    const isCoding = this.config.mode === "coding";
+
+    // In coding mode, Enter is the line boundary (inline spaces are
+    // literal characters instead). Everywhere else Enter is ignored.
+    if (keyEvent.key === "Enter") {
+      if (isCoding) {
+        return this.handleBoundary("\n", currentCursor);
+      }
+      return { action: null, shouldPreventDefault: false };
+    }
+
     // Ignore modifier keys alone
     if (keyEvent.isModifier) {
       return { action: null, shouldPreventDefault: false };
     }
 
-    // Handle space
+    // Handle space — a literal character in coding mode, a word boundary
+    // everywhere else.
     if (keyEvent.isSpace) {
-      return this.handleSpace(currentCursor, words);
+      if (isCoding) {
+        return this.handleCharacter(" ", currentCursor, words);
+      }
+      return this.handleBoundary(" ", currentCursor);
     }
 
     // Handle character input
@@ -108,18 +123,19 @@ export class InputManager {
   }
 
   /**
-   * Handle space input
+   * Handle a word/line boundary keypress (space in normal modes, Enter in
+   * coding mode) — advances to the start of the next word.
    */
-  private handleSpace(
+  private handleBoundary(
+    value: string,
     currentCursor: CursorPosition,
-    _words: Word[],
   ): {
     action: InputAction;
     shouldPreventDefault: boolean;
   } {
     const action: InputAction = {
       type: "character",
-      value: " ",
+      value,
       timestamp: Date.now(),
       cursorBefore: { ...currentCursor },
       cursorAfter: {

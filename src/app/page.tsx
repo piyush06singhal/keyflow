@@ -1,6 +1,5 @@
 import { HeroSection } from "@/components/landing/hero-section";
 import { FeaturesSection } from "@/components/landing/features-section";
-import { InteractiveShowcase } from "@/components/landing/interactive-showcase";
 import { CodingPracticeSection } from "@/components/landing/coding-practice-section";
 import { FAQSection } from "@/components/landing/faq-section";
 import { CTASection } from "@/components/landing/cta-section";
@@ -39,7 +38,6 @@ export default function LandingPage() {
       <SiteNavbar />
       <main className="relative">
         <HeroSection />
-        <InteractiveShowcase />
         <FeaturesSection />
         <CodingPracticeSection />
         <FAQSection />

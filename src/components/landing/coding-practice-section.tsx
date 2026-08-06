@@ -1,21 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { motion, useInView } from "framer-motion";
 import { Code2, ChevronRight } from "lucide-react";
-
-const languages = [
-  "JavaScript",
-  "TypeScript",
-  "Python",
-  "Java",
-  "C++",
-  "SQL",
-  "React",
-  "Next.js",
-];
 
 const codeSnippets = {
   JavaScript: `function fibonacci(n) {
@@ -42,9 +32,36 @@ const getUser = async (id: number): Promise<User> => {
     middle = [x for x in arr if x == pivot]
     right = [x for x in arr if x > pivot]
     return quick_sort(left) + middle + quick_sort(right)`,
+  Java: `public class BinarySearch {
+  public static int search(int[] arr, int target) {
+    int lo = 0, hi = arr.length - 1;
+    while (lo <= hi) {
+      int mid = (lo + hi) / 2;
+      if (arr[mid] == target) return mid;
+      if (arr[mid] < target) lo = mid + 1;
+      else hi = mid - 1;
+    }
+    return -1;
+  }
+}`,
+  "C++": `#include <vector>
+
+int sumEven(const std::vector<int>& nums) {
+  int total = 0;
+  for (int n : nums) {
+    if (n % 2 == 0) total += n;
+  }
+  return total;
+}`,
+  SQL: `SELECT users.name, COUNT(orders.id) AS order_count
+FROM users
+LEFT JOIN orders ON orders.user_id = users.id
+GROUP BY users.name
+ORDER BY order_count DESC
+LIMIT 10;`,
   React: `export function Counter() {
   const [count, setCount] = useState(0);
-  
+
   return (
     <div>
       <p>Count: {count}</p>
@@ -56,10 +73,25 @@ const getUser = async (id: number): Promise<User> => {
 }`,
 };
 
+const languages = Object.keys(codeSnippets) as (keyof typeof codeSnippets)[];
+
+const FILE_EXTENSIONS: Record<keyof typeof codeSnippets, string> = {
+  JavaScript: "js",
+  TypeScript: "ts",
+  Python: "py",
+  Java: "java",
+  "C++": "cpp",
+  SQL: "sql",
+  React: "jsx",
+};
+
 export function CodingPracticeSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const [selectedLang, setSelectedLang] = useState("JavaScript");
+  const [selectedLang, setSelectedLang] =
+    useState<keyof typeof codeSnippets>("JavaScript");
+  const activeSnippet = codeSnippets[selectedLang];
+  const snippetLines = activeSnippet.split("\n");
 
   return (
     <section id="coding" className="relative py-24 sm:py-32" ref={ref}>
@@ -93,9 +125,9 @@ export function CodingPracticeSection() {
 
             <div className="mt-8 space-y-4">
               {[
-                "✓ Syntax-highlighted code editor",
+                "✓ Real indentation, brackets, and line breaks",
                 "✓ Real-world code patterns",
-                "✓ 16 programming languages",
+                "✓ 17 programming languages",
                 "✓ Track code-specific metrics",
               ].map((feature, i) => (
                 <motion.div
@@ -117,9 +149,11 @@ export function CodingPracticeSection() {
               transition={{ duration: 0.5, delay: 0.6 }}
               className="mt-8"
             >
-              <Button size="lg" className="group">
-                Start Coding Practice
-                <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <Button size="lg" className="group" asChild>
+                <Link href="/practice/code/dashboard">
+                  Start Coding Practice
+                  <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
               </Button>
             </motion.div>
           </motion.div>
@@ -140,12 +174,7 @@ export function CodingPracticeSection() {
                   <div className="bg-success/80 h-3 w-3 rounded-full" />
                 </div>
                 <div className="text-muted-foreground font-mono text-xs">
-                  practice.
-                  {selectedLang === "TypeScript"
-                    ? "ts"
-                    : selectedLang === "Python"
-                      ? "py"
-                      : "js"}
+                  practice.{FILE_EXTENSIONS[selectedLang]}
                 </div>
               </div>
 
@@ -178,10 +207,7 @@ export function CodingPracticeSection() {
                     transition={{ duration: 0.3 }}
                     className="text-foreground/90 w-max min-w-full"
                   >
-                    <code>
-                      {codeSnippets[selectedLang as keyof typeof codeSnippets] ||
-                        codeSnippets.JavaScript}
-                    </code>
+                    <code>{activeSnippet}</code>
                   </motion.pre>
                 </div>
 
@@ -191,8 +217,8 @@ export function CodingPracticeSection() {
 
               {/* Editor Footer */}
               <div className="border-border-subtle bg-muted/30 text-muted-foreground flex items-center justify-between border-t-2 px-4 py-2 text-xs">
-                <span>Lines: 8</span>
-                <span>Characters: 142</span>
+                <span>Lines: {snippetLines.length}</span>
+                <span>Characters: {activeSnippet.length}</span>
                 <span className="text-success">Ready</span>
               </div>
             </Card>

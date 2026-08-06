@@ -143,43 +143,52 @@ export function CodingDashboard() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <TiltCard maxTilt={6} className="surface-card p-4">
+        <TiltCard maxTilt={6} className="surface-card border-t-4 border-t-blue-500 p-4">
           <div className="flex items-center gap-3">
             <div className="border-border shadow-pop-sm rounded-xl border-2 bg-blue-500/15 p-2">
               <Code2 className="h-5 w-5 text-blue-500" />
             </div>
             <div>
-              <div className="text-2xl font-bold">16</div>
+              <div className="text-2xl font-bold">17</div>
               <div className="text-muted-foreground text-sm">Languages</div>
             </div>
           </div>
         </TiltCard>
 
-        <TiltCard maxTilt={6} className="surface-card p-4">
+        <TiltCard
+          maxTilt={6}
+          className="surface-card border-t-4 border-t-green-500 p-4"
+        >
           <div className="flex items-center gap-3">
             <div className="border-border shadow-pop-sm rounded-xl border-2 bg-green-500/15 p-2">
               <Target className="h-5 w-5 text-green-500" />
             </div>
             <div>
-              <div className="text-2xl font-bold">100+</div>
-              <div className="text-muted-foreground text-sm">Code Snippets</div>
+              <div className="text-2xl font-bold">48</div>
+              <div className="text-muted-foreground text-sm">Curated Snippets</div>
             </div>
           </div>
         </TiltCard>
 
-        <TiltCard maxTilt={6} className="surface-card p-4">
+        <TiltCard
+          maxTilt={6}
+          className="surface-card border-t-4 border-t-purple-500 p-4"
+        >
           <div className="flex items-center gap-3">
             <div className="border-border shadow-pop-sm rounded-xl border-2 bg-purple-500/15 p-2">
               <Zap className="h-5 w-5 text-purple-500" />
             </div>
             <div>
               <div className="text-2xl font-bold">Live</div>
-              <div className="text-muted-foreground text-sm">Syntax Highlight</div>
+              <div className="text-muted-foreground text-sm">Per-Keystroke Scoring</div>
             </div>
           </div>
         </TiltCard>
 
-        <TiltCard maxTilt={6} className="surface-card p-4">
+        <TiltCard
+          maxTilt={6}
+          className="surface-card border-t-4 border-t-orange-500 p-4"
+        >
           <div className="flex items-center gap-3">
             <div className="border-border shadow-pop-sm rounded-xl border-2 bg-orange-500/15 p-2">
               <TrendingUp className="h-5 w-5 text-orange-500" />
@@ -374,11 +383,11 @@ export function CodingDashboard() {
         <TiltCard maxTilt={5} className="surface-card p-6">
           <h3 className="mb-2 flex items-center gap-2 font-semibold">
             <Zap className="text-primary h-5 w-5" />
-            Syntax Highlighting
+            Real Indentation
           </h3>
           <p className="text-muted-foreground text-sm">
-            Code editor with full syntax highlighting, line numbers, and indentation
-            guides.
+            Type actual indentation and line breaks — not simplified text — with line
+            numbers and per-character correctness as you go.
           </p>
         </TiltCard>
 
