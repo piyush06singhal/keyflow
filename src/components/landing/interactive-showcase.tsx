@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion, useInView } from "framer-motion";
-import { Keyboard, Code2, TrendingUp, Target, Award, Calendar } from "lucide-react";
+import { Keyboard, Code2, TrendingUp, Target, Calendar } from "lucide-react";
 
 const showcaseItems = [
   {
@@ -30,12 +30,6 @@ const showcaseItems = [
     label: "Progress",
     icon: Target,
     content: <ProgressShowcase />,
-  },
-  {
-    id: "achievements",
-    label: "Achievements",
-    icon: Award,
-    content: <AchievementsShowcase />,
   },
   {
     id: "challenges",
@@ -77,14 +71,14 @@ export function InteractiveShowcase() {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="bg-muted/50 grid w-full grid-cols-3 gap-2 p-2 lg:grid-cols-6">
+            <TabsList className="grid h-auto w-full grid-cols-3 gap-2 p-2 lg:grid-cols-5">
               {showcaseItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <TabsTrigger
                     key={item.id}
                     value={item.id}
-                    className="data-[state=active]:bg-background data-[state=active]:shadow-key-sm flex items-center gap-2"
+                    className="flex items-center gap-2 py-2"
                   >
                     <Icon className="h-4 w-4" />
                     <span className="hidden sm:inline">{item.label}</span>
@@ -107,7 +101,7 @@ export function InteractiveShowcase() {
 
 function TypingShowcase() {
   return (
-    <Card className="border-border/50 bg-card/50 overflow-hidden p-8 backdrop-blur-sm">
+    <Card className="overflow-hidden p-8">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold">Live Typing Practice</h3>
@@ -127,7 +121,7 @@ function TypingShowcase() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="border-border/50 bg-muted/30 rounded-lg border p-4"
+              className="border-border bg-muted/30 shadow-pop-sm rounded-xl border-2 p-4"
             >
               <div className="text-muted-foreground text-sm">{stat.label}</div>
               <div className="mt-1 text-2xl font-bold">{stat.value}</div>
@@ -142,7 +136,7 @@ function TypingShowcase() {
 
 function CodingShowcase() {
   return (
-    <Card className="border-border/50 bg-card/50 overflow-hidden backdrop-blur-sm">
+    <Card className="overflow-hidden">
       <div className="bg-muted/30 p-4">
         <div className="flex items-center gap-2">
           <div className="bg-destructive h-3 w-3 rounded-full" />
@@ -178,7 +172,7 @@ function CodingShowcase() {
 
 function AnalyticsShowcase() {
   return (
-    <Card className="border-border/50 bg-card/50 overflow-hidden p-8 backdrop-blur-sm">
+    <Card className="overflow-hidden p-8">
       <h3 className="mb-6 text-xl font-semibold">Performance Insights</h3>
       <div className="space-y-4">
         {[
@@ -208,7 +202,7 @@ function AnalyticsShowcase() {
 
 function ProgressShowcase() {
   return (
-    <Card className="border-border/50 bg-card/50 overflow-hidden p-8 backdrop-blur-sm">
+    <Card className="overflow-hidden p-8">
       <h3 className="mb-6 text-xl font-semibold">7-Day Progress</h3>
       <div className="flex items-end justify-between gap-2">
         {[45, 52, 48, 61, 58, 67, 72].map((value, i) => (
@@ -230,39 +224,9 @@ function ProgressShowcase() {
   );
 }
 
-function AchievementsShowcase() {
-  return (
-    <Card className="border-border/50 bg-card/50 overflow-hidden p-8 backdrop-blur-sm">
-      <h3 className="mb-6 text-xl font-semibold">Recent Achievements</h3>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {[
-          { icon: "🏆", title: "Speed Demon", desc: "Reached 100 WPM" },
-          { icon: "🎯", title: "Perfect Streak", desc: "100% accuracy × 10" },
-          { icon: "⚡", title: "Consistency King", desc: "Practiced 30 days" },
-          { icon: "🚀", title: "Code Master", desc: "Completed 50 coding exercises" },
-        ].map((achievement, i) => (
-          <motion.div
-            key={achievement.title}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.1 }}
-            className="border-border/50 bg-muted/30 flex items-center gap-4 rounded-lg border p-4"
-          >
-            <div className="text-3xl">{achievement.icon}</div>
-            <div>
-              <div className="font-semibold">{achievement.title}</div>
-              <div className="text-muted-foreground text-sm">{achievement.desc}</div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </Card>
-  );
-}
-
 function ChallengesShowcase() {
   return (
-    <Card className="border-border/50 bg-card/50 overflow-hidden p-8 backdrop-blur-sm">
+    <Card className="overflow-hidden p-8">
       <h3 className="mb-6 text-xl font-semibold">Today&apos;s Challenges</h3>
       <div className="space-y-4">
         {[
@@ -276,7 +240,7 @@ function ChallengesShowcase() {
         ].map((challenge) => (
           <div
             key={challenge.title}
-            className="border-border/50 bg-muted/30 rounded-lg border p-4"
+            className="border-border bg-muted/30 shadow-pop-sm rounded-xl border-2 p-4"
           >
             <div className="mb-2 flex justify-between">
               <span className="font-medium">{challenge.title}</span>

@@ -62,14 +62,15 @@ export function StatisticCard({
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
     >
-      <Card
-        className={cn(
-          "border-border/40 hover:border-border/60 hover:shadow-key-md transition-all duration-200",
-          classes.card,
-        )}
-      >
+      <Card className={cn("transition-all duration-200", classes.card)}>
         <div className="flex items-start gap-3">
-          <div className={cn("shadow-key-xs rounded-xl", bgColor, classes.iconWrapper)}>
+          <div
+            className={cn(
+              "border-border shadow-pop-sm rounded-xl border-2",
+              bgColor,
+              classes.iconWrapper,
+            )}
+          >
             <Icon className={cn(classes.icon, color)} />
           </div>
           <div className="flex-1 space-y-1">

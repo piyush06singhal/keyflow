@@ -11,7 +11,6 @@ import type {
   SnippetProviderConfig,
   ProgrammingLanguage,
   CodingDifficulty,
-  CodeSnippetMetadata,
 } from "./types";
 import { STATIC_SNIPPETS } from "./snippets/static-snippets";
 import { generateMetadata } from "./snippet-utils";
@@ -135,44 +134,13 @@ export class SnippetProvider {
   }
 
   /**
-   * Get snippet from database (placeholder for future implementation)
+   * Database-backed snippets aren't available in this no-account build —
+   * always falls back to static snippets.
    */
   private static async getDatabaseSnippet(
     filter?: SnippetFilter,
   ): Promise<CodeSnippet | null> {
-    try {
-      // Import dynamically to avoid circular dependency
-      const { getUserSnippets } = await import("@/lib/supabase/coding-practice");
-      const { createSupabaseBrowserClient } = await import("@/lib/supabase/client");
-
-      const supabase = createSupabaseBrowserClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        console.warn("No user logged in, falling back to static snippets");
-        return this.getStaticSnippet(filter);
-      }
-
-      const result = await getUserSnippets(user.id, {
-        language: filter?.language,
-        difficulty: filter?.difficulty,
-        category: filter?.category,
-      });
-
-      if (result.success && result.data.length > 0) {
-        const snippets = result.data;
-        const randomIndex = Math.floor(Math.random() * snippets.length);
-        return snippets[randomIndex] || null;
-      }
-
-      // Fallback to static if no database snippets
-      return this.getStaticSnippet(filter);
-    } catch (error) {
-      console.error("Database snippet retrieval error:", error);
-      return this.getStaticSnippet(filter);
-    }
+    return this.getStaticSnippet(filter);
   }
 
   /**
@@ -201,30 +169,13 @@ export class SnippetProvider {
   }
 
   /**
-   * Get community snippet (placeholder for future implementation)
+   * Community snippets aren't available in this no-account build — always
+   * falls back to static snippets.
    */
   private static async getCommunitySnippet(
     filter?: SnippetFilter,
   ): Promise<CodeSnippet | null> {
-    try {
-      const { getCommunitySnippets } = await import("@/lib/supabase/coding-practice");
-
-      const result = await getCommunitySnippets({
-        language: filter?.language,
-        difficulty: filter?.difficulty,
-        limit: 10,
-      });
-
-      if (result.success && result.data.length > 0) {
-        const randomIndex = Math.floor(Math.random() * result.data.length);
-        return result.data[randomIndex] || null;
-      }
-
-      return this.getStaticSnippet(filter);
-    } catch (error) {
-      console.error("Community snippet retrieval error:", error);
-      return this.getStaticSnippet(filter);
-    }
+    return this.getStaticSnippet(filter);
   }
 
   /**

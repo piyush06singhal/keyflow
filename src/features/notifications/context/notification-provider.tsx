@@ -1,245 +1,79 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
+
+const STORAGE_KEY = "keyflow-notifications";
+const MAX_NOTIFICATIONS = 50;
 
 export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: "level_up" | "achievement" | "challenge" | "info" | "streak";
-  read: boolean;
+  type: "info" | "challenge";
   created_at: string;
 }
 
 interface NotificationContextProps {
   notifications: Notification[];
-  unreadCount: number;
-  isDrawerOpen: boolean;
-  setIsDrawerOpen: (open: boolean) => void;
-  addNotification: (
-    title: string,
-    message: string,
-    type: Notification["type"],
-  ) => Promise<void>;
-  markAsRead: (id: string) => Promise<void>;
-  markAllAsRead: () => Promise<void>;
-  clearNotification: (id: string) => Promise<void>;
-  isLoading: boolean;
+  addNotification: (title: string, message: string, type: Notification["type"]) => void;
 }
 
 const NotificationContext = createContext<NotificationContextProps | undefined>(
   undefined,
 );
 
+function readStoredNotifications(): Notification[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as Notification[]) : [];
+  } catch (error) {
+    console.warn("Failed to read notifications:", error);
+    return [];
+  }
+}
+
+/**
+ * Local-only notifications provider — no accounts, no realtime backend.
+ * Surfaces milestones (personal bests, streaks, etc.) as toasts and keeps a
+ * short local history in localStorage.
+ */
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const supabase = createSupabaseBrowserClient();
+  const [notifications, setNotifications] = useState<Notification[]>(() =>
+    readStoredNotifications(),
+  );
 
-  // Load initial notifications from Supabase and LocalStorage fallback
   useEffect(() => {
-    async function loadNotifications() {
-      setIsLoading(true);
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user) {
-          // Attempt loading from Supabase
-          const { data, error } = await supabase
-            .from("notifications")
-            .select("*")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false });
-
-          if (error) throw error;
-          if (data) {
-            setNotifications(data);
-            setIsLoading(false);
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn(
-          "Supabase notifications table not ready or error. Falling back to localStorage.",
-          e,
-        );
-      }
-
-      // LocalStorage Fallback
-      if (typeof window !== "undefined") {
-        const local = localStorage.getItem("keyflow-notifications");
-        if (local) {
-          try {
-            setNotifications(JSON.parse(local));
-          } catch (err) {
-            console.error("Failed to parse local notifications", err);
-          }
-        } else {
-          // Initialize mock welcome notifications for premium initial look
-          const welcomeNotifications: Notification[] = [
-            {
-              id: "welcome-1",
-              title: "Welcome to KeyFlow!",
-              message:
-                "Start typing or coding to earn experience points (XP) and level up your passport.",
-              type: "info",
-              read: false,
-              created_at: new Date().toISOString(),
-            },
-          ];
-          setNotifications(welcomeNotifications);
-          localStorage.setItem(
-            "keyflow-notifications",
-            JSON.stringify(welcomeNotifications),
-          );
-        }
-      }
-      setIsLoading(false);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+    } catch (error) {
+      console.warn("Failed to persist notifications:", error);
     }
+  }, [notifications]);
 
-    loadNotifications();
-  }, [supabase]);
-
-  // Real-time listener for notifications channel
-  useEffect(() => {
-    let channel: any;
-    async function setupRealtime() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      channel = supabase
-        .channel(`notifications:${user.id}`)
-        .on("broadcast", { event: "new-notification" }, ({ payload }: any) => {
-          if (payload) {
-            const newNotif: Notification = {
-              id: payload.id || Math.random().toString(),
-              title: payload.title || "New Notification",
-              message: payload.message || "",
-              type: payload.type || "info",
-              read: false,
-              created_at: new Date().toISOString(),
-            };
-            setNotifications((prev) => [newNotif, ...prev]);
-            toast(newNotif.title, { description: newNotif.message });
-          }
-        })
-        .subscribe();
-    }
-
-    setupRealtime();
-    return () => {
-      if (channel) supabase.removeChannel(channel);
-    };
-  }, [supabase]);
-
-  // Sync to LocalStorage on updates
-  useEffect(() => {
-    if (typeof window !== "undefined" && !isLoading) {
-      localStorage.setItem("keyflow-notifications", JSON.stringify(notifications));
-    }
-  }, [notifications, isLoading]);
-
-  const addNotification = async (
+  const addNotification = (
     title: string,
     message: string,
     type: Notification["type"],
   ) => {
-    const newNotif: Notification = {
-      id: Math.random().toString(),
+    const newNotification: Notification = {
+      id: crypto.randomUUID(),
       title,
       message,
       type,
-      read: false,
       created_at: new Date().toISOString(),
     };
 
-    setNotifications((prev) => [newNotif, ...prev]);
+    setNotifications((prev) => [newNotification, ...prev].slice(0, MAX_NOTIFICATIONS));
     toast(title, { description: message });
-
-    // Sync database
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("notifications").insert([
-          {
-            id: newNotif.id,
-            user_id: user.id,
-            title,
-            message,
-            type,
-            read: false,
-          },
-        ]);
-      }
-    } catch (e) {
-      // Failed silently (table does not exist or network loss)
-    }
   };
-
-  const markAsRead = async (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-    );
-
-    try {
-      await supabase.from("notifications").update({ read: true }).eq("id", id);
-    } catch (e) {
-      // Ignored fallback
-    }
-  };
-
-  const markAllAsRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from("notifications")
-          .update({ read: true })
-          .eq("user_id", user.id);
-      }
-    } catch (e) {
-      // Ignored fallback
-    }
-  };
-
-  const clearNotification = async (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-
-    try {
-      await supabase.from("notifications").delete().eq("id", id);
-    } catch (e) {
-      // Ignored fallback
-    }
-  };
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <NotificationContext.Provider
-      value={{
-        notifications,
-        unreadCount,
-        isDrawerOpen,
-        setIsDrawerOpen,
-        addNotification,
-        markAsRead,
-        markAllAsRead,
-        clearNotification,
-        isLoading,
-      }}
-    >
+    <NotificationContext.Provider value={{ notifications, addNotification }}>
       {children}
     </NotificationContext.Provider>
   );

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Zap,
@@ -11,9 +10,9 @@ import {
   Type,
   AlertCircle,
   RotateCcw,
-  Home,
   Share2,
   BarChart3,
+  Trophy,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,14 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { SessionResult } from "@/lib/typing-engine";
 import type { SessionCompletionResult } from "@/lib/session-lifecycle";
-import { calculateLevel } from "@/lib/session-lifecycle";
 import { StatisticCard } from "./statistic-card";
 import { PerformanceChart } from "./performance-chart";
-import {
-  AchievementCelebration,
-  PersonalBestCelebration,
-} from "./achievement-celebration";
-import { XpRewardCard } from "./xp-reward-card";
+import { SpringPop } from "@/components/motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -41,6 +35,13 @@ export interface SessionResultsPageProps {
   onNewSession?: () => void;
 }
 
+const PERSONAL_BEST_LABELS: Record<string, string> = {
+  wpm: "Fastest WPM",
+  accuracy: "Best accuracy",
+  consistency: "Best consistency",
+  duration: "Longest session",
+};
+
 export function SessionResultsPage({
   sessionResult,
   completionResult,
@@ -48,28 +49,6 @@ export function SessionResultsPage({
   onDashboard,
   onNewSession,
 }: SessionResultsPageProps) {
-  const [showAchievements, setShowAchievements] = useState(false);
-  const [achievementsShown, setAchievementsShown] = useState(false);
-
-  // Show achievements after a delay
-  useEffect(() => {
-    if (completionResult.newAchievements.length > 0 && !achievementsShown) {
-      const timer = setTimeout(() => {
-        setShowAchievements(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [completionResult.newAchievements, achievementsShown]);
-
-  const handleAchievementsComplete = () => {
-    setShowAchievements(false);
-    setAchievementsShown(true);
-  };
-
-  // Calculate current level info
-  const currentTotalXp = completionResult.xpGained; // Simplified - in real app, get from user stats
-  const levelInfo = calculateLevel(currentTotalXp);
-
   // Format time
   const formatTime = (ms: number) => {
     const seconds = Math.floor(ms / 1000);
@@ -157,26 +136,50 @@ export function SessionResultsPage({
     },
   ];
 
-  const handleShare = () => {
-    toast.success("Share feature coming soon!", {
-      description: "You'll be able to share your results on social media.",
-    });
+  const handleShare = async () => {
+    const summary = `I just hit ${sessionResult.finalWpm.toFixed(0)} WPM at ${sessionResult.finalAccuracy.toFixed(1)}% accuracy on KeyFlow \u{1F3AF}\n${sessionResult.mode.charAt(0).toUpperCase() + sessionResult.mode.slice(1)} mode · ${formatTime(sessionResult.duration)}`;
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: "My KeyFlow results", text: summary });
+        return;
+      } catch (error) {
+        // The user closing the native share sheet isn't a failure worth
+        // reporting — anything else falls through to the clipboard copy.
+        if (error instanceof Error && error.name === "AbortError") return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(summary);
+      toast.success("Results copied to clipboard!", {
+        description: "Paste them anywhere to share your run.",
+      });
+    } catch {
+      toast.error("Couldn't copy results", {
+        description: "Your browser blocked clipboard access.",
+      });
+    }
   };
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
-      {/* Achievement Celebration */}
-      <AchievementCelebration
-        achievements={completionResult.newAchievements}
-        show={showAchievements}
-        onComplete={handleAchievementsComplete}
-      />
-
       {/* Personal Bests */}
-      <PersonalBestCelebration
-        personalBests={completionResult.newPersonalBests}
-        show={completionResult.newPersonalBests.length > 0}
-      />
+      {completionResult.newPersonalBests.length > 0 && (
+        <SpringPop>
+          <Card className="bg-primary/5 flex flex-wrap items-center gap-3 p-4">
+            <Trophy className="text-primary size-5 shrink-0" />
+            <span className="font-semibold">New personal best!</span>
+            <div className="flex flex-wrap gap-2">
+              {completionResult.newPersonalBests.map((pb) => (
+                <Badge key={pb.type} variant="secondary">
+                  {PERSONAL_BEST_LABELS[pb.type] ?? pb.type}
+                </Badge>
+              ))}
+            </div>
+          </Card>
+        </SpringPop>
+      )}
 
       {/* Sync Status Warnings */}
       {completionResult.warnings.length > 0 && (
@@ -213,7 +216,7 @@ export function SessionResultsPage({
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
           className={cn(
-            "from-primary/5 to-primary/10 mx-auto mb-6 rounded-2xl border bg-gradient-to-br p-8",
+            "border-border shadow-pop-md from-primary/5 to-primary/10 mx-auto mb-6 rounded-2xl border-2 bg-gradient-to-br p-8",
             rating.bg,
           )}
         >
@@ -237,14 +240,6 @@ export function SessionResultsPage({
           <StatisticCard key={stat.label} {...stat} delay={index * 0.1} />
         ))}
       </div>
-
-      {/* XP and Level */}
-      <XpRewardCard
-        xpGained={completionResult.xpGained}
-        levelInfo={levelInfo}
-        levelUp={completionResult.levelUp}
-        newLevel={completionResult.newLevel}
-      />
 
       {/* Performance Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -310,16 +305,12 @@ export function SessionResultsPage({
           New Session
         </Button>
         <Button size="lg" variant="outline" onClick={onDashboard}>
-          <Home className="mr-2 size-4" />
-          Dashboard
+          <BarChart3 className="mr-2 size-4" />
+          History
         </Button>
         <Button size="lg" variant="outline" onClick={handleShare}>
           <Share2 className="mr-2 size-4" />
           Share Results
-        </Button>
-        <Button size="lg" variant="outline">
-          <BarChart3 className="mr-2 size-4" />
-          View Analytics
         </Button>
       </div>
     </div>

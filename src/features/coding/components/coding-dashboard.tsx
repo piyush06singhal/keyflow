@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { TiltCard } from "@/components/motion";
 import { useCodingPracticeStore } from "@/stores/coding-practice-store";
 import { getAllLanguages, getLanguageConfig } from "@/lib/coding-practice/languages";
 import { LanguageBadge } from "@/features/coding/components/language-badge";
@@ -30,7 +30,6 @@ import type {
   ProgrammingLanguage,
   CodingDifficulty,
   CodingCategory,
-  Framework,
 } from "@/lib/coding-practice/types";
 
 const DIFFICULTIES: { value: CodingDifficulty; label: string; description: string }[] =
@@ -80,28 +79,15 @@ const DURATIONS = [
 const SNIPPET_SOURCES = [
   {
     value: "static",
-    label: "Static Snippets",
-    description: "Pre-defined, always available",
+    label: "Curated Snippets",
+    description: "Hand-picked, always available",
     icon: "📚",
   },
   {
     value: "ai-generated",
     label: "AI Generated",
-    description: "Custom code from AI (Groq)",
+    description: "A fresh snippet every time, powered by Groq",
     icon: "✨",
-    badge: "New",
-  },
-  {
-    value: "database",
-    label: "My Snippets",
-    description: "Your saved custom snippets",
-    icon: "💾",
-  },
-  {
-    value: "community",
-    label: "Community",
-    description: "Shared by other users",
-    icon: "👥",
   },
 ];
 
@@ -118,13 +104,12 @@ export function CodingDashboard() {
     config.category,
   );
   const [selectedDuration, setSelectedDuration] = useState(config.duration || 300);
-  const [snippetSource, setSnippetSource] = useState<
-    "static" | "ai-generated" | "database" | "community"
-  >((config.snippetSource as any) || "static");
+  const [snippetSource, setSnippetSource] = useState<"static" | "ai-generated">(
+    (config.snippetSource as "static" | "ai-generated") || "static",
+  );
 
   const languages = getAllLanguages();
   const currentLanguageConfig = getLanguageConfig(selectedLanguage);
-  const availableFrameworks = currentLanguageConfig.frameworks;
   const availableCategories = currentLanguageConfig.categories;
 
   const handleStartPractice = () => {
@@ -158,21 +143,21 @@ export function CodingDashboard() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card className="p-4">
+        <TiltCard maxTilt={6} className="surface-card p-4">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-500/10 p-2">
+            <div className="border-border shadow-pop-sm rounded-xl border-2 bg-blue-500/15 p-2">
               <Code2 className="h-5 w-5 text-blue-500" />
             </div>
             <div>
-              <div className="text-2xl font-bold">20+</div>
+              <div className="text-2xl font-bold">16</div>
               <div className="text-muted-foreground text-sm">Languages</div>
             </div>
           </div>
-        </Card>
+        </TiltCard>
 
-        <Card className="p-4">
+        <TiltCard maxTilt={6} className="surface-card p-4">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-green-500/10 p-2">
+            <div className="border-border shadow-pop-sm rounded-xl border-2 bg-green-500/15 p-2">
               <Target className="h-5 w-5 text-green-500" />
             </div>
             <div>
@@ -180,11 +165,11 @@ export function CodingDashboard() {
               <div className="text-muted-foreground text-sm">Code Snippets</div>
             </div>
           </div>
-        </Card>
+        </TiltCard>
 
-        <Card className="p-4">
+        <TiltCard maxTilt={6} className="surface-card p-4">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-purple-500/10 p-2">
+            <div className="border-border shadow-pop-sm rounded-xl border-2 bg-purple-500/15 p-2">
               <Zap className="h-5 w-5 text-purple-500" />
             </div>
             <div>
@@ -192,23 +177,23 @@ export function CodingDashboard() {
               <div className="text-muted-foreground text-sm">Syntax Highlight</div>
             </div>
           </div>
-        </Card>
+        </TiltCard>
 
-        <Card className="p-4">
+        <TiltCard maxTilt={6} className="surface-card p-4">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-orange-500/10 p-2">
+            <div className="border-border shadow-pop-sm rounded-xl border-2 bg-orange-500/15 p-2">
               <TrendingUp className="h-5 w-5 text-orange-500" />
             </div>
             <div>
               <div className="text-2xl font-bold">AI</div>
-              <div className="text-muted-foreground text-sm">Coming Soon</div>
+              <div className="text-muted-foreground text-sm">Snippets, Live</div>
             </div>
           </div>
-        </Card>
+        </TiltCard>
       </div>
 
       {/* Configuration */}
-      <Card className="p-8">
+      <Card className="glass-panel p-8">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold">Configure Practice</h2>
@@ -311,9 +296,7 @@ export function CodingDashboard() {
               <Select
                 value={snippetSource}
                 onValueChange={(value) =>
-                  setSnippetSource(
-                    value as "static" | "ai-generated" | "database" | "community",
-                  )
+                  setSnippetSource(value as "static" | "ai-generated")
                 }
               >
                 <SelectTrigger>
@@ -365,7 +348,7 @@ export function CodingDashboard() {
           <div className="pt-4">
             <Button
               size="lg"
-              className="h-14 w-full text-lg"
+              className="glow-primary h-14 w-full text-lg"
               onClick={handleStartPractice}
             >
               <Play className="mr-2 h-5 w-5" />
@@ -377,7 +360,7 @@ export function CodingDashboard() {
 
       {/* Info Cards */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <Card className="p-6">
+        <TiltCard maxTilt={5} className="surface-card p-6">
           <h3 className="mb-2 flex items-center gap-2 font-semibold">
             <Code2 className="text-primary h-5 w-5" />
             Real Code
@@ -386,9 +369,9 @@ export function CodingDashboard() {
             Practice with production-quality code snippets from real projects and
             frameworks.
           </p>
-        </Card>
+        </TiltCard>
 
-        <Card className="p-6">
+        <TiltCard maxTilt={5} className="surface-card p-6">
           <h3 className="mb-2 flex items-center gap-2 font-semibold">
             <Zap className="text-primary h-5 w-5" />
             Syntax Highlighting
@@ -397,9 +380,9 @@ export function CodingDashboard() {
             Code editor with full syntax highlighting, line numbers, and indentation
             guides.
           </p>
-        </Card>
+        </TiltCard>
 
-        <Card className="p-6">
+        <TiltCard maxTilt={5} className="surface-card p-6">
           <h3 className="mb-2 flex items-center gap-2 font-semibold">
             <TrendingUp className="text-primary h-5 w-5" />
             Track Progress
@@ -407,7 +390,7 @@ export function CodingDashboard() {
           <p className="text-muted-foreground text-sm">
             Detailed statistics including bracket accuracy, symbol accuracy, and more.
           </p>
-        </Card>
+        </TiltCard>
       </div>
     </div>
   );

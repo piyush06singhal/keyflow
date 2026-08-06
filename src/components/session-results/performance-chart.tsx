@@ -57,22 +57,22 @@ export function PerformanceChart({
           title: "Words Per Minute Over Time",
           dataKey: "wpm",
           secondaryKey: "rawWpm",
-          color: "#3b82f6",
-          secondaryColor: "#93c5fd",
+          color: "var(--chart-speed)",
+          secondaryColor: "var(--pink)",
           unit: " WPM",
         };
       case "accuracy":
         return {
           title: "Accuracy Over Time",
           dataKey: "accuracy",
-          color: "#10b981",
+          color: "var(--chart-accuracy)",
           unit: "%",
         };
       case "consistency":
         return {
           title: "Consistency Over Time",
           dataKey: "consistency",
-          color: "#8b5cf6",
+          color: "var(--chart-consistency)",
           unit: "",
         };
     }
@@ -108,9 +108,11 @@ export function PerformanceChart({
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(var(--background))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
+                backgroundColor: "var(--card)",
+                border: "2px solid var(--border)",
+                borderRadius: "12px",
+                boxShadow: "var(--shadow-pop-sm)",
+                fontWeight: 600,
               }}
               formatter={(value, name) => [
                 value !== undefined ? `${value}${config.unit}` : "N/A",
@@ -152,9 +154,11 @@ export function PerformanceChart({
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(var(--background))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
+                backgroundColor: "var(--card)",
+                border: "2px solid var(--border)",
+                borderRadius: "12px",
+                boxShadow: "var(--shadow-pop-sm)",
+                fontWeight: 600,
               }}
               formatter={(value) => [
                 `${typeof value === "number" ? value.toFixed(1) : value}${config.unit}`,

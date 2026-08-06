@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Baloo_2 } from "next/font/google";
 import { AppProviders } from "@/providers/app-providers";
 import "./globals.css";
 
@@ -13,6 +13,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const baloo = Baloo_2({
+  variable: "--font-baloo",
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: {
@@ -20,29 +26,27 @@ export const metadata: Metadata = {
     template: "%s | KeyFlow",
   },
   description:
-    "A premium typing and coding practice platform with analytics, progress tracking, and optional AI coaching.",
+    "A local-first typing and coding practice arena with AI-generated content — no accounts, no tracking.",
   applicationName: "KeyFlow",
   keywords: [
     "typing practice",
     "coding practice",
     "keyboard training",
     "developer practice",
-    "AI coaching",
+    "typing speed",
   ],
   authors: [{ name: "KeyFlow" }],
   creator: "KeyFlow",
   openGraph: {
     title: "KeyFlow",
-    description:
-      "A premium typing and coding practice platform with optional AI coaching.",
+    description: "A local-first typing and coding practice arena.",
     siteName: "KeyFlow",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "KeyFlow",
-    description:
-      "A premium typing and coding practice platform with optional AI coaching.",
+    description: "A local-first typing and coding practice arena.",
   },
   appleWebApp: {
     capable: true,
@@ -63,9 +67,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${baloo.variable} h-full antialiased`}
     >
-      <body className="min-h-full">
+      <body className="min-h-full overflow-x-hidden">
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

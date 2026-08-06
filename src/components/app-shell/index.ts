@@ -1,7 +1,4 @@
-export { AppLayout } from "./app-layout";
-export { AppSidebar } from "./app-sidebar";
-export { AppTopbar } from "./app-topbar";
-export { MobileSidebar } from "./mobile-sidebar";
-export { CommandPalette } from "./command-palette";
+export { SiteNavbar } from "./site-navbar";
+export { SiteFooter } from "./site-footer";
 export { PageHeader } from "./page-header";
 export { PageContainer } from "./page-container";

@@ -55,16 +55,21 @@ export function LanguageBadge({
   };
 
   return (
+    // Official per-language brand colors (JS yellow, Python blue, etc.) stay
+    // on the border/icon as an identity accent — real dev-facing brand
+    // colors we don't want to repaint — but the readable label uses the
+    // theme's normal text color instead of the raw brand hex, since several
+    // of these brand colors (JS yellow especially) fail WCAG contrast as
+    // text on a light tint background.
     <Badge
       variant="secondary"
-      className={`${sizeClasses[size]} inline-flex items-center gap-1.5 font-medium`}
+      className={`${sizeClasses[size]} shadow-pop-sm inline-flex items-center gap-1.5 font-bold`}
       style={{
-        backgroundColor: `${color}15`,
-        borderColor: `${color}40`,
-        color: color,
+        backgroundColor: `${color}20`,
+        borderColor: color,
       }}
     >
-      {showIcon && <Icon className={iconSizes[size]} />}
+      {showIcon && <Icon className={iconSizes[size]} style={{ color }} />}
       <span>{config.displayName}</span>
     </Badge>
   );

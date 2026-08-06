@@ -1,6 +1,6 @@
 /**
  * Analytics Aggregator
- * 
+ *
  * Aggregates session data for efficient analytics querying.
  * Maintains daily, weekly, and monthly summaries.
  */
@@ -18,7 +18,7 @@ import type { SessionResult } from "@/lib/typing-engine";
  */
 export function aggregateDailySession(
   existing: DailyAggregation | null,
-  sessionResult: SessionResult
+  sessionResult: SessionResult,
 ): DailyAggregation {
   const date = new Date().toISOString().split("T")[0]!;
 
@@ -46,13 +46,11 @@ export function aggregateDailySession(
       (existing.avgWpm * existing.totalSessions + sessionResult.finalWpm) /
       newTotalSessions,
     avgAccuracy:
-      (existing.avgAccuracy * existing.totalSessions +
-        sessionResult.finalAccuracy) /
+      (existing.avgAccuracy * existing.totalSessions + sessionResult.finalAccuracy) /
       newTotalSessions,
     bestWpm: Math.max(existing.bestWpm, sessionResult.finalWpm),
     totalWords: existing.totalWords + sessionResult.finalStats.completedWords,
-    totalErrors:
-      existing.totalErrors + sessionResult.finalStats.incorrectChars,
+    totalErrors: existing.totalErrors + sessionResult.finalStats.incorrectChars,
   };
 }
 
@@ -62,7 +60,7 @@ export function aggregateDailySession(
 export function aggregateWeeklySession(
   existing: WeeklyAggregation | null,
   sessionResult: SessionResult,
-  previousWeekAvgWpm: number = 0
+  previousWeekAvgWpm: number = 0,
 ): WeeklyAggregation {
   const now = new Date();
   const weekStart = getWeekStart(now);
@@ -94,8 +92,7 @@ export function aggregateWeeklySession(
     totalDuration: existing.totalDuration + sessionResult.duration,
     avgWpm: newAvgWpm,
     avgAccuracy:
-      (existing.avgAccuracy * existing.totalSessions +
-        sessionResult.finalAccuracy) /
+      (existing.avgAccuracy * existing.totalSessions + sessionResult.finalAccuracy) /
       newTotalSessions,
     bestWpm: Math.max(existing.bestWpm, sessionResult.finalWpm),
     improvement: newAvgWpm - previousWeekAvgWpm,
@@ -109,7 +106,7 @@ export function aggregateWeeklySession(
 export function aggregateMonthlySession(
   existing: MonthlyAggregation | null,
   sessionResult: SessionResult,
-  previousMonthAvgWpm: number = 0
+  previousMonthAvgWpm: number = 0,
 ): MonthlyAggregation {
   const now = new Date();
   const month = now.toLocaleString("default", { month: "long" });
@@ -141,14 +138,12 @@ export function aggregateMonthlySession(
     totalDuration: existing.totalDuration + sessionResult.duration,
     avgWpm: newAvgWpm,
     avgAccuracy:
-      (existing.avgAccuracy * existing.totalSessions +
-        sessionResult.finalAccuracy) /
+      (existing.avgAccuracy * existing.totalSessions + sessionResult.finalAccuracy) /
       newTotalSessions,
     bestWpm: Math.max(existing.bestWpm, sessionResult.finalWpm),
     improvement: newAvgWpm - previousMonthAvgWpm,
     consistencyScore:
-      (existing.consistencyScore * existing.totalSessions +
-        sessionResult.consistency) /
+      (existing.consistencyScore * existing.totalSessions + sessionResult.consistency) /
       newTotalSessions,
   };
 }
@@ -181,7 +176,7 @@ function getWeekEnd(date: Date): Date {
  */
 export function calculateImprovement(
   currentAvg: number,
-  historicalData: number[]
+  historicalData: number[],
 ): number {
   if (historicalData.length === 0) return 0;
 
@@ -199,8 +194,7 @@ export function calculateConsistencyScore(wpmValues: number[]): number {
 
   const mean = wpmValues.reduce((sum, val) => sum + val, 0) / wpmValues.length;
   const variance =
-    wpmValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
-    wpmValues.length;
+    wpmValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / wpmValues.length;
   const stdDev = Math.sqrt(variance);
 
   // Convert to percentage (lower std dev = higher consistency)
@@ -209,18 +203,16 @@ export function calculateConsistencyScore(wpmValues: number[]): number {
   return Math.max(0, Math.min(100, 100 - cv));
 }
 
+const ANALYTICS_KEY = "keyflow.analytics.v1";
+
 /**
  * Store aggregated analytics in localStorage (for quick access)
  */
-export function storeAggregatedAnalytics(
-  userId: string,
-  analytics: AggregatedAnalytics
-): void {
+export function storeAggregatedAnalytics(analytics: AggregatedAnalytics): void {
+  if (typeof window === "undefined") return;
+
   try {
-    localStorage.setItem(
-      `analytics_${userId}`,
-      JSON.stringify(analytics)
-    );
+    localStorage.setItem(ANALYTICS_KEY, JSON.stringify(analytics));
   } catch (error) {
     console.error("Failed to store aggregated analytics:", error);
   }
@@ -229,11 +221,11 @@ export function storeAggregatedAnalytics(
 /**
  * Get aggregated analytics from localStorage
  */
-export function getAggregatedAnalytics(
-  userId: string
-): AggregatedAnalytics | null {
+export function getAggregatedAnalytics(): AggregatedAnalytics | null {
+  if (typeof window === "undefined") return null;
+
   try {
-    const data = localStorage.getItem(`analytics_${userId}`);
+    const data = localStorage.getItem(ANALYTICS_KEY);
     if (!data) return null;
     return JSON.parse(data) as AggregatedAnalytics;
   } catch (error) {
@@ -245,12 +237,9 @@ export function getAggregatedAnalytics(
 /**
  * Update aggregated analytics after session
  */
-export function updateAggregatedAnalytics(
-  userId: string,
-  sessionResult: SessionResult
-): void {
+export function updateAggregatedAnalytics(sessionResult: SessionResult): void {
   try {
-    const existing = getAggregatedAnalytics(userId);
+    const existing = getAggregatedAnalytics();
     const now = new Date();
     const today = now.toISOString().split("T")[0]!;
 
@@ -272,21 +261,18 @@ export function updateAggregatedAnalytics(
     // Keep only last 90 days
     const ninetyDaysAgo = new Date(now);
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-    const filteredDaily = dailyData.filter(
-      (d) => new Date(d.date) >= ninetyDaysAgo
-    );
+    const filteredDaily = dailyData.filter((d) => new Date(d.date) >= ninetyDaysAgo);
 
     // Update weekly
     const weekStart = getWeekStart(now).toISOString().split("T")[0]!;
     const weekIndex = weeklyData.findIndex((w) => w.weekStart === weekStart);
     const weekData = weekIndex >= 0 ? weeklyData[weekIndex] : null;
-    
-    const previousWeekAvg =
-      weekIndex > 0 ? weeklyData[weekIndex - 1]?.avgWpm || 0 : 0;
+
+    const previousWeekAvg = weekIndex > 0 ? weeklyData[weekIndex - 1]?.avgWpm || 0 : 0;
     const newWeeklyData = aggregateWeeklySession(
       weekData || null,
       sessionResult,
-      previousWeekAvg
+      previousWeekAvg,
     );
 
     if (weekIndex >= 0) {
@@ -299,23 +285,23 @@ export function updateAggregatedAnalytics(
     const fiftyTwoWeeksAgo = new Date(now);
     fiftyTwoWeeksAgo.setDate(fiftyTwoWeeksAgo.getDate() - 364);
     const filteredWeekly = weeklyData.filter(
-      (w) => new Date(w.weekStart) >= fiftyTwoWeeksAgo
+      (w) => new Date(w.weekStart) >= fiftyTwoWeeksAgo,
     );
 
     // Update monthly
     const month = now.toLocaleString("default", { month: "long" });
     const year = now.getFullYear();
     const monthIndex = monthlyData.findIndex(
-      (m) => m.month === month && m.year === year
+      (m) => m.month === month && m.year === year,
     );
     const monthData = monthIndex >= 0 ? monthlyData[monthIndex] : null;
-    
+
     const previousMonthAvg =
       monthIndex > 0 ? monthlyData[monthIndex - 1]?.avgWpm || 0 : 0;
     const newMonthlyData = aggregateMonthlySession(
       monthData || null,
       sessionResult,
-      previousMonthAvg
+      previousMonthAvg,
     );
 
     if (monthIndex >= 0) {
@@ -340,7 +326,7 @@ export function updateAggregatedAnalytics(
       lastUpdated: Date.now(),
     };
 
-    storeAggregatedAnalytics(userId, updatedAnalytics);
+    storeAggregatedAnalytics(updatedAnalytics);
   } catch (error) {
     console.error("Failed to update aggregated analytics:", error);
   }

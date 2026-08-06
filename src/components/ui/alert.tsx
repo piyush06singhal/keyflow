@@ -4,18 +4,15 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const alertVariants = cva(
-  "relative w-full rounded-xl border p-4 shadow-key-sm [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
+  "relative w-full rounded-xl border-2 border-border p-4 shadow-pop-sm [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
   {
     variants: {
       variant: {
-        default: "bg-card border-border text-foreground",
-        info: "bg-info/5 border-info/20 text-info-foreground [&>svg]:text-info",
-        success:
-          "bg-success/5 border-success/20 text-success-foreground [&>svg]:text-success",
-        warning:
-          "bg-warning/5 border-warning/20 text-warning-foreground [&>svg]:text-warning",
-        destructive:
-          "bg-destructive/5 border-destructive/20 text-destructive [&>svg]:text-destructive",
+        default: "bg-card text-foreground",
+        info: "bg-info/10 text-info-foreground [&>svg]:text-info",
+        success: "bg-success/10 text-success-foreground [&>svg]:text-success",
+        warning: "bg-warning/10 text-warning-foreground [&>svg]:text-warning",
+        destructive: "bg-destructive/10 text-destructive [&>svg]:text-destructive",
       },
     },
     defaultVariants: {

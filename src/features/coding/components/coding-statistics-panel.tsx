@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Activity, Target, Zap, TrendingUp, Clock, Code2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { TiltCard } from "@/components/motion";
 
 interface CodingStatisticsPanelProps {
   statistics?: {
@@ -82,9 +83,11 @@ export function CodingStatisticsPanel({ statistics }: CodingStatisticsPanelProps
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="p-4">
+            <TiltCard maxTilt={5} className="surface-card p-4">
               <div className="flex items-center gap-3">
-                <div className={`rounded-lg p-2 ${stat.bgColor}`}>
+                <div
+                  className={`border-border shadow-pop-sm rounded-xl border-2 p-2 ${stat.bgColor}`}
+                >
                   <stat.icon className={`h-4 w-4 ${stat.color}`} />
                 </div>
                 <div className="flex-1">
@@ -92,13 +95,13 @@ export function CodingStatisticsPanel({ statistics }: CodingStatisticsPanelProps
                   <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
                 </div>
               </div>
-            </Card>
+            </TiltCard>
           </motion.div>
         ))}
       </div>
 
       {/* Progress Bar */}
-      <Card className="p-4">
+      <Card className="glass-panel p-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Overall Progress</span>
@@ -133,7 +136,7 @@ export function CodingStatisticsPanel({ statistics }: CodingStatisticsPanelProps
       </Card>
 
       {/* Tips Card */}
-      <Card className="bg-primary/5 border-primary/20 p-4">
+      <Card className="bg-primary/5 p-4">
         <h3 className="mb-2 flex items-center gap-2 font-semibold">
           <TrendingUp className="text-primary h-4 w-4" />
           Quick Tip

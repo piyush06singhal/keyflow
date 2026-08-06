@@ -1,29 +1,18 @@
 "use client";
 
 import React from "react";
-import { useSettings } from "@/features/settings/context/settings-provider";
-import { Keyboard, Type, Timer, Volume2 } from "lucide-react";
+import { useSettingsStore } from "@/stores/settings-store";
+import { getAccentColor } from "@/lib/accent-colors";
+import { Type, Timer, Volume2 } from "lucide-react";
 
 export default function TypingSettingsPage() {
-  const { preferences, updateTyping, isLoading } = useSettings();
-
-  if (isLoading) {
-    return (
-      <div className="animate-pulse space-y-6">
-        <div className="bg-secondary h-8 w-48 rounded" />
-        <div className="bg-secondary/50 h-32 rounded-lg" />
-      </div>
-    );
-  }
-
-  const { typing } = preferences;
+  const typing = useSettingsStore((state) => state.typing);
+  const updateTyping = useSettingsStore((state) => state.updateTyping);
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 space-y-10 duration-500">
       <div>
-        <h2 className="mb-2 text-2xl font-semibold tracking-tight">
-          Typing Preferences
-        </h2>
+        <h2 className="mb-2 text-2xl">Typing Preferences</h2>
         <p className="text-muted-foreground">
           Tailor the typing engine exactly to your practice style.
         </p>
@@ -31,27 +20,29 @@ export default function TypingSettingsPage() {
 
       <div className="space-y-8">
         {/* Default Mode */}
-        <section className="border-border/50 space-y-4 border-b pb-8">
+        <section className="border-border-subtle space-y-4 border-b-2 pb-8">
           <div className="mb-4 flex items-center gap-3">
-            <div className="bg-primary/10 text-primary rounded-md p-2">
+            <div
+              className={`border-border shadow-pop-sm rounded-xl border-2 p-2 ${getAccentColor(0).bg} ${getAccentColor(0).fg}`}
+            >
               <Type className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-medium">Default Mode</h3>
+              <h3 className="text-lg">Default Mode</h3>
               <p className="text-muted-foreground text-sm">
                 Select your preferred practice configuration on startup.
               </p>
             </div>
           </div>
 
-          <div className="bg-secondary flex w-fit rounded-lg p-1">
+          <div className="bg-muted flex w-fit rounded-full p-1.5">
             {["time", "words", "quote"].map((mode) => (
               <button
                 key={mode}
                 onClick={() => updateTyping({ preferredMode: mode as any })}
-                className={`rounded-md px-6 py-2 text-sm font-medium capitalize transition-all ${
+                className={`rounded-full px-6 py-2 text-sm font-bold capitalize transition-all ${
                   typing.preferredMode === mode
-                    ? "bg-background text-foreground shadow-sm"
+                    ? "border-border bg-primary text-primary-foreground shadow-pop-sm border-2"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -62,13 +53,15 @@ export default function TypingSettingsPage() {
         </section>
 
         {/* Default Duration */}
-        <section className="border-border/50 space-y-4 border-b pb-8">
+        <section className="border-border-subtle space-y-4 border-b-2 pb-8">
           <div className="mb-4 flex items-center gap-3">
-            <div className="bg-primary/10 text-primary rounded-md p-2">
+            <div
+              className={`border-border shadow-pop-sm rounded-xl border-2 p-2 ${getAccentColor(1).bg} ${getAccentColor(1).fg}`}
+            >
               <Timer className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-medium">Time Duration</h3>
+              <h3 className="text-lg">Time Duration</h3>
               <p className="text-muted-foreground text-sm">
                 Default timer for time-based practices.
               </p>
@@ -80,9 +73,9 @@ export default function TypingSettingsPage() {
               <button
                 key={time}
                 onClick={() => updateTyping({ defaultDuration: time })}
-                className={`rounded-lg border px-4 py-2 transition-all ${
+                className={`rounded-full border-2 px-4 py-2 font-bold transition-all ${
                   typing.defaultDuration === time
-                    ? "border-primary bg-primary/10 text-primary font-medium"
+                    ? "border-border bg-primary text-primary-foreground shadow-pop-sm"
                     : "border-border hover:bg-secondary/50 text-muted-foreground"
                 }`}
               >
@@ -94,13 +87,15 @@ export default function TypingSettingsPage() {
 
         {/* Typing Sounds */}
         <section className="space-y-4">
-          <div className="border-border/50 bg-secondary/20 flex items-center justify-between rounded-xl border p-4">
+          <div className="border-border bg-secondary/40 shadow-pop-sm flex items-center justify-between rounded-2xl border-2 p-4">
             <div className="flex items-center gap-3">
-              <div className="bg-primary/10 text-primary rounded-md p-2">
+              <div
+                className={`border-border shadow-pop-sm rounded-xl border-2 p-2 ${getAccentColor(2).bg} ${getAccentColor(2).fg}`}
+              >
                 <Volume2 className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-base font-medium">Keyboard Sounds</h3>
+                <h3 className="text-base">Keyboard Sounds</h3>
                 <p className="text-muted-foreground text-sm">
                   Play a mechanical clicking sound on every keystroke.
                 </p>
@@ -108,7 +103,7 @@ export default function TypingSettingsPage() {
             </div>
             <button
               onClick={() => updateTyping({ soundsEnabled: !typing.soundsEnabled })}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              className={`border-border relative inline-flex h-6 w-11 items-center rounded-full border-2 transition-colors ${
                 typing.soundsEnabled ? "bg-primary" : "bg-muted"
               }`}
             >

@@ -72,7 +72,7 @@ export function CodingPracticeSection() {
             transition={{ duration: 0.6 }}
             className="flex flex-col justify-center"
           >
-            <div className="border-primary/20 bg-primary/10 text-primary mb-4 inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium">
+            <div className="border-border bg-primary/10 text-primary shadow-pop-sm mb-4 inline-flex w-fit items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-bold">
               <Code2 className="h-4 w-4" />
               Coding Practice
             </div>
@@ -95,7 +95,7 @@ export function CodingPracticeSection() {
               {[
                 "✓ Syntax-highlighted code editor",
                 "✓ Real-world code patterns",
-                "✓ 10+ programming languages",
+                "✓ 16 programming languages",
                 "✓ Track code-specific metrics",
               ].map((feature, i) => (
                 <motion.div
@@ -129,11 +129,11 @@ export function CodingPracticeSection() {
             initial={{ opacity: 0, x: 30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="flex items-center"
+            className="flex min-w-0 items-center"
           >
-            <Card className="border-border/50 bg-card/50 shadow-key-lg w-full overflow-hidden backdrop-blur-sm">
+            <Card className="w-full min-w-0 overflow-hidden">
               {/* Editor Header */}
-              <div className="border-border/50 bg-muted/30 flex items-center justify-between border-b px-4 py-3">
+              <div className="border-border-subtle bg-muted/30 flex items-center justify-between border-b-2 px-4 py-3">
                 <div className="flex items-center gap-2">
                   <div className="bg-destructive/80 h-3 w-3 rounded-full" />
                   <div className="bg-warning/80 h-3 w-3 rounded-full" />
@@ -150,7 +150,7 @@ export function CodingPracticeSection() {
               </div>
 
               {/* Language Tabs */}
-              <div className="border-border/50 bg-muted/20 border-b">
+              <div className="border-border-subtle bg-muted/20 border-b-2">
                 <div className="flex gap-1 overflow-x-auto p-2">
                   {languages.map((lang) => (
                     <button
@@ -170,13 +170,13 @@ export function CodingPracticeSection() {
 
               {/* Code Display */}
               <div className="relative overflow-hidden">
-                <div className="max-h-[400px] overflow-y-auto p-6 font-mono text-sm leading-relaxed">
+                <div className="max-h-[400px] overflow-x-auto overflow-y-auto p-6 font-mono text-sm leading-relaxed">
                   <motion.pre
                     key={selectedLang}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="text-foreground/90"
+                    className="text-foreground/90 w-max min-w-full"
                   >
                     <code>
                       {codeSnippets[selectedLang as keyof typeof codeSnippets] ||
@@ -190,7 +190,7 @@ export function CodingPracticeSection() {
               </div>
 
               {/* Editor Footer */}
-              <div className="border-border/50 bg-muted/30 text-muted-foreground flex items-center justify-between border-t px-4 py-2 text-xs">
+              <div className="border-border-subtle bg-muted/30 text-muted-foreground flex items-center justify-between border-t-2 px-4 py-2 text-xs">
                 <span>Lines: 8</span>
                 <span>Characters: 142</span>
                 <span className="text-success">Ready</span>

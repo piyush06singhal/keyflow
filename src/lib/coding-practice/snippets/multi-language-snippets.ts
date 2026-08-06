@@ -8,7 +8,6 @@ import type { CodeSnippet } from "../types";
 import { generateMetadata } from "../snippet-utils";
 
 function createSnippet(partial: Omit<CodeSnippet, "id" | "metadata">): CodeSnippet {
-  const prefix = partial.language.substring(0, 2);
   return {
     id: `multi-${Math.random().toString(36).substring(2, 11)}`,
     ...partial,

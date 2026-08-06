@@ -4,22 +4,24 @@ import { motion } from "framer-motion";
 import { Calendar, Clock, Zap, Target, TrendingUp, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { SessionHistoryItem } from "@/lib/session-lifecycle";
+import type { LocalSessionRecord } from "@/lib/local-storage/practice-history";
 import { cn } from "@/lib/utils";
 
 export interface SessionHistoryCardProps {
-  session: SessionHistoryItem;
-  onClick?: (session: SessionHistoryItem) => void;
+  session: LocalSessionRecord;
+  isPersonalBest?: boolean;
+  onClick?: (session: LocalSessionRecord) => void;
   delay?: number;
 }
 
 export function SessionHistoryCard({
   session,
+  isPersonalBest = false,
   onClick,
   delay = 0,
 }: SessionHistoryCardProps) {
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -52,8 +54,8 @@ export function SessionHistoryCard({
       onClick={() => onClick?.(session)}
       className={cn("cursor-pointer transition-all", onClick && "hover:scale-[1.02]")}
     >
-      <Card className="group relative overflow-hidden p-4 hover:shadow-md">
-        {session.isPersonalBest && (
+      <Card className="group hover:shadow-pop-md relative overflow-hidden p-4 hover:-translate-x-0.5 hover:-translate-y-0.5">
+        {isPersonalBest && (
           <div className="absolute top-2 right-2">
             <Trophy className="size-4 fill-yellow-500 text-yellow-500" />
           </div>
@@ -65,9 +67,11 @@ export function SessionHistoryCard({
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="capitalize">
-                  {session.mode}
+                  {session.practiceMode === "coding"
+                    ? (session.language ?? "coding")
+                    : session.mode}
                 </Badge>
-                {session.isPersonalBest && (
+                {isPersonalBest && (
                   <Badge
                     variant="secondary"
                     className="text-yellow-600 dark:text-yellow-500"
@@ -78,7 +82,7 @@ export function SessionHistoryCard({
               </div>
               <div className="text-muted-foreground mt-2 flex items-center gap-2 text-xs">
                 <Calendar className="size-3" />
-                <span>{formatDate(session.date)}</span>
+                <span>{formatDate(session.completedAt)}</span>
                 <span>•</span>
                 <Clock className="size-3" />
                 <span>{formatDuration(session.duration)}</span>
@@ -94,12 +98,12 @@ export function SessionHistoryCard({
                 <span>WPM</span>
               </div>
               <p
-                className={cn("font-mono text-xl font-bold", getWpmColor(session.wpm))}
+                className={cn(
+                  "font-mono text-xl font-bold",
+                  getWpmColor(session.finalWpm),
+                )}
               >
-                {session.wpm.toFixed(0)}
-              </p>
-              <p className="text-muted-foreground text-xs">
-                Peak: {session.peakWpm.toFixed(0)}
+                {session.finalWpm.toFixed(0)}
               </p>
             </div>
 
@@ -109,10 +113,7 @@ export function SessionHistoryCard({
                 <span>Accuracy</span>
               </div>
               <p className="font-mono text-xl font-bold">
-                {session.accuracy.toFixed(1)}%
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {session.mistakes} mistakes
+                {session.finalAccuracy.toFixed(1)}%
               </p>
             </div>
 

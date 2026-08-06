@@ -42,13 +42,7 @@ export default function PracticeResultsPage() {
     }
     return null;
   });
-  const [isLoading, setIsLoading] = useState(() => {
-    // Initial check - if data exists, no need to load
-    if (typeof window === "undefined") return true;
-    const hasSessionData = sessionStorage.getItem("lastSessionResult");
-    const hasCompletionData = sessionStorage.getItem("lastCompletionResult");
-    return !hasSessionData || !hasCompletionData;
-  });
+  const isLoading = !sessionResult || !completionResult;
 
   useEffect(() => {
     // Check if we have the data, if not redirect
@@ -62,7 +56,7 @@ export default function PracticeResultsPage() {
   };
 
   const handleDashboard = () => {
-    router.push("/dashboard");
+    router.push("/practice/history");
   };
 
   const handleNewSession = () => {

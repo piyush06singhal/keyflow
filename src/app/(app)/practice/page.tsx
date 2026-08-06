@@ -17,12 +17,14 @@ import { TimeUpModal } from "@/components/typing-practice/time-up-modal";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { useKeyboardShortcuts, TYPING_SHORTCUTS } from "@/hooks/use-keyboard-shortcuts";
 import { useTypingPracticeStore } from "@/stores/typing-practice-store";
-import { usePracticePreferences } from "@/hooks/use-practice-preferences";
-import { useAuth } from "@/hooks/use-auth";
 import { useSessionLifecycle } from "@/hooks/use-session-lifecycle";
 import type { SessionResult } from "@/lib/typing-engine";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  getDisplayName,
+  recordChallengeRun,
+} from "@/lib/local-storage/daily-challenge";
 
 /**
  * Typing Practice Page
@@ -33,6 +35,14 @@ import { toast } from "sonner";
  * - Restart uses the latest config (duration, mode, toggles)
  * - Support dynamic AI text generation using Groq
  */
+
+const CATEGORY_TOPICS: Record<string, string> = {
+  general: "general everyday topics",
+  science: "science and nature",
+  technology: "technology and software engineering",
+  business: "business and finance",
+  literature: "literature and the arts",
+};
 
 export default function PracticePage() {
   const router = useRouter();
@@ -48,9 +58,6 @@ export default function PracticePage() {
     updateConfig,
   } = useTypingPracticeStore();
 
-  const { user } = useAuth();
-  usePracticePreferences();
-
   const [sessionResult, setSessionResult] = useState<SessionResult | null>(null);
   const [timeUpOpen, setTimeUpOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -61,55 +68,35 @@ export default function PracticePage() {
 
   // Stable onComplete callback
   const handleComplete = useCallback(
-    async (result: SessionResult) => {
+    (result: SessionResult) => {
       setSessionResult(result);
       setTimeUpOpen(true);
 
-      if (user) {
-        try {
-          const completionResult = await completeSession(result, config.mode);
-          sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
-          sessionStorage.setItem(
-            "lastCompletionResult",
-            JSON.stringify(completionResult),
-          );
+      const completionResult = completeSession(result, config.mode);
+      sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
+      sessionStorage.setItem("lastCompletionResult", JSON.stringify(completionResult));
 
-          if (completionResult.saved) {
-            toast.success("Session saved! 🎉", {
-              description: `+${completionResult.xpGained} XP${completionResult.levelUp ? ` • Level ${completionResult.newLevel}!` : ""}`,
-            });
-          }
-        } catch {
-          sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
-          sessionStorage.setItem(
-            "lastCompletionResult",
-            JSON.stringify({
-              saved: false,
-              xpGained: 0,
-              levelUp: false,
-              newLevel: 0,
-              warnings: [],
-              statisticsUpdated: false,
-            }),
-          );
-        }
-      } else {
-        sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
-        sessionStorage.setItem(
-          "lastCompletionResult",
-          JSON.stringify({
-            saved: false,
-            xpGained: 0,
-            levelUp: false,
-            newLevel: 0,
-            warnings: [],
-            statisticsUpdated: false,
-          }),
-        );
+      if (completionResult.newPersonalBests.length > 0) {
+        toast.success("New personal best! 🎉", {
+          description: completionResult.newPersonalBests
+            .map((pb) => pb.type)
+            .join(", "),
+        });
+      }
+
+      if (sessionStorage.getItem("dailyChallengeActive") === "true") {
+        sessionStorage.removeItem("dailyChallengeActive");
+        recordChallengeRun({
+          date: new Date().toDateString(),
+          displayName: getDisplayName() || "You",
+          wpm: Math.round(result.finalWpm),
+          accuracy: Math.round(result.finalAccuracy),
+        });
+        toast.success("Daily challenge run recorded!");
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user, config.mode],
+    [config.mode],
   );
 
   // Initialize typing engine
@@ -136,13 +123,20 @@ export default function PracticePage() {
     autoStart: false,
   });
 
-  // Fetch dynamic text from Groq API route
+  // Fetch dynamic text from Groq API route, honoring the user's chosen
+  // difficulty/category so generated text actually matches their selection
   const getPracticeText = async (mode: string, duration: number) => {
     try {
       const res = await fetch("/api/generate-text", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, duration, difficulty: "intermediate" }),
+        body: JSON.stringify({
+          mode,
+          duration,
+          wordCount: config.wordCount,
+          difficulty: config.difficulty,
+          topic: CATEGORY_TOPICS[config.category],
+        }),
       });
       if (res.ok) {
         const json = await res.json();
@@ -165,7 +159,10 @@ export default function PracticePage() {
     let finalMode = config.mode;
     let finalText = config.customText;
 
-    if (config.useAiText && (config.mode === "quote" || config.mode === "paragraph")) {
+    if (
+      config.useAiText &&
+      (config.mode === "quote" || config.mode === "paragraph" || config.mode === "word")
+    ) {
       setIsGeneratingText(true);
       const text = await getPracticeText(config.mode, config.duration);
       setIsGeneratingText(false);
@@ -203,20 +200,27 @@ export default function PracticePage() {
     config.blindMode,
     config.strictMode,
     config.useAiText,
+    config.difficulty,
+    config.category,
   ]);
 
-  // Load custom lesson text from AI coach if present in sessionStorage
+  // Load a hand-off practice text (e.g. from the Daily Challenge) staged in sessionStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
     const customText = sessionStorage.getItem("customPracticeText");
     const customTitle = sessionStorage.getItem("customPracticeTitle");
+    const customDuration = sessionStorage.getItem("customPracticeDuration");
     if (customText) {
       sessionStorage.removeItem("customPracticeText");
       sessionStorage.removeItem("customPracticeTitle");
-      toast.success(`Loaded AI Lesson: ${customTitle || "Practice"}`);
+      sessionStorage.removeItem("customPracticeDuration");
+      toast.success(`Loaded: ${customTitle || "Practice"}`);
       updateConfig({
         mode: "custom",
         customText,
+        ...(customDuration
+          ? { timerMode: "countdown", duration: Number(customDuration) }
+          : {}),
       });
     }
   }, [updateConfig]);
@@ -236,6 +240,8 @@ export default function PracticePage() {
     config.includeCapitalization,
     config.wordCount,
     config.useAiText,
+    config.difficulty,
+    config.category,
   ]);
 
   // Navigate to full results page
@@ -327,7 +333,7 @@ export default function PracticePage() {
             })}
           >
             {/* Left: Typing Area */}
-            <div className="space-y-6">
+            <div className="min-w-0 space-y-6">
               <div className="relative">
                 <TypingCanvas typing={typing} />
 
@@ -358,7 +364,7 @@ export default function PracticePage() {
                     exit={{ y: 20, opacity: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <VirtualKeyboard layout={uiSettings.keyboardLayout} />
+                    <VirtualKeyboard />
                   </motion.div>
                 )}
               </AnimatePresence>

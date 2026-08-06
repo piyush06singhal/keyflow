@@ -2,28 +2,23 @@ import { HeroSection } from "@/components/landing/hero-section";
 import { FeaturesSection } from "@/components/landing/features-section";
 import { InteractiveShowcase } from "@/components/landing/interactive-showcase";
 import { CodingPracticeSection } from "@/components/landing/coding-practice-section";
-import { AnalyticsShowcase } from "@/components/landing/analytics-showcase";
-import { AISection } from "@/components/landing/ai-section";
-import { StatisticsSection } from "@/components/landing/statistics-section";
-import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { FAQSection } from "@/components/landing/faq-section";
 import { CTASection } from "@/components/landing/cta-section";
-import { LandingNavbar } from "@/components/landing/landing-navbar";
-import { LandingFooter } from "@/components/landing/landing-footer";
+import { SiteNavbar } from "@/components/app-shell/site-navbar";
+import { SiteFooter } from "@/components/app-shell/site-footer";
 import type { Metadata } from "next";
 
 export const revalidate = 86400; // Cache landing page for 24 hours (ISR)
 
 export const metadata: Metadata = {
-  title: "KeyFlow - Master Typing & Coding Speed",
+  title: "KeyFlow - Playful Typing & Coding Practice",
   description:
-    "Elevate your typing and coding skills with KeyFlow. AI-powered coaching, real-time analytics, coding practice, and personalized learning paths. Join thousands improving daily.",
+    "KeyFlow is a local-first typing and coding practice arena. No accounts, no tracking — practice with AI-generated text and code snippets, and keep your stats on your own device.",
   keywords: [
     "typing practice",
     "coding practice",
     "keyboard training",
     "developer practice",
-    "AI coaching",
     "typing speed",
     "WPM",
     "programming practice",
@@ -31,9 +26,9 @@ export const metadata: Metadata = {
     "developer tools",
   ],
   openGraph: {
-    title: "KeyFlow - Master Typing & Coding Speed",
+    title: "KeyFlow - Playful Typing & Coding Practice",
     description:
-      "AI-powered typing and coding practice platform with real-time analytics and personalized coaching.",
+      "A local-first typing and coding practice arena. No accounts, no tracking, just practice.",
     type: "website",
   },
 };
@@ -41,20 +36,16 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <div className="relative min-h-screen">
-      <LandingNavbar />
+      <SiteNavbar />
       <main className="relative">
         <HeroSection />
         <InteractiveShowcase />
         <FeaturesSection />
         <CodingPracticeSection />
-        <AnalyticsShowcase />
-        <AISection />
-        <StatisticsSection />
-        <TestimonialsSection />
         <FAQSection />
         <CTASection />
       </main>
-      <LandingFooter />
+      <SiteFooter />
     </div>
   );
 }

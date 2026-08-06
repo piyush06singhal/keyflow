@@ -5,6 +5,7 @@ import { X, Keyboard, Zap, Settings as SettingsIcon, Target } from "lucide-react
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getAccentColor } from "@/lib/accent-colors";
 
 /**
  * Quick Start Guide Component
@@ -59,7 +60,7 @@ export function QuickStartGuide() {
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
         >
-          <Card className="border-primary/20 bg-primary/5 relative mb-6 overflow-hidden p-6">
+          <Card className="bg-primary/5 relative mb-6 overflow-hidden p-6">
             <button
               onClick={handleDismiss}
               className="text-muted-foreground hover:text-foreground absolute top-4 right-4 transition-colors"
@@ -68,20 +69,25 @@ export function QuickStartGuide() {
               <X className="size-4" />
             </button>
 
-            <h3 className="mb-4 text-lg font-semibold">Quick Start Guide</h3>
+            <h3 className="mb-4 text-lg">Quick Start Guide</h3>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              {tips.map((tip) => (
-                <div key={tip.title} className="flex gap-3">
-                  <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-                    <tip.icon className="text-primary size-5" />
+              {tips.map((tip, index) => {
+                const accent = getAccentColor(index);
+                return (
+                  <div key={tip.title} className="flex gap-3">
+                    <div
+                      className={`border-border shadow-pop-sm flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 ${accent.bg} ${accent.fg}`}
+                    >
+                      <tip.icon className="size-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold">{tip.title}</p>
+                      <p className="text-muted-foreground text-sm">{tip.description}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{tip.title}</p>
-                    <p className="text-muted-foreground text-sm">{tip.description}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="mt-4 flex justify-end">

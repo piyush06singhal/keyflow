@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback, useLayoutEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Word, Character, CursorPosition } from "@/lib/typing-engine";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,14 @@ import { useTypingPracticeStore } from "@/stores/typing-practice-store";
  *
  * Renders the typing text with character-level styling and animations.
  * Handles correct/incorrect character states and cursor positioning.
+ *
+ * The viewport is fixed to a few lines tall — as the active word crosses
+ * a line boundary, the word flow is translated up so the current line
+ * stays in view, instead of showing the entire (often huge) generated
+ * text buffer as one ever-growing block.
  */
+
+const VISIBLE_LINES = 3;
 
 export interface TextRendererProps {
   words: ReadonlyArray<Readonly<Word>>;
@@ -25,6 +32,14 @@ export const TextRenderer = memo(function TextRenderer({
   className,
 }: TextRendererProps) {
   const { uiSettings } = useTypingPracticeStore();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const wordEls = useRef<Map<number, HTMLSpanElement>>(new Map());
+
+  const registerWordRef = useCallback((index: number, el: HTMLSpanElement | null) => {
+    if (el) wordEls.current.set(index, el);
+    else wordEls.current.delete(index);
+  }, []);
 
   const fontSizeClass = {
     sm: "text-lg",
@@ -39,25 +54,59 @@ export const TextRenderer = memo(function TextRenderer({
     serif: "font-serif",
   }[uiSettings.fontFamily];
 
+  const activeWordIndex = cursorPosition?.wordIndex ?? 0;
+
+  // Keep the active line in view: measure the real line height (accounts
+  // for font size + gap) and translate the word flow so the active word
+  // never sits below the fixed viewport. Runs before paint so there's no
+  // visible jump.
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const inner = innerRef.current;
+    if (!container || !inner) return;
+
+    const style = window.getComputedStyle(inner);
+    const lineHeight = parseFloat(style.lineHeight) || 32;
+    const rowGap = parseFloat(style.rowGap) || 0;
+    const effectiveLineHeight = lineHeight + rowGap;
+
+    const targetHeight = Math.round(effectiveLineHeight * VISIBLE_LINES);
+    if (Math.abs(container.clientHeight - targetHeight) > 1) {
+      container.style.height = `${targetHeight}px`;
+    }
+
+    const activeEl = wordEls.current.get(activeWordIndex);
+    const activeTop = activeEl ? activeEl.offsetTop : 0;
+    const activeLine = Math.round(activeTop / effectiveLineHeight);
+    const targetLine = Math.max(0, activeLine - 1);
+    const translateY = -(targetLine * effectiveLineHeight);
+
+    inner.style.transform = `translateY(${translateY}px)`;
+  }, [activeWordIndex, words, fontSizeClass, fontFamilyClass]);
+
   return (
-    <div
-      className={cn(
-        "relative flex flex-wrap gap-x-2 gap-y-3 leading-relaxed",
-        fontSizeClass,
-        fontFamilyClass,
-        className,
-      )}
-      role="textbox"
-      aria-label="Typing practice text"
-    >
-      {words.map((word) => (
-        <WordRenderer
-          key={word.index}
-          word={word}
-          cursorPosition={cursorPosition}
-          cursorStyle={uiSettings.cursorStyle}
-        />
-      ))}
+    <div ref={containerRef} className="relative overflow-hidden">
+      <div
+        ref={innerRef}
+        className={cn(
+          "relative flex flex-wrap gap-x-2 gap-y-3 leading-relaxed transition-transform duration-150 ease-out",
+          fontSizeClass,
+          fontFamilyClass,
+          className,
+        )}
+        role="textbox"
+        aria-label="Typing practice text"
+      >
+        {words.map((word) => (
+          <WordRenderer
+            key={word.index}
+            word={word}
+            cursorPosition={cursorPosition}
+            cursorStyle={uiSettings.cursorStyle}
+            registerRef={registerWordRef}
+          />
+        ))}
+      </div>
     </div>
   );
 });
@@ -66,18 +115,21 @@ interface WordRendererProps {
   word: Readonly<Word>;
   cursorPosition: CursorPosition | null;
   cursorStyle: "line" | "block" | "underline";
+  registerRef: (index: number, el: HTMLSpanElement | null) => void;
 }
 
 const WordRenderer = memo(function WordRenderer({
   word,
   cursorPosition,
   cursorStyle,
+  registerRef,
 }: WordRendererProps) {
   const isActiveWord = cursorPosition?.wordIndex === word.index;
   const isCompleted = word.isCompleted;
 
   return (
     <span
+      ref={(el) => registerRef(word.index, el)}
       className={cn("relative inline-flex", {
         "opacity-40": !isCompleted && !isActiveWord,
         "opacity-100": isCompleted || isActiveWord,
@@ -130,7 +182,7 @@ const CharacterRenderer = memo(function CharacterRenderer({
           getBgColor(),
         )}
       >
-        {char === " " ? "\u00A0" : char}
+        {char === " " ? " " : char}
       </span>
 
       {/* Cursor — blinking */}
@@ -145,7 +197,7 @@ const CharacterRenderer = memo(function CharacterRenderer({
               duration: 1,
               times: [0, 0.5, 0.5, 1],
             }}
-            className={cn("pointer-events-none absolute", {
+            className={cn("glow-primary pointer-events-none absolute", {
               "bg-primary top-0 left-[-1px] h-full w-[2px]": cursorStyle === "line",
               "bg-primary/25 ring-primary inset-0 rounded-sm ring-1 ring-inset":
                 cursorStyle === "block",

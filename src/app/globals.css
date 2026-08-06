@@ -6,130 +6,192 @@
 :root {
   color-scheme: light;
 
-  /* Core Surfaces - Soft, warm neutrals */
-  --background: #fafaf9;
-  --foreground: #1c1917;
+  /* Core Surfaces - light lavender, high-contrast ink outlines */
+  --background: #f6f4fc;
+  --foreground: #171123;
   --card: #ffffff;
-  --card-foreground: #1c1917;
+  --card-foreground: #171123;
   --popover: #ffffff;
-  --popover-foreground: #1c1917;
+  --popover-foreground: #171123;
 
-  /* Primary - Soft indigo/lavender */
-  --primary: #6366f1;
+  /* Ink - the outline/shadow color for the bold "sticker" look */
+  --ink: #171123;
+
+  /* Primary - vivid violet, darkened just enough from the original #7c5cff
+     to clear WCAG AA contrast (4.5:1) for white button text and for the
+     color used as text against the page background. */
+  --primary: #7550f5;
   --primary-foreground: #ffffff;
 
-  /* Secondary - Warm gray surfaces */
-  --secondary: #f5f5f4;
-  --secondary-foreground: #44403c;
+  /* Secondary accents - pink + orange. Darkened from the original
+     #ff6ec7/#ffb020 (which failed WCAG AA as text: 2.32:1 and 1.68:1
+     against the background) to pass 4.5:1 as text while still passing
+     4.5:1 with white foreground when used as a filled badge/icon-box —
+     foregrounds flip from dark to white to match. */
+  --pink: #d40082;
+  --pink-foreground: #ffffff;
+  --orange: #9a6400;
+  --orange-foreground: #ffffff;
 
-  /* Muted - Subtle backgrounds */
-  --muted: #fafaf9;
-  --muted-foreground: #78716c;
+  /* Secondary - light lavender-gray surfaces */
+  --secondary: #ede9fb;
+  --secondary-foreground: #3a2e63;
 
-  /* Accent - Soft lavender tint */
-  --accent: #f5f3ff;
+  /* Muted - subtle backgrounds */
+  --muted: #eeecf9;
+  --muted-foreground: #6b6285;
+
+  /* Accent - lavender tint */
+  --accent: #f1ecff;
   --accent-foreground: #5b21b6;
 
-  /* Destructive - Soft coral */
-  --destructive: #f87171;
+  /* Destructive - darkened from #ff5470 (white text only reached 3.11:1) */
+  --destructive: #de0024;
   --destructive-foreground: #ffffff;
 
-  /* Borders - Ultra-soft, barely visible */
-  --border: rgba(120, 113, 108, 0.08);
-  --input: rgba(120, 113, 108, 0.12);
-  --ring: #6366f1;
+  /* Borders - bold by default; -subtle kept for dividers that shouldn't compete */
+  --border: var(--ink);
+  --border-subtle: rgba(23, 17, 35, 0.1);
+  --input: var(--ink);
+  --ring: #7550f5;
 
-  /* Status Colors - Soft pastels */
-  --success: #10b981;
-  --warning: #f59e0b;
-  --info: #3b82f6;
+  /* Status Colors. Success/warning darkened from #14b874/#ffb020 (2.37:1
+     and 1.68:1 as text — both failed) to pass 4.5:1 as text against the
+     background, matching the pink/orange/destructive fix above. */
+  --success: #0e8151;
+  --warning: #9a6400;
+  --info: #3b9eff;
 
-  /* Glass Effects - Subtle */
-  --glass: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(120, 113, 108, 0.06);
+  /* Glass Effects - subtle */
+  --glass: rgba(255, 255, 255, 0.88);
+  --glass-border: rgba(23, 17, 35, 0.08);
 
-  /* Chart Colors - Soft, distinct pastels */
-  --chart-speed: #6366f1;
-  --chart-accuracy: #10b981;
-  --chart-consistency: #8b5cf6;
-  --chart-errors: #f87171;
-  --chart-time: #f59e0b;
+  /* Chart Colors - distinct, vivid */
+  --chart-speed: #7c5cff;
+  --chart-accuracy: #14b874;
+  --chart-consistency: #ff6ec7;
+  --chart-errors: #ff5470;
+  --chart-time: #ffb020;
 
   /* Additional Accents */
-  --accent-blue: #60a5fa;
+  --accent-blue: #3b9eff;
   --accent-purple: #a78bfa;
-  --accent-pink: #f9a8d4;
-  --accent-green: #6ee7b7;
-  --accent-yellow: #fcd34d;
-  --accent-coral: #fca5a5;
+  --accent-pink: #ff6ec7;
+  --accent-green: #4ade80;
+  --accent-yellow: #ffd166;
+  --accent-coral: #ff8a80;
 
-  --radius: 0.875rem;
+  /* Aurora gradient arc - violet -> pink -> orange, matches the new brand */
+  --gradient-aurora-from: #7c5cff;
+  --gradient-aurora-via: #ff6ec7;
+  --gradient-aurora-to: #ffb020;
+
+  /* Glow shadows - punchier than shadow-key-glow, colored per intent */
+  --glow-primary: 0 0 40px rgba(124, 92, 255, 0.35);
+  --glow-success: 0 0 40px rgba(20, 184, 116, 0.3);
+  --glow-danger: 0 0 40px rgba(255, 84, 112, 0.3);
+
+  /* Mascot state colors */
+  --mascot-idle: #7c5cff;
+  --mascot-happy: #14b874;
+  --mascot-sad: #ffb020;
+
+  --radius: 1.125rem;
 }
 
 .dark {
   color-scheme: dark;
 
-  /* Core Surfaces - Premium dark, not pure black */
-  --background: #0a0a0a;
-  --foreground: #fafaf9;
-  --card: #141414;
-  --card-foreground: #fafaf9;
-  --popover: #141414;
-  --popover-foreground: #fafaf9;
+  /* Core Surfaces - deep navy-violet, not pure black. Card/popover are
+     deliberately much lighter than the page background (not just a shade
+     up) so raised surfaces are obviously distinct without relying on the
+     border glow alone to separate them. */
+  --background: #141022;
+  --foreground: #f1eefb;
+  --card: #2a2347;
+  --card-foreground: #f1eefb;
+  --popover: #2a2347;
+  --popover-foreground: #f1eefb;
 
-  /* Primary - Brighter indigo for dark mode */
-  --primary: #818cf8;
-  --primary-foreground: #0a0a0a;
+  /* Ink flips to light in dark mode - a black outline wouldn't read */
+  --ink: #f1eefb;
 
-  /* Secondary - Slightly elevated surfaces */
-  --secondary: #1c1c1c;
-  --secondary-foreground: #d6d3d1;
+  /* Primary - brightened violet for dark mode */
+  --primary: #9b84ff;
+  --primary-foreground: #141022;
 
-  /* Muted - Subtle dark surfaces */
-  --muted: #171717;
-  --muted-foreground: #a8a29e;
+  /* Secondary accents */
+  --pink: #ff8ad4;
+  --pink-foreground: #3a0a2a;
+  --orange: #ffc561;
+  --orange-foreground: #3a2200;
 
-  /* Accent - Soft purple glow */
-  --accent: rgba(129, 140, 248, 0.1);
+  /* Secondary - elevated surfaces */
+  --secondary: #241d3a;
+  --secondary-foreground: #d8d2f0;
+
+  /* Muted - subtle dark surfaces */
+  --muted: #1c1730;
+  --muted-foreground: #a79fc2;
+
+  /* Accent - soft violet glow */
+  --accent: rgba(155, 132, 255, 0.12);
   --accent-foreground: #c4b5fd;
 
-  /* Destructive - Softer red for dark */
-  --destructive: #fca5a5;
-  --destructive-foreground: #0a0a0a;
+  /* Destructive - slightly softened for dark */
+  --destructive: #ff7a90;
+  --destructive-foreground: #141022;
 
-  /* Borders - Subtle light borders */
-  --border: rgba(250, 250, 249, 0.08);
-  --input: rgba(250, 250, 249, 0.12);
-  --ring: #818cf8;
+  /* Borders - light ink by default; -subtle for quiet dividers */
+  --border: var(--ink);
+  --border-subtle: rgba(241, 238, 251, 0.1);
+  --input: var(--ink);
+  --ring: #9b84ff;
 
   /* Status Colors */
   --success: #34d399;
-  --warning: #fbbf24;
+  --warning: #ffc561;
   --info: #60a5fa;
 
   /* Glass Effects */
-  --glass: rgba(20, 20, 20, 0.82);
-  --glass-border: rgba(250, 250, 249, 0.08);
+  --glass: rgba(30, 24, 48, 0.85);
+  --glass-border: rgba(241, 238, 251, 0.1);
 
-  /* Chart Colors - Brighter for dark mode */
-  --chart-speed: #818cf8;
+  /* Chart Colors - brighter for dark mode */
+  --chart-speed: #9b84ff;
   --chart-accuracy: #34d399;
-  --chart-consistency: #a78bfa;
-  --chart-errors: #fca5a5;
-  --chart-time: #fbbf24;
+  --chart-consistency: #ff8ad4;
+  --chart-errors: #ff7a90;
+  --chart-time: #ffc561;
 
   /* Additional Accents */
   --accent-blue: #60a5fa;
   --accent-purple: #c4b5fd;
-  --accent-pink: #f9a8d4;
+  --accent-pink: #ff8ad4;
   --accent-green: #6ee7b7;
   --accent-yellow: #fde68a;
-  --accent-coral: #fca5a5;
+  --accent-coral: #ffa8a0;
+
+  /* Aurora gradient arc - brighter for dark mode */
+  --gradient-aurora-from: #9b84ff;
+  --gradient-aurora-via: #ff8ad4;
+  --gradient-aurora-to: #ffc561;
+
+  /* Glow shadows - brighter for dark mode */
+  --glow-primary: 0 0 48px rgba(155, 132, 255, 0.45);
+  --glow-success: 0 0 48px rgba(52, 211, 153, 0.4);
+  --glow-danger: 0 0 48px rgba(255, 122, 144, 0.4);
+
+  /* Mascot state colors */
+  --mascot-idle: #9b84ff;
+  --mascot-happy: #34d399;
+  --mascot-sad: #ffc561;
 }
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-baloo);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -139,6 +201,10 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-pink: var(--pink);
+  --color-pink-foreground: var(--pink-foreground);
+  --color-orange: var(--orange);
+  --color-orange-foreground: var(--orange-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -148,13 +214,14 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-info: var(--info);
 
-  /* Enhanced radii for softer feel */
+  /* Enhanced radii for a chunkier, stickers-and-pills feel */
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 3px);
   --radius-lg: var(--radius);
@@ -162,17 +229,37 @@
   --radius-2xl: calc(var(--radius) + 12px);
   --radius-full: 9999px;
 
-  /* Refined shadows - softer, more subtle */
-  --shadow-key-xs: 0 1px 2px rgba(28, 25, 23, 0.04);
-  --shadow-key-sm: 0 2px 8px rgba(28, 25, 23, 0.04), 0 1px 2px rgba(28, 25, 23, 0.02);
-  --shadow-key-md: 0 8px 24px rgba(28, 25, 23, 0.06), 0 2px 4px rgba(28, 25, 23, 0.03);
-  --shadow-key-lg: 0 16px 48px rgba(28, 25, 23, 0.08), 0 4px 8px rgba(28, 25, 23, 0.04);
-  --shadow-key-xl: 0 24px 64px rgba(28, 25, 23, 0.1), 0 8px 16px rgba(28, 25, 23, 0.05);
-  --shadow-key-glow: 0 0 32px rgba(99, 102, 241, 0.12);
+  /* Quiet shadow tier - kept for things that shouldn't shout (tooltips, popovers) */
+  --shadow-key-xs: 0 1px 2px rgba(23, 17, 35, 0.04);
+  --shadow-key-sm: 0 2px 8px rgba(23, 17, 35, 0.04), 0 1px 2px rgba(23, 17, 35, 0.02);
+  --shadow-key-md: 0 8px 24px rgba(23, 17, 35, 0.06), 0 2px 4px rgba(23, 17, 35, 0.03);
+  --shadow-key-lg: 0 16px 48px rgba(23, 17, 35, 0.08), 0 4px 8px rgba(23, 17, 35, 0.04);
+  --shadow-key-xl: 0 24px 64px rgba(23, 17, 35, 0.1), 0 8px 16px rgba(23, 17, 35, 0.05);
+  --shadow-key-glow: 0 0 32px rgba(124, 92, 255, 0.15);
+
+  /* Bold "sticker" tier - hard offset shadows, the signature of the new look */
+  --shadow-pop-sm: 3px 3px 0 var(--ink);
+  --shadow-pop-md: 5px 5px 0 var(--ink);
+  --shadow-pop-lg: 8px 8px 0 var(--ink);
+  --shadow-pop-press: 1px 1px 0 var(--ink);
+}
+
+.dark {
+  /* A literal --ink (near-white) offset would read as muddy on dark
+     backgrounds, so dark mode uses a near-opaque colored offset instead —
+     crisp like the light-mode "sticker" shadow, just tinted violet instead
+     of black, with only a very tight glow (not a wide haze). */
+  --shadow-pop-sm:
+    3px 3px 0 rgba(155, 132, 255, 0.9), 0 0 6px rgba(155, 132, 255, 0.15);
+  --shadow-pop-md:
+    5px 5px 0 rgba(155, 132, 255, 0.9), 0 0 10px rgba(155, 132, 255, 0.18);
+  --shadow-pop-lg:
+    8px 8px 0 rgba(155, 132, 255, 0.9), 0 0 16px rgba(155, 132, 255, 0.2);
+  --shadow-pop-press: 1px 1px 0 rgba(155, 132, 255, 0.9);
 }
 
 * {
-  border-color: var(--border);
+  border-color: var(--border-subtle);
 }
 
 html {
@@ -185,8 +272,12 @@ html {
 body {
   min-height: 100%;
   background:
-    radial-gradient(circle at top left, rgba(99, 102, 241, 0.04), transparent 35rem),
-    radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.04), transparent 32rem),
+    radial-gradient(circle at top left, rgba(124, 92, 255, 0.08), transparent 35rem),
+    radial-gradient(
+      circle at bottom right,
+      rgba(255, 110, 199, 0.06),
+      transparent 32rem
+    ),
     var(--background);
   color: var(--foreground);
   font-feature-settings:
@@ -197,7 +288,7 @@ body {
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--primary) 18%, transparent);
+  background: color-mix(in oklab, var(--primary) 25%, transparent);
 }
 
 :focus-visible {
@@ -207,7 +298,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   *,
   *::before,
   *::after {
@@ -220,24 +310,57 @@ body {
 
 /* Refined utility classes */
 @utility surface-card {
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   background: var(--card);
-  box-shadow: var(--shadow-key-sm);
+  box-shadow: var(--shadow-pop-sm);
   border-radius: var(--radius-lg);
 }
 
 @utility surface-elevated {
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   background: var(--card);
-  box-shadow: var(--shadow-key-md);
+  box-shadow: var(--shadow-pop-md);
   border-radius: var(--radius-xl);
 }
 
 @utility glass-panel {
-  border: 1px solid var(--glass-border);
+  border: 2px solid var(--glass-border);
   background: var(--glass);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+
+@utility aurora-text {
+  background-image: linear-gradient(
+    135deg,
+    var(--gradient-aurora-from),
+    var(--gradient-aurora-via),
+    var(--gradient-aurora-to)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+@utility aurora-surface {
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--gradient-aurora-from) 12%, transparent),
+    color-mix(in oklab, var(--gradient-aurora-via) 10%, transparent),
+    color-mix(in oklab, var(--gradient-aurora-to) 12%, transparent)
+  );
+}
+
+@utility glow-primary {
+  box-shadow: var(--glow-primary);
+}
+
+@utility glow-success {
+  box-shadow: var(--glow-success);
+}
+
+@utility glow-danger {
+  box-shadow: var(--glow-danger);
 }
 
 @utility text-balance {
@@ -248,16 +371,17 @@ body {
   text-wrap: pretty;
 }
 
-/* Enhanced typography */
+/* Enhanced typography - bold rounded display font for headings */
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 p {
@@ -302,10 +426,12 @@ p {
 
 .skeleton {
   animation: shimmer 2s infinite linear;
-  background: linear-gradient(90deg,
-      var(--muted) 0%,
-      color-mix(in oklab, var(--muted) 95%, var(--foreground)) 20%,
-      var(--muted) 40%,
-      var(--muted) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    color-mix(in oklab, var(--muted) 95%, var(--foreground)) 20%,
+    var(--muted) 40%,
+    var(--muted) 100%
+  );
   background-size: 1000px 100%;
 }

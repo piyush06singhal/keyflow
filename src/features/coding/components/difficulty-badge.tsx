@@ -12,29 +12,32 @@ interface DifficultyBadgeProps {
   size?: "sm" | "md" | "lg";
 }
 
+// Colors are darkened from the more saturated #10b981/#3b82f6/#f59e0b/#ef4444
+// so the text (rendered at full color on a ~8%-tint background) clears
+// WCAG AA 4.5:1 — the brighter originals landed as low as 2.15:1.
 const DIFFICULTY_CONFIG: Record<
   CodingDifficulty,
   { label: string; color: string; bgColor: string }
 > = {
   beginner: {
     label: "Beginner",
-    color: "#10b981",
-    bgColor: "#10b98115",
+    color: "#0c855d",
+    bgColor: "#0c855d15",
   },
   intermediate: {
     label: "Intermediate",
-    color: "#3b82f6",
-    bgColor: "#3b82f615",
+    color: "#1e6ff5",
+    bgColor: "#1e6ff515",
   },
   advanced: {
     label: "Advanced",
-    color: "#f59e0b",
-    bgColor: "#f59e0b15",
+    color: "#a36907",
+    bgColor: "#a3690715",
   },
   expert: {
     label: "Expert",
-    color: "#ef4444",
-    bgColor: "#ef444415",
+    color: "#eb1515",
+    bgColor: "#eb151515",
   },
 };
 
@@ -50,10 +53,10 @@ export function DifficultyBadge({ difficulty, size = "md" }: DifficultyBadgeProp
   return (
     <Badge
       variant="secondary"
-      className={`${sizeClasses[size]} font-medium`}
+      className={`${sizeClasses[size]} shadow-pop-sm font-bold`}
       style={{
         backgroundColor: config.bgColor,
-        borderColor: `${config.color}40`,
+        borderColor: config.color,
         color: config.color,
       }}
     >

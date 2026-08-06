@@ -89,9 +89,9 @@ export function TypingDemo() {
   };
 
   return (
-    <Card className="border-border/50 bg-card/50 overflow-hidden backdrop-blur-sm">
+    <Card className="overflow-hidden">
       {/* Stats Bar */}
-      <div className="border-border/50 bg-muted/30 grid grid-cols-2 gap-4 border-b p-4 sm:grid-cols-4">
+      <div className="border-border-subtle bg-muted/40 grid grid-cols-2 gap-4 border-b-2 p-4 sm:grid-cols-4">
         <StatItem label="WPM" value={stats.wpm} icon="⚡" />
         <StatItem label="Accuracy" value={`${stats.accuracy}%`} icon="🎯" />
         <StatItem label="Consistency" value={`${stats.consistency}%`} icon="📊" />
@@ -102,7 +102,7 @@ export function TypingDemo() {
       <div className="relative p-6">
         {/* Text Display */}
         <div
-          className="border-border/50 bg-background mb-4 min-h-[120px] cursor-text rounded-lg border p-4 font-mono text-lg leading-relaxed"
+          className="border-border bg-background mb-4 min-h-[120px] cursor-text rounded-xl border-2 p-4 font-mono text-lg leading-relaxed"
           onClick={() => inputRef.current?.focus()}
         >
           {sampleText.split("").map((char, index) => (

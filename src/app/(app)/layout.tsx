@@ -1,41 +1,12 @@
-import { requireAuth } from "@/lib/supabase/auth";
-import { hasCompletedOnboarding } from "@/lib/supabase/profile";
-import { redirect } from "next/navigation";
-import { routes } from "@/lib/constants/routes";
-import { AppLayout } from "@/components/app-shell";
-import { getUserProfile } from "@/lib/supabase/profile";
+import { SiteNavbar } from "@/components/app-shell/site-navbar";
+import { SiteFooter } from "@/components/app-shell/site-footer";
 
-import { NotificationProvider } from "@/features/notifications/context/notification-provider";
-import { SettingsProvider } from "@/features/settings/context/settings-provider";
-export default async function AppLayoutWrapper({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const user = await requireAuth();
-
-  // Check if user has completed onboarding
-  const onboardingCompleted = await hasCompletedOnboarding(user.id);
-
-  if (!onboardingCompleted) {
-    redirect(routes.onboarding);
-  }
-
-  // Get user profile for display
-  const profile = await getUserProfile(user.id);
-  const userData = {
-    email: user.email,
-    display_name:
-      (profile as { display_name?: string } | null)?.display_name ||
-      user.email?.split("@")[0] ||
-      "User",
-  };
-
+export default function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <SettingsProvider>
-      <NotificationProvider>
-        <AppLayout user={userData}>{children}</AppLayout>
-      </NotificationProvider>
-    </SettingsProvider>
+    <div className="flex min-h-screen flex-col">
+      <SiteNavbar />
+      <main className="flex-1">{children}</main>
+      <SiteFooter />
+    </div>
   );
 }

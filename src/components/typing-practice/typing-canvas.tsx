@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TextRenderer } from "./text-renderer";
 import { useTypingPracticeStore } from "@/stores/typing-practice-store";
+import { Mascot, useMascotState } from "@/components/mascot";
 import { cn } from "@/lib/utils";
 import type { UseTypingEngineReturn } from "@/hooks/use-typing-engine";
 
@@ -26,12 +27,19 @@ export interface TypingCanvasProps {
 
 export function TypingCanvas({ typing, className }: TypingCanvasProps) {
   const { viewMode, config } = useTypingPracticeStore();
-  const { status, words, cursorPosition, inputRef, start, pause, resume } = typing;
+  const { status, words, cursorPosition, inputRef, start, pause, resume, statistics } =
+    typing;
 
   // Keep the canvas focusable and focused so window keydown captures properly
   useEffect(() => {
     inputRef.current?.focus();
   }, [inputRef]);
+
+  const mascotState = useMascotState({
+    engineStatus: status,
+    wpm: statistics?.wpm ?? 0,
+    accuracy: statistics?.accuracy ?? 100,
+  });
 
   const isZenMode = viewMode.mode === "zen";
 
@@ -56,18 +64,25 @@ export function TypingCanvas({ typing, className }: TypingCanvasProps) {
       tabIndex={0}
       onClick={handleClick}
       className={cn(
-        "focus:ring-ring focus:border-primary/50 border-border/40 shadow-key-md focus:ring-primary/20",
-        "relative min-h-[300px] rounded-2xl p-8 transition-all duration-200",
+        "focus:ring-ring focus:ring-primary/20 shadow-pop-sm",
+        "glass-panel relative rounded-2xl p-8 transition-all duration-200",
         "cursor-text focus:ring-2 focus:outline-none",
         {
-          "border-primary/60 shadow-key-lg": status === "active",
-          "min-h-screen": isZenMode,
+          "border-primary glow-primary": status === "active",
+          "flex min-h-screen flex-col items-center justify-center": isZenMode,
         },
         className,
       )}
       role="application"
       aria-label="Typing practice area"
     >
+      {/* Mascot companion */}
+      {!isZenMode && (
+        <div className="pointer-events-none absolute top-4 right-4 z-10">
+          <Mascot state={mascotState} size={56} />
+        </div>
+      )}
+
       {/* Ready overlay */}
       <AnimatePresence>
         {showReadyOverlay && (
@@ -79,7 +94,7 @@ export function TypingCanvas({ typing, className }: TypingCanvasProps) {
             className="bg-background/75 absolute inset-0 z-10 flex items-center justify-center rounded-2xl backdrop-blur-lg"
           >
             <div className="space-y-3 text-center">
-              <div className="bg-primary/10 text-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl">
+              <div className="aurora-surface text-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl">
                 <Play className="h-8 w-8" />
               </div>
               <p className="text-lg font-semibold tracking-tight">

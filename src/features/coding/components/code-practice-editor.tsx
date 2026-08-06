@@ -20,8 +20,8 @@ import { RotateCcw, Play, Timer } from "lucide-react";
 import { useCodingPracticeStore } from "@/stores/coding-practice-store";
 import { useTypingEngine } from "@/hooks/use-typing-engine";
 import { useSessionLifecycle } from "@/hooks/use-session-lifecycle";
-import { useAuth } from "@/hooks/use-auth";
 import { TimeUpModal } from "@/components/typing-practice/time-up-modal";
+import { Mascot, useMascotState } from "@/components/mascot";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { CodeSnippet } from "@/lib/coding-practice/types";
@@ -39,65 +39,29 @@ export function CodePracticeEditor({
   const { config } = useCodingPracticeStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { user } = useAuth();
   const { completeSession, isProcessing } = useSessionLifecycle();
   const [sessionResult, setSessionResult] = useState<SessionResult | null>(null);
   const [timeUpOpen, setTimeUpOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
-  const handleComplete = useCallback(
-    async (result: SessionResult) => {
-      setSessionResult(result);
-      setTimeUpOpen(true);
+  const handleComplete = useCallback((result: SessionResult) => {
+    setSessionResult(result);
+    setTimeUpOpen(true);
 
-      if (user) {
-        try {
-          const completionResult = await completeSession(result, "coding");
-          sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
-          sessionStorage.setItem(
-            "lastCompletionResult",
-            JSON.stringify(completionResult),
-          );
-          if (completionResult.saved) {
-            toast.success("Coding session saved! 🎉", {
-              description: `+${completionResult.xpGained} XP`,
-            });
-          }
-        } catch {
-          sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
-          sessionStorage.setItem(
-            "lastCompletionResult",
-            JSON.stringify({
-              saved: false,
-              xpGained: 0,
-              levelUp: false,
-              newLevel: 0,
-              warnings: [],
-              statisticsUpdated: false,
-            }),
-          );
-        }
-      } else {
-        sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
-        sessionStorage.setItem(
-          "lastCompletionResult",
-          JSON.stringify({
-            saved: false,
-            xpGained: 0,
-            levelUp: false,
-            newLevel: 0,
-            warnings: [],
-            statisticsUpdated: false,
-          }),
-        );
-      }
-    },
+    const completionResult = completeSession(result, "coding");
+    sessionStorage.setItem("lastSessionResult", JSON.stringify(result));
+    sessionStorage.setItem("lastCompletionResult", JSON.stringify(completionResult));
+
+    if (completionResult.newPersonalBests.length > 0) {
+      toast.success("New personal best! 🎉", {
+        description: completionResult.newPersonalBests.map((pb) => pb.type).join(", "),
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user],
-  );
+  }, []);
 
   // Initialize typing engine with code snippet text
-  const { words, cursorPosition, status, start, restart, elapsedTime } =
+  const { words, cursorPosition, status, start, restart, elapsedTime, statistics } =
     useTypingEngine({
       config: {
         mode: "coding",
@@ -178,9 +142,15 @@ export function CodePracticeEditor({
   const isStarted =
     status === "active" || status === "paused" || status === "completed";
 
+  const mascotState = useMascotState({
+    engineStatus: status,
+    wpm: statistics?.wpm ?? 0,
+    accuracy: statistics?.accuracy ?? 100,
+  });
+
   return (
     <>
-      <Card className="overflow-hidden">
+      <Card className="glass-panel overflow-hidden">
         {/* Timer bar at top */}
         {isCountdown && isStarted && (
           <div className="bg-secondary/50 relative h-1.5 w-full">
@@ -222,6 +192,7 @@ export function CodePracticeEditor({
                       ? "COMPLETE"
                       : "READY"}
               </span>
+              <Mascot state={mascotState} size={28} className="ml-1" />
             </div>
 
             {/* Timer display */}

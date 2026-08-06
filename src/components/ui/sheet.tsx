@@ -25,14 +25,14 @@ const SheetOverlay = React.forwardRef<
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
 const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-card p-6 text-card-foreground shadow-key-lg transition ease-in-out",
+  "border-border fixed z-50 gap-4 bg-card p-6 text-card-foreground shadow-pop-lg transition ease-in-out",
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 border-b",
-        bottom: "inset-x-0 bottom-0 border-t",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm",
-        right: "inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm",
+        top: "inset-x-0 top-0 border-b-2",
+        bottom: "inset-x-0 bottom-0 border-t-2",
+        left: "inset-y-0 left-0 h-full w-3/4 border-r-2 sm:max-w-sm",
+        right: "inset-y-0 right-0 h-full w-3/4 border-l-2 sm:max-w-sm",
       },
     },
     defaultVariants: {

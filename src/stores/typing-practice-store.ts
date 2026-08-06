@@ -1,5 +1,9 @@
 import { create } from "zustand";
-import type { PracticeMode, TimerMode } from "@/lib/typing-engine";
+import { persist } from "zustand/middleware";
+import type { PracticeMode, TimerMode, Difficulty } from "@/lib/typing-engine";
+
+export type PracticeCategory =
+  "general" | "science" | "technology" | "business" | "literature";
 
 /**
  * Typing Practice Store
@@ -23,6 +27,8 @@ export interface PracticeConfig {
   wordCount: number;
   customText?: string;
   useAiText: boolean;
+  difficulty: Difficulty;
+  category: PracticeCategory;
 
   // Features
   allowBackspace: boolean;
@@ -79,6 +85,8 @@ const defaultConfig: PracticeConfig = {
   includeCapitalization: false,
   wordCount: 50,
   useAiText: true,
+  difficulty: "intermediate",
+  category: "general",
   allowBackspace: true,
   blindMode: false,
   strictMode: false,
@@ -96,35 +104,59 @@ const defaultUISettings: PracticeUISettings = {
   highContrast: false,
 };
 
-export const useTypingPracticeStore = create<TypingPracticeState>((set) => ({
-  // Initial state
-  config: defaultConfig,
-  uiSettings: defaultUISettings,
-  viewMode: { mode: "default" },
-  settingsOpen: false,
-  resultsOpen: false,
-
-  // Actions
-  updateConfig: (config) =>
-    set((state) => ({
-      config: { ...state.config, ...config },
-    })),
-
-  updateUISettings: (settings) =>
-    set((state) => ({
-      uiSettings: { ...state.uiSettings, ...settings },
-    })),
-
-  setViewMode: (mode) => set({ viewMode: { mode } }),
-
-  setSettingsOpen: (open) => set({ settingsOpen: open }),
-
-  setResultsOpen: (open) => set({ resultsOpen: open }),
-
-  resetToDefaults: () =>
-    set({
+export const useTypingPracticeStore = create<TypingPracticeState>()(
+  persist(
+    (set) => ({
+      // Initial state
       config: defaultConfig,
       uiSettings: defaultUISettings,
       viewMode: { mode: "default" },
+      settingsOpen: false,
+      resultsOpen: false,
+
+      // Actions
+      updateConfig: (config) =>
+        set((state) => ({
+          config: { ...state.config, ...config },
+        })),
+
+      updateUISettings: (settings) =>
+        set((state) => ({
+          uiSettings: { ...state.uiSettings, ...settings },
+        })),
+
+      setViewMode: (mode) => set({ viewMode: { mode } }),
+
+      setSettingsOpen: (open) => set({ settingsOpen: open }),
+
+      setResultsOpen: (open) => set({ resultsOpen: open }),
+
+      resetToDefaults: () =>
+        set({
+          config: defaultConfig,
+          uiSettings: defaultUISettings,
+          viewMode: { mode: "default" },
+        }),
     }),
-}));
+    {
+      name: "typing-practice-storage",
+      partialize: (state) => ({
+        config: state.config,
+        uiSettings: state.uiSettings,
+      }),
+      // Deep-merge persisted config/uiSettings over the current defaults so
+      // fields added after a user already has a saved config (e.g. difficulty,
+      // category) still get a valid default instead of `undefined`.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<
+          Pick<TypingPracticeState, "config" | "uiSettings">
+        >;
+        return {
+          ...current,
+          config: { ...current.config, ...p.config },
+          uiSettings: { ...current.uiSettings, ...p.uiSettings },
+        };
+      },
+    },
+  ),
+);

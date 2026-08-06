@@ -5,19 +5,19 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "KeyFlow",
     short_name: "KeyFlow",
     description:
-      "Master your typing and coding speed with AI coaching and real-time analytics.",
+      "A local-first typing and coding practice arena — no accounts, no tracking.",
     start_url: "/",
     display: "standalone",
-    background_color: "#000000",
-    theme_color: "#171717", // Primary dark theme accent
+    background_color: "#141022",
+    theme_color: "#7c5cff",
     icons: [
       {
-        src: "/icon-192x192.png",
+        src: "/manifest-icon-192",
         sizes: "192x192",
         type: "image/png",
       },
       {
-        src: "/icon-512x512.png",
+        src: "/manifest-icon-512",
         sizes: "512x512",
         type: "image/png",
       },

@@ -18,9 +18,6 @@ export type { VirtualKeyboardProps } from "./virtual-keyboard";
 
 export { SettingsDrawer } from "./settings-drawer";
 
-export { ResultsModal } from "./results-modal";
-export type { ResultsModalProps } from "./results-modal";
-
 export { TypingCanvas } from "./typing-canvas";
 export type { TypingCanvasProps } from "./typing-canvas";
 

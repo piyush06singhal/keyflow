@@ -52,6 +52,7 @@ export function PracticeFAB({
       label: isPaused ? "Resume" : "Pause",
       onClick: onPauseToggle,
       color: "text-blue-500",
+      disabled: !isActive && !isPaused,
     },
     {
       icon: Keyboard,
@@ -94,7 +95,9 @@ export function PracticeFAB({
                         <Button
                           size="icon"
                           variant="secondary"
-                          className={cn("shadow-lg", action.color)}
+                          disabled={action.disabled}
+                          aria-label={action.label}
+                          className={cn("shadow-pop-sm", action.color)}
                           onClick={() => {
                             action.onClick();
                             setIsOpen(false);
@@ -117,7 +120,7 @@ export function PracticeFAB({
           <Button
             size="icon"
             className={cn(
-              "size-14 rounded-full shadow-lg transition-transform",
+              "shadow-pop-md size-14 rounded-full transition-transform",
               isOpen && "rotate-45",
             )}
             onClick={() => setIsOpen(!isOpen)}

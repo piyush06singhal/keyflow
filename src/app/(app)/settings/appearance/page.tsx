@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useSettings } from "@/features/settings/context/settings-provider";
+import { useSettingsStore } from "@/stores/settings-store";
 import type { LucideIcon } from "lucide-react";
 import { Palette, Monitor, Sun, Moon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,7 +24,7 @@ const ThemeOption = ({
   const isSelected = currentTheme === value;
   return (
     <Card
-      className={`hover:border-primary/50 cursor-pointer transition-all ${isSelected ? "border-primary ring-primary/20 ring-1" : ""}`}
+      className={`cursor-pointer transition-all ${isSelected ? "bg-primary/10" : ""}`}
       onClick={() => onClick(value)}
     >
       <CardContent className="flex flex-col items-center justify-center gap-3 p-6">
@@ -32,7 +32,7 @@ const ThemeOption = ({
           className={`h-8 w-8 ${isSelected ? "text-primary" : "text-muted-foreground"}`}
         />
         <span
-          className={`text-sm font-medium ${isSelected ? "text-foreground" : "text-muted-foreground"}`}
+          className={`text-sm font-bold ${isSelected ? "text-foreground" : "text-muted-foreground"}`}
         >
           {label}
         </span>
@@ -42,24 +42,13 @@ const ThemeOption = ({
 };
 
 export default function AppearanceSettingsPage() {
-  const { preferences, updateAppearance, isLoading } = useSettings();
-
-  if (isLoading) {
-    return (
-      <div className="animate-pulse space-y-6">
-        <div className="bg-secondary h-8 w-48 rounded" />
-        <div className="bg-secondary/50 h-32 rounded-lg" />
-        <div className="bg-secondary/50 h-32 rounded-lg" />
-      </div>
-    );
-  }
-
-  const { appearance } = preferences;
+  const appearance = useSettingsStore((state) => state.appearance);
+  const updateAppearance = useSettingsStore((state) => state.updateAppearance);
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 space-y-10 duration-500">
       <div>
-        <h2 className="mb-2 text-2xl font-semibold tracking-tight">Appearance</h2>
+        <h2 className="mb-2 text-2xl">Appearance</h2>
         <p className="text-muted-foreground">
           Customize how the application looks and feels across your devices.
         </p>
@@ -67,7 +56,7 @@ export default function AppearanceSettingsPage() {
 
       {/* Theme Section */}
       <section className="space-y-4">
-        <h3 className="flex items-center gap-2 text-lg font-medium">
+        <h3 className="flex items-center gap-2 text-lg">
           <Palette className="text-primary h-5 w-5" />
           Color Theme
         </h3>
@@ -98,19 +87,19 @@ export default function AppearanceSettingsPage() {
 
       {/* Density Section */}
       <section className="space-y-4">
-        <h3 className="text-lg font-medium">Layout Density</h3>
+        <h3 className="text-lg">Layout Density</h3>
         <p className="text-muted-foreground mb-4 text-sm">
           Control the spacing and sizing of UI elements.
         </p>
 
-        <div className="bg-secondary flex w-fit rounded-lg p-1">
+        <div className="bg-muted flex w-fit rounded-full p-1.5">
           {["compact", "comfortable", "spacious"].map((density) => (
             <button
               key={density}
               onClick={() => updateAppearance({ density: density as any })}
-              className={`rounded-md px-4 py-2 text-sm font-medium capitalize transition-all ${
+              className={`rounded-full px-4 py-2 text-sm font-bold capitalize transition-all ${
                 appearance.density === density
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "border-border bg-primary text-primary-foreground shadow-pop-sm border-2"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >

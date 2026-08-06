@@ -1,6 +1,4 @@
-import Groq from "groq-sdk";
-
-import { serverEnv } from "@/config/env";
+import { groqKeyPool } from "@/lib/ai/groq-key-pool";
 import { toAiError } from "@/lib/ai/errors";
 import type {
   AiGenerateTextInput,
@@ -12,25 +10,19 @@ export class GroqProvider implements AiProvider {
   readonly id = "groq" as const;
   readonly defaultModel = "llama-3.1-8b-instant";
 
-  private get client() {
-    if (!serverEnv.GROQ_API_KEY) {
-      throw toAiError(new Error("Missing GROQ_API_KEY."), this.id);
-    }
-
-    return new Groq({ apiKey: serverEnv.GROQ_API_KEY });
-  }
-
   async generateText(input: AiGenerateTextInput): Promise<AiGenerateTextResult> {
     const startedAt = performance.now();
     const model = input.model ?? this.defaultModel;
 
     try {
-      const response = await this.client.chat.completions.create({
-        model,
-        messages: input.messages,
-        temperature: input.temperature,
-        max_tokens: input.maxOutputTokens,
-      });
+      const response = await groqKeyPool.withKey((client) =>
+        client.chat.completions.create({
+          model,
+          messages: input.messages,
+          temperature: input.temperature,
+          max_tokens: input.maxOutputTokens,
+        }),
+      );
 
       return {
         provider: this.id,

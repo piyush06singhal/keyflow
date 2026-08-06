@@ -13,7 +13,6 @@ import { Card } from "@/components/ui/card";
  */
 
 export interface VirtualKeyboardProps {
-  layout?: "ansi" | "iso" | "tkl" | "full";
   className?: string;
 }
 
@@ -93,7 +92,6 @@ const ANSI_LAYOUT = [
 ];
 
 export const VirtualKeyboard = memo(function VirtualKeyboard({
-  layout = "ansi",
   className,
 }: VirtualKeyboardProps) {
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
@@ -121,10 +119,17 @@ export const VirtualKeyboard = memo(function VirtualKeyboard({
   }, []);
 
   return (
-    <Card className={cn("p-4", className)}>
-      <div className="space-y-1.5">
+    <Card className={cn("glass-panel p-4", className)} aria-hidden="true">
+      {/* Purely a visual mirror of real keystrokes — it has no onClick and
+          nothing here is operable, so it's hidden from assistive tech
+          instead of announcing ~65 fake "buttons" (including an unlabeled
+          one for the spacebar) that a screen reader user can't act on. */}
+      {/* The full ANSI layout is ~750px wide and doesn't reflow — scroll it
+          horizontally within its own card on narrow viewports instead of
+          letting it force the whole page wider. */}
+      <div className="space-y-1.5 overflow-x-auto pb-1">
         {ANSI_LAYOUT.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex gap-1.5">
+          <div key={rowIndex} className="flex w-max gap-1.5">
             {row.map((keyDef, keyIndex) => {
               const isActive = activeKeys.has(keyDef.key.toLowerCase());
               const width = keyDef.width || 1;
@@ -133,10 +138,10 @@ export const VirtualKeyboard = memo(function VirtualKeyboard({
                 <motion.div
                   key={`${rowIndex}-${keyIndex}`}
                   className={cn(
-                    "bg-secondary flex items-center justify-center rounded border text-xs font-medium transition-colors",
+                    "border-border bg-secondary shadow-pop-sm flex items-center justify-center rounded-lg border-2 text-xs font-bold transition-colors",
                     "h-10",
                     {
-                      "bg-primary text-primary-foreground": isActive,
+                      "bg-primary text-primary-foreground shadow-pop-press": isActive,
                     },
                   )}
                   style={{
@@ -144,8 +149,9 @@ export const VirtualKeyboard = memo(function VirtualKeyboard({
                   }}
                   animate={{
                     scale: isActive ? 0.95 : 1,
+                    y: isActive ? 2 : 0,
                   }}
-                  transition={{ duration: 0.1 }}
+                  transition={{ duration: 0.08 }}
                   role="button"
                   aria-label={keyDef.label}
                   aria-pressed={isActive}

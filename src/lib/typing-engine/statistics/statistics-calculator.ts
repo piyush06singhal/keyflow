@@ -4,7 +4,7 @@
  * Calculates typing statistics following industry standards.
  */
 
-import type { LiveStatistics, Word, Character, TypingSegment } from "../types";
+import type { LiveStatistics, Word, TypingSegment } from "../types";
 
 export class StatisticsCalculator {
   /**

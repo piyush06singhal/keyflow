@@ -6,6 +6,7 @@ import { Timer, Zap, Target, TrendingUp, Activity } from "lucide-react";
 import type { LiveStatistics as Stats } from "@/lib/typing-engine";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { TiltCard } from "@/components/motion";
 
 /**
  * Live Statistics Component
@@ -50,7 +51,7 @@ export const LiveStatistics = memo(function LiveStatistics({
 
   if (!statistics) {
     return (
-      <Card className={cn("p-6", className)}>
+      <Card className={cn("glass-panel p-6", className)}>
         {/* Timer always visible even before typing starts */}
         <div className="mb-4 text-center">
           <div
@@ -108,7 +109,7 @@ export const LiveStatistics = memo(function LiveStatistics({
   ];
 
   return (
-    <Card className={cn("border-border/40 shadow-key-md rounded-2xl p-6", className)}>
+    <Card className={cn("glass-panel rounded-2xl p-6", className)}>
       {/* Timer — big and prominent at the top */}
       <div className="mb-6">
         <div className="mb-3 flex items-center justify-between">
@@ -168,7 +169,11 @@ export const LiveStatistics = memo(function LiveStatistics({
         </div>
         <div className="bg-secondary/50 h-2.5 overflow-hidden rounded-full">
           <motion.div
-            className="bg-primary h-full rounded-full shadow-sm"
+            className="glow-primary h-full rounded-full"
+            style={{
+              backgroundImage:
+                "linear-gradient(90deg, var(--gradient-aurora-from), var(--gradient-aurora-via))",
+            }}
             initial={{ width: 0 }}
             animate={{ width: `${statistics.progress}%` }}
             transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
@@ -201,8 +206,13 @@ const StatCard = memo(function StatCard({
   bgColor,
 }: StatCardProps) {
   return (
-    <div className="bg-card/50 border-border/40 shadow-key-xs hover:border-border/60 hover:shadow-key-sm flex items-start gap-3 rounded-xl border p-4 backdrop-blur-sm transition-all duration-200">
-      <div className={cn("shadow-key-xs rounded-xl p-2.5", bgColor)}>
+    <TiltCard
+      maxTilt={6}
+      className="bg-card border-border shadow-pop-sm hover:shadow-pop-md flex items-start gap-3 rounded-xl border-2 p-4 transition-all duration-200"
+    >
+      <div
+        className={cn("border-border shadow-pop-sm rounded-xl border-2 p-2.5", bgColor)}
+      >
         <Icon className={cn("size-5", color)} />
       </div>
       <div className="flex-1 space-y-1">
@@ -220,6 +230,6 @@ const StatCard = memo(function StatCard({
         </motion.p>
         <p className="text-muted-foreground text-xs">{subValue}</p>
       </div>
-    </div>
+    </TiltCard>
   );
 });

@@ -13,52 +13,47 @@ const faqs = [
   {
     question: "Is KeyFlow really free?",
     answer:
-      "Yes! KeyFlow is completely free to use. All features including typing practice, coding practice, AI coaching, analytics, and achievements are available at no cost. We believe in making quality typing education accessible to everyone.",
+      "Yes! KeyFlow is completely free to use, with no account and no paywalled features. Typing practice, coding practice, AI-generated content, and analytics are all available the moment you land on the page.",
   },
   {
     question: "Do I need to create an account?",
     answer:
-      "You can try the basic typing practice without an account, but creating a free account unlocks full features like progress tracking, AI coaching, personalized recommendations, achievements, and detailed analytics. Registration takes less than a minute.",
+      "No — there's no login, no registration, and no email required. Open the page and start typing immediately. Your history and settings are saved locally in your browser, not on a server.",
   },
   {
     question: "What programming languages are supported?",
     answer:
-      "We currently support JavaScript, TypeScript, Python, Java, C++, C#, SQL, HTML, CSS, React, Next.js, and more. We're constantly adding new languages based on community feedback. Each language includes real-world code snippets and syntax patterns.",
+      "We currently support JavaScript, TypeScript, Python, Java, C++, C#, SQL, HTML, CSS, React, Next.js, and more. Each language includes real-world code snippets and syntax patterns, plus AI-generated snippets on demand.",
   },
   {
-    question: "How does the AI coaching work?",
+    question: "How does the AI-generated content work?",
     answer:
-      "Our AI analyzes your typing patterns, identifies weaknesses, and provides personalized recommendations. It generates custom lessons targeting your problem areas, suggests optimal practice times, and creates improvement plans tailored to your goals. The AI learns from your progress and adapts accordingly.",
+      "Every time you start a paragraph or code-typing session, we can generate fresh content tailored to your chosen difficulty and language via the Groq API — so you're never memorizing the same test twice. If generation is ever unavailable, a curated library of text and snippets keeps you practicing without interruption.",
   },
   {
     question: "Can I use KeyFlow on mobile devices?",
     answer:
-      "KeyFlow is optimized for desktop and laptop use since typing practice is most effective with a physical keyboard. However, our responsive design ensures you can view your progress, analytics, and achievements on mobile devices. We recommend using a desktop for practice sessions.",
+      "KeyFlow is optimized for desktop and laptop use since typing practice is most effective with a physical keyboard. Our responsive design lets you check your history and stats on mobile, but we recommend a desktop for practice sessions.",
   },
   {
     question: "How is my progress tracked?",
     answer:
-      "We track comprehensive metrics including WPM (Words Per Minute), accuracy percentage, consistency scores, error rates, improvement trends, and practice time. All data is visualized in beautiful charts and graphs. You can filter by date range, practice type, and see detailed breakdowns of your performance.",
+      "We track WPM, accuracy, consistency, error rates, and practice time for every session, visualized in charts on your History page. All of it lives in your browser's local storage — nothing is sent to a server or tied to an account.",
   },
   {
     question: "What are daily challenges?",
     answer:
-      "Daily challenges are fresh typing exercises released every day designed to keep you motivated and consistent. They include speed challenges, accuracy goals, special character practice, and coding-specific tasks. Completing challenges earns you achievements and helps build a daily practice habit.",
+      "Daily challenges are fresh typing exercises designed to keep you motivated and consistent — speed challenges, accuracy goals, special character practice, and coding-specific tasks.",
   },
   {
-    question: "Is my data private and secure?",
+    question: "Is my data private?",
     answer:
-      "Absolutely. We take privacy seriously. Your practice data, personal information, and progress are encrypted and securely stored. We never share your data with third parties. You can delete your account and all associated data at any time from your settings.",
-  },
-  {
-    question: "Can I compete with friends?",
-    answer:
-      "Yes! KeyFlow features global leaderboards where you can see how you rank against other users. You can also view detailed community statistics. We're working on a multiplayer racing mode where you'll be able to compete with friends in real-time typing battles (coming soon!).",
+      "Yes. Since there's no account, your practice history, settings, and stats never leave your device — they're stored in your browser's local storage. Clearing your browser data clears your KeyFlow history too.",
   },
   {
     question: "How often should I practice?",
     answer:
-      "Consistency is key! We recommend practicing for 15-20 minutes daily for optimal improvement. The AI coach will help you establish a sustainable practice schedule based on your goals and availability. Even short, regular sessions are more effective than occasional long sessions.",
+      "Consistency is key! We recommend practicing for 15–20 minutes daily for optimal improvement. Even short, regular sessions are more effective than occasional long ones — your History page will show the trend as you build the habit.",
   },
 ];
 
@@ -77,10 +72,7 @@ export function FAQSection() {
         >
           <h2 className="text-3xl font-bold tracking-tight text-balance sm:text-4xl md:text-5xl">
             Frequently Asked
-            <span className="from-primary to-accent-foreground bg-gradient-to-r bg-clip-text text-transparent">
-              {" "}
-              Questions
-            </span>
+            <span className="aurora-text"> Questions</span>
           </h2>
           <p className="text-muted-foreground mt-4 text-lg text-pretty">
             Everything you need to know about KeyFlow
@@ -102,7 +94,7 @@ export function FAQSection() {
               >
                 <AccordionItem
                   value={`item-${index}`}
-                  className="border-border/50 bg-card/50 hover:border-primary/50 hover:shadow-key-md overflow-hidden rounded-lg border px-6 backdrop-blur-sm transition-all duration-300"
+                  className="border-border bg-card shadow-pop-sm hover:shadow-pop-md overflow-hidden rounded-2xl border-2 px-6 transition-all duration-300 hover:-translate-x-0.5 hover:-translate-y-0.5"
                 >
                   <AccordionTrigger className="text-left hover:no-underline">
                     <span className="font-semibold">{faq.question}</span>

@@ -21,7 +21,6 @@ import { CodingConfigurationDrawer } from "@/features/coding/components/coding-c
 import type { CodeSnippet } from "@/lib/coding-practice/types";
 import type { LiveStatistics } from "@/lib/typing-engine";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
 
 export default function CodePracticeClient() {
   const router = useRouter();
@@ -33,7 +32,6 @@ export default function CodePracticeClient() {
     setConfigDrawerOpen,
     setLoading,
     isLoading,
-    updateConfig,
   } = useCodingPracticeStore();
 
   const [snippet, setSnippet] = useState<CodeSnippet | null>(selectedSnippet);
@@ -49,29 +47,13 @@ export default function CodePracticeClient() {
   // Load snippet on mount or when config changes
   useEffect(() => {
     async function loadSnippet() {
-      // 1. Check if there's a custom lesson snippet from AI Coach
-      const cached = sessionStorage.getItem("customPracticeSnippet");
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          sessionStorage.removeItem("customPracticeSnippet");
-          setSelectedSnippet(parsed);
-          setSnippet(parsed);
-          updateConfig({ snippetSource: "custom" });
-          toast.success("Loaded AI practice lesson!");
-          return;
-        } catch (e) {
-          console.error("Failed to parse custom lesson snippet:", e);
-        }
-      }
-
-      // 2. If config.snippetSource is custom and we have a selectedSnippet, preserve it
+      // 1. If config.snippetSource is custom and we have a selectedSnippet, preserve it
       if (config.snippetSource === "custom" && selectedSnippet) {
         setSnippet(selectedSnippet);
         return;
       }
 
-      // 3. Otherwise fetch as usual
+      // 2. Otherwise fetch as usual
       setLoading(true);
       setLiveStats(null);
       setElapsedTime(0);

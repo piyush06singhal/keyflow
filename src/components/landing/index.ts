@@ -1,13 +1,7 @@
-export { LandingNavbar } from "./landing-navbar";
 export { HeroSection } from "./hero-section";
 export { TypingDemo } from "./typing-demo";
 export { FeaturesSection } from "./features-section";
 export { InteractiveShowcase } from "./interactive-showcase";
 export { CodingPracticeSection } from "./coding-practice-section";
-export { AnalyticsShowcase } from "./analytics-showcase";
-export { AISection } from "./ai-section";
-export { StatisticsSection } from "./statistics-section";
-export { TestimonialsSection } from "./testimonials-section";
 export { FAQSection } from "./faq-section";
 export { CTASection } from "./cta-section";
-export { LandingFooter } from "./landing-footer";
