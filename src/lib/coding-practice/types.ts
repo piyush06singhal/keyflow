@@ -1,6 +1,6 @@
 /**
  * Coding Practice - Type Definitions
- * 
+ *
  * Type definitions for the developer coding practice module.
  * Extends the base typing engine with programming-specific features.
  */
@@ -43,11 +43,7 @@ export type Framework =
   | "spring"
   | "none";
 
-export type CodingDifficulty =
-  | "beginner"
-  | "intermediate"
-  | "advanced"
-  | "expert";
+export type CodingDifficulty = "beginner" | "intermediate" | "advanced" | "expert";
 
 // ============================================================================
 // Coding Practice Categories
@@ -126,7 +122,10 @@ export interface CodeSnippetMetadata {
 // Coding Practice Configuration
 // ============================================================================
 
-export interface CodingPracticeConfig extends Omit<Partial<TypingEngineConfig>, 'language'> {
+export interface CodingPracticeConfig extends Omit<
+  Partial<TypingEngineConfig>,
+  "language"
+> {
   // Coding-specific settings
   language: ProgrammingLanguage;
   framework?: Framework;
@@ -134,25 +133,21 @@ export interface CodingPracticeConfig extends Omit<Partial<TypingEngineConfig>, 
   difficulty: CodingDifficulty;
   snippetType?: SnippetType;
   snippetSource?: SnippetSource;
-  
+
   // Code display settings
   showLineNumbers: boolean;
-  showIndentation: boolean;
-  showMinimap: boolean;
-  enableSyntaxHighlighting: boolean;
-  
+
   // Code editor theme
   codeTheme: CodeTheme;
-  
+
   // Indentation settings
-  indentWithTabs: boolean;
   tabSize: number;
-  
+
   // Typography
   fontFamily: string;
   fontSize: number;
   lineHeight: number;
-  
+
   // Advanced features (future)
   enableAIGeneration?: boolean;
   enableInterviewMode?: boolean;
@@ -182,24 +177,24 @@ export interface CodingStatistics {
   wpm: number;
   rawWpm: number;
   accuracy: number;
-  
+
   // Code-specific stats
   correctLines: number;
   incorrectLines: number;
   totalLines: number;
   lineAccuracy: number;
-  
+
   // Symbol accuracy
   bracketAccuracy: number;
   indentationAccuracy: number;
   symbolAccuracy: number;
   quoteAccuracy: number;
-  
+
   // Programming syntax accuracy
   syntaxAccuracy: number;
   keywordAccuracy: number;
   operatorAccuracy: number;
-  
+
   // Performance
   averageLineTime: number; // milliseconds per line
   fastestLine: { line: number; time: number } | null;
@@ -217,18 +212,21 @@ export interface CodingSessionResult extends SessionResult {
   category?: CodingCategory;
   snippetId: string;
   codingStats: CodingStatistics;
-  
+
   // Line-by-line analysis
   lineStats: LineStatistic[];
-  
+
   // Symbol analysis
-  symbolStats: Map<string, {
-    total: number;
-    correct: number;
-    incorrect: number;
-    accuracy: number;
-  }>;
-  
+  symbolStats: Map<
+    string,
+    {
+      total: number;
+      correct: number;
+      incorrect: number;
+      accuracy: number;
+    }
+  >;
+
   // Concept mastery (for future AI features)
   conceptsCovered: string[];
   conceptMastery?: Map<string, number>; // concept -> mastery percentage
@@ -283,26 +281,6 @@ export interface SnippetProviderConfig {
 // UI Component Props Types
 // ============================================================================
 
-export interface CodingDashboardState {
-  language: ProgrammingLanguage;
-  framework?: Framework;
-  difficulty: CodingDifficulty;
-  category?: CodingCategory;
-  duration: number;
-  timerMode: "countdown" | "elapsed" | "untimed";
-}
-
-export interface CodeEditorSettings {
-  theme: CodeTheme;
-  showLineNumbers: boolean;
-  showMinimap: boolean;
-  fontSize: number;
-  lineHeight: number;
-  tabSize: number;
-  indentWithTabs: boolean;
-  fontFamily: string;
-}
-
 // ============================================================================
 // Future Extension Points
 // ============================================================================
@@ -341,12 +319,12 @@ export interface LanguageConfig {
   fileExtension: string;
   icon: string; // Icon name for lucide-react or custom icon
   color: string; // Hex color for badges
-  
+
   // Syntax features
   hasIndentation: boolean;
   indentationStyle: "spaces" | "tabs" | "both";
   defaultIndentation: number;
-  
+
   // Common symbols
   commonSymbols: string[];
   bracketPairs: Array<[string, string]>;
@@ -355,10 +333,10 @@ export interface LanguageConfig {
     blockStart?: string;
     blockEnd?: string;
   };
-  
+
   // Frameworks available
   frameworks: Framework[];
-  
+
   // Categories available
   categories: CodingCategory[];
 }
@@ -370,12 +348,12 @@ export interface LanguageConfig {
 export interface CodingPracticeStore {
   // Configuration
   config: CodingPracticeConfig;
-  
+
   // UI State
   selectedSnippet: CodeSnippet | null;
   isConfigDrawerOpen: boolean;
   isLoading: boolean;
-  
+
   // Actions
   setLanguage: (language: ProgrammingLanguage) => void;
   setFramework: (framework: Framework | undefined) => void;

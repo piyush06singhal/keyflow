@@ -162,64 +162,6 @@ export function CodingConfigurationDrawer({
                 }
               />
             </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="indentation">Show Indentation</Label>
-              <Switch
-                id="indentation"
-                checked={config.showIndentation}
-                onCheckedChange={(checked) =>
-                  updateConfig({ showIndentation: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="syntax">Syntax Highlighting</Label>
-              <Switch
-                id="syntax"
-                checked={config.enableSyntaxHighlighting}
-                onCheckedChange={(checked) =>
-                  updateConfig({ enableSyntaxHighlighting: checked })
-                }
-              />
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Indentation Settings */}
-          <div className="space-y-4">
-            <h3 className="font-semibold">Indentation</h3>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="tabs">Use Tabs</Label>
-              <Switch
-                id="tabs"
-                checked={config.indentWithTabs}
-                onCheckedChange={(checked) => updateConfig({ indentWithTabs: checked })}
-              />
-            </div>
-
-            {!config.indentWithTabs && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label>Tab Size (Spaces)</Label>
-                  <span className="text-muted-foreground text-sm">
-                    {config.tabSize}
-                  </span>
-                </div>
-                <Slider
-                  value={[config.tabSize]}
-                  onValueChange={([value]: number[]) =>
-                    updateConfig({ tabSize: value })
-                  }
-                  min={2}
-                  max={8}
-                  step={1}
-                />
-              </div>
-            )}
           </div>
 
           <Separator />
@@ -234,15 +176,6 @@ export function CodingConfigurationDrawer({
                 id="backspace"
                 checked={config.allowBackspace}
                 onCheckedChange={(checked) => updateConfig({ allowBackspace: checked })}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="strict">Strict Mode</Label>
-              <Switch
-                id="strict"
-                checked={config.strictMode}
-                onCheckedChange={(checked) => updateConfig({ strictMode: checked })}
               />
             </div>
 

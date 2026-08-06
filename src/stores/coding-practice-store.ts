@@ -70,15 +70,11 @@ const DEFAULT_CONFIG: CodingPracticeConfig = {
 
   // Code display
   showLineNumbers: true,
-  showIndentation: true,
-  showMinimap: false,
-  enableSyntaxHighlighting: true,
 
   // Code theme
   codeTheme: "vs-dark",
 
   // Indentation
-  indentWithTabs: false,
   tabSize: 2,
 
   // Typography

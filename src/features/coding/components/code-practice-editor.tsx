@@ -11,7 +11,7 @@
  * - TimeUpModal appears on completion
  */
 
-import { useRef, useMemo, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
@@ -25,7 +25,16 @@ import { Mascot, useMascotState } from "@/components/mascot";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { CodeSnippet } from "@/lib/coding-practice/types";
-import type { Character, SessionResult, LiveStatistics } from "@/lib/typing-engine";
+import {
+  TextGenerator,
+  type SessionResult,
+  type LiveStatistics,
+  type Word,
+} from "@/lib/typing-engine";
+import {
+  getCodeThemeColors,
+  type CodeThemeColors,
+} from "@/lib/coding-practice/code-themes";
 
 interface CodePracticeEditorProps {
   snippet: CodeSnippet;
@@ -104,43 +113,22 @@ export function CodePracticeEditor({
     router.push("/practice/results");
   }, [router]);
 
-  // Derived from the engine's live word list (one word = one line in coding
-  // mode) rather than the static `snippet.code` prop — if the buffer runs
-  // out before a countdown timer expires, the engine appends fresh lines
-  // (see extendContent() in typing-engine.ts) and this needs to reflect
-  // that, or the extended content would never actually become visible.
-  const codeLines =
-    words.length > 0 ? words.map((w) => w.text) : snippet.code.split("\n");
-
-  // Memoize character states by absolute index for O(1) lookups.
-  // `char.index` is only the position *within its line* (word), so it
-  // collides across lines — track a running absolute index instead,
-  // matching the +1-per-newline scheme used for cursorPosition.absoluteIndex
-  // and the line-start offsets below.
-  const characterMap = useMemo(() => {
-    const map = new Map<number, Character>();
-    let absoluteIndex = 0;
-    for (const word of words) {
-      for (const char of word.characters) {
-        map.set(absoluteIndex, char);
-        absoluteIndex++;
-      }
-      absoluteIndex++; // newline between lines
-    }
-    return map;
-  }, [words]);
-
-  // Calculate which line the cursor is on
-  let charsSoFar = 0;
-  let currentLine = 0;
-  for (let i = 0; i < codeLines.length; i++) {
-    const lineLength = (codeLines[i]?.length ?? 0) + 1; // +1 for newline
-    if (cursorPosition && charsSoFar + lineLength > cursorPosition.absoluteIndex) {
-      currentLine = i;
-      break;
-    }
-    charsSoFar += lineLength;
-  }
+  // In coding mode each word IS a line (see parseCodeText in
+  // text-generator.ts), so the active line is just the cursor's word
+  // index — no need to scan/sum line lengths to find it. Rendering maps
+  // over `words` directly so each line can be an independently memoized
+  // component (CodeLineRenderer below) instead of the whole editor
+  // re-rendering every character of every line on every keystroke.
+  const activeLineIndex = cursorPosition?.wordIndex ?? 0;
+  const activeCharIndex = cursorPosition?.charIndex ?? null;
+  // Brief window on mount before the engine populates `words` — fall back
+  // to parsing the snippet directly so the code is visible immediately
+  // instead of blank.
+  const fallbackLines = useMemo(
+    () => TextGenerator.parseCodeText(snippet.code),
+    [snippet.code],
+  );
+  const lines: ReadonlyArray<Readonly<Word>> = words.length > 0 ? words : fallbackLines;
 
   // Timer calculations
   const isCountdown = config.timerMode === "countdown";
@@ -160,6 +148,8 @@ export function CodePracticeEditor({
     wpm: statistics?.wpm ?? 0,
     accuracy: statistics?.accuracy ?? 100,
   });
+
+  const theme = getCodeThemeColors(config.codeTheme);
 
   return (
     <>
@@ -185,7 +175,10 @@ export function CodePracticeEditor({
           }}
         >
           {/* Header bar with timer and restart */}
-          <div className="flex items-center justify-between border-b border-white/5 bg-[#1e1e1e] px-4 py-2">
+          <div
+            className="flex items-center justify-between border-b border-white/5 px-4 py-2"
+            style={{ backgroundColor: theme.background }}
+          >
             <div className="flex items-center gap-2">
               {/* Status dot */}
               <div
@@ -196,7 +189,7 @@ export function CodePracticeEditor({
                   "bg-blue-500": status === "completed",
                 })}
               />
-              <span className="font-mono text-xs text-[#858585]">
+              <span className="font-mono text-xs" style={{ color: theme.muted }}>
                 {status === "active"
                   ? "TYPING"
                   : status === "paused"
@@ -211,13 +204,15 @@ export function CodePracticeEditor({
             {/* Timer display */}
             {isStarted && (
               <div
-                className={cn(
-                  "flex items-center gap-1.5 font-mono text-sm font-bold",
-                  isLowTime ? "text-red-400" : "text-[#858585]",
-                )}
+                className="flex items-center gap-1.5 font-mono text-sm font-bold"
+                style={{ color: isLowTime ? undefined : theme.muted }}
               >
                 <Timer className="h-3.5 w-3.5" />
-                {isCountdown ? `${displaySec}s` : `${Math.floor(elapsedTime / 1000)}s`}
+                <span className={isLowTime ? "text-red-400" : undefined}>
+                  {isCountdown
+                    ? `${displaySec}s`
+                    : `${Math.floor(elapsedTime / 1000)}s`}
+                </span>
               </div>
             )}
 
@@ -226,7 +221,8 @@ export function CodePracticeEditor({
               variant="ghost"
               size="sm"
               onClick={handleRestart}
-              className="h-7 gap-1.5 text-xs text-[#858585] hover:text-white"
+              className="h-7 gap-1.5 text-xs hover:text-white"
+              style={{ color: theme.muted }}
             >
               <RotateCcw className="h-3 w-3" />
               Restart
@@ -234,79 +230,25 @@ export function CodePracticeEditor({
           </div>
 
           {/* Code Display */}
-          <div className="max-h-[calc(100vh-340px)] min-h-[300px] overflow-auto bg-[#1e1e1e] p-6 text-[#d4d4d4]">
+          <div
+            className="max-h-[calc(100vh-340px)] min-h-[300px] overflow-auto p-6"
+            style={{ backgroundColor: theme.background, color: theme.text }}
+          >
             <div className="font-mono">
-              {codeLines.map((line, lineIndex) => {
-                const lineStartIndex = codeLines
-                  .slice(0, lineIndex)
-                  .reduce((acc, l) => acc + l.length + 1, 0);
-
-                return (
-                  <div
-                    key={lineIndex}
-                    className={`flex items-start gap-4 py-0.5 ${
-                      lineIndex === currentLine && isStarted
-                        ? "rounded bg-[#2a2a2a]"
-                        : ""
-                    }`}
-                  >
-                    {/* Line Numbers */}
-                    {config.showLineNumbers && (
-                      <div
-                        className="text-right text-[#858585] select-none"
-                        style={{ minWidth: "3ch" }}
-                      >
-                        {lineIndex + 1}
-                      </div>
-                    )}
-
-                    {/* Line Content */}
-                    <div className="flex-1 whitespace-pre">
-                      {line.split("").map((char, charIndex) => {
-                        const absoluteIndex = lineStartIndex + charIndex;
-                        const charState = characterMap.get(absoluteIndex);
-
-                        let textColor = "text-[#858585]"; // untyped — dimmed
-                        let bgStyle = "";
-
-                        const isCursor =
-                          cursorPosition !== null &&
-                          absoluteIndex === cursorPosition.absoluteIndex &&
-                          isStarted;
-
-                        if (charState) {
-                          if (charState.typed) {
-                            if (charState.isCorrect) {
-                              textColor = "text-[#d4d4d4]"; // correct — normal
-                            } else {
-                              textColor = "text-red-400 underline decoration-wavy";
-                              bgStyle = "rgba(255,0,0,0.15)";
-                            }
-                          }
-                        }
-
-                        return (
-                          <span
-                            key={charIndex}
-                            className={cn("relative inline-block", textColor, {
-                              "rounded-[2px] bg-blue-500/40": isCursor,
-                            })}
-                            style={bgStyle ? { backgroundColor: bgStyle } : undefined}
-                          >
-                            {char === " " ? "\u00A0" : char}
-                          </span>
-                        );
-                      })}
-                      {/* Cursor at end of line */}
-                      {cursorPosition !== null &&
-                        lineStartIndex + line.length === cursorPosition.absoluteIndex &&
-                        isStarted && (
-                          <span className="inline-block h-5 w-2 animate-pulse rounded-sm bg-blue-500/50 align-bottom" />
-                        )}
-                    </div>
-                  </div>
-                );
-              })}
+              {lines.map((word, lineIndex) => (
+                <CodeLineRenderer
+                  key={word.index}
+                  word={word}
+                  lineNumber={lineIndex + 1}
+                  isActiveLine={lineIndex === activeLineIndex}
+                  activeCharIndex={
+                    lineIndex === activeLineIndex ? activeCharIndex : null
+                  }
+                  showLineNumbers={config.showLineNumbers}
+                  isStarted={isStarted}
+                  theme={theme}
+                />
+              ))}
             </div>
           </div>
 
@@ -317,14 +259,17 @@ export function CodePracticeEditor({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 flex items-center justify-center bg-[#1e1e1e]/80 backdrop-blur-sm"
+                className="absolute inset-0 flex items-center justify-center backdrop-blur-sm"
+                style={{ backgroundColor: `${theme.background}cc` }}
               >
                 <div className="space-y-3 text-center">
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/20">
                     <Play className="h-7 w-7 text-blue-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white">Ready to type?</h3>
-                  <p className="text-sm text-[#858585]">
+                  <h3 className="text-lg font-semibold" style={{ color: theme.text }}>
+                    Ready to type?
+                  </h3>
+                  <p className="text-sm" style={{ color: theme.muted }}>
                     Click here or press any key to start
                   </p>
                   <Button
@@ -367,3 +312,83 @@ export function CodePracticeEditor({
     </>
   );
 }
+
+interface CodeLineRendererProps {
+  word: Readonly<Word>;
+  lineNumber: number;
+  isActiveLine: boolean;
+  /** Only meaningful when isActiveLine is true; stays a stable `null` for
+   *  every other line so memo() can skip re-rendering them. */
+  activeCharIndex: number | null;
+  showLineNumbers: boolean;
+  isStarted: boolean;
+  theme: CodeThemeColors;
+}
+
+const CodeLineRenderer = memo(function CodeLineRenderer({
+  word,
+  lineNumber,
+  isActiveLine,
+  activeCharIndex,
+  showLineNumbers,
+  isStarted,
+  theme,
+}: CodeLineRendererProps) {
+  return (
+    <div
+      className="flex items-start gap-4 rounded py-0.5"
+      style={{
+        backgroundColor: isActiveLine && isStarted ? theme.activeLine : undefined,
+      }}
+    >
+      {/* Line Numbers */}
+      {showLineNumbers && (
+        <div
+          className="text-right select-none"
+          style={{ minWidth: "3ch", color: theme.muted }}
+        >
+          {lineNumber}
+        </div>
+      )}
+
+      {/* Line Content */}
+      <div className="flex-1 whitespace-pre">
+        {word.characters.map((character, charIndex) => {
+          let textColor = theme.muted; // untyped — dimmed
+          let errorClassName = "";
+          let bgStyle = "";
+
+          const isCursor = isActiveLine && isStarted && activeCharIndex === charIndex;
+
+          if (character.typed) {
+            if (character.isCorrect) {
+              textColor = theme.text; // correct — normal
+            } else {
+              errorClassName = "text-red-400 underline decoration-wavy";
+              bgStyle = "rgba(255,0,0,0.15)";
+            }
+          }
+
+          return (
+            <span
+              key={charIndex}
+              className={cn("relative inline-block", errorClassName, {
+                "rounded-[2px] bg-blue-500/40": isCursor,
+              })}
+              style={{
+                color: errorClassName ? undefined : textColor,
+                backgroundColor: bgStyle || undefined,
+              }}
+            >
+              {character.char === " " ? " " : character.char}
+            </span>
+          );
+        })}
+        {/* Cursor at end of line */}
+        {isActiveLine && isStarted && activeCharIndex === word.characters.length && (
+          <span className="inline-block h-5 w-2 animate-pulse rounded-sm bg-blue-500/50 align-bottom" />
+        )}
+      </div>
+    </div>
+  );
+});
