@@ -2,7 +2,6 @@ import { HeroSection } from "@/components/landing/hero-section";
 import { FeaturesSection } from "@/components/landing/features-section";
 import { CodingPracticeSection } from "@/components/landing/coding-practice-section";
 import { FAQSection } from "@/components/landing/faq-section";
-import { CTASection } from "@/components/landing/cta-section";
 import { SiteNavbar } from "@/components/app-shell/site-navbar";
 import { SiteFooter } from "@/components/app-shell/site-footer";
 import type { Metadata } from "next";
@@ -41,7 +40,6 @@ export default function LandingPage() {
         <FeaturesSection />
         <CodingPracticeSection />
         <FAQSection />
-        <CTASection />
       </main>
       <SiteFooter />
     </div>

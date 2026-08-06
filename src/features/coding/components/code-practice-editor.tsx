@@ -48,10 +48,9 @@ export function CodePracticeEditor({
   const { config } = useCodingPracticeStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { completeSession, isProcessing } = useSessionLifecycle();
+  const { completeSession } = useSessionLifecycle();
   const [sessionResult, setSessionResult] = useState<SessionResult | null>(null);
   const [timeUpOpen, setTimeUpOpen] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
 
   const handleComplete = useCallback((result: SessionResult) => {
     setSessionResult(result);
@@ -96,7 +95,6 @@ export function CodePracticeEditor({
   const handleRestart = useCallback(() => {
     setTimeUpOpen(false);
     setSessionResult(null);
-    setIsNavigating(false);
     restart({
       mode: "coding",
       customText: snippet.code,
@@ -108,7 +106,6 @@ export function CodePracticeEditor({
   }, [restart, snippet.code, config]);
 
   const handleViewResults = useCallback(() => {
-    setIsNavigating(true);
     setTimeUpOpen(false);
     router.push("/practice/results");
   }, [router]);
@@ -284,23 +281,6 @@ export function CodePracticeEditor({
           </AnimatePresence>
         </div>
       </Card>
-
-      {/* Processing overlay */}
-      <AnimatePresence>
-        {isNavigating && isProcessing && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="bg-background/60 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
-          >
-            <div className="flex flex-col items-center gap-3">
-              <div className="border-primary h-10 w-10 animate-spin rounded-full border-4 border-t-transparent" />
-              <p className="text-muted-foreground text-sm">Saving results…</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Time-Up Modal */}
       <TimeUpModal

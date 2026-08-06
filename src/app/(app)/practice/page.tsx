@@ -60,11 +60,10 @@ export default function PracticePage() {
 
   const [sessionResult, setSessionResult] = useState<SessionResult | null>(null);
   const [timeUpOpen, setTimeUpOpen] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
   const [isGeneratingText, setIsGeneratingText] = useState(false);
 
   // Session lifecycle management
-  const { completeSession, isProcessing } = useSessionLifecycle();
+  const { completeSession } = useSessionLifecycle();
 
   // Stable onComplete callback
   const handleComplete = useCallback(
@@ -154,7 +153,6 @@ export default function PracticePage() {
   const handleRestart = useCallback(async () => {
     setTimeUpOpen(false);
     setSessionResult(null);
-    setIsNavigating(false);
 
     let finalMode = config.mode;
     let finalText = config.customText;
@@ -246,7 +244,6 @@ export default function PracticePage() {
 
   // Navigate to full results page
   const handleViewResults = useCallback(() => {
-    setIsNavigating(true);
     setTimeUpOpen(false);
     router.push("/practice/results");
   }, [router]);
@@ -432,23 +429,6 @@ export default function PracticePage() {
           showKeyboard={uiSettings.showKeyboard}
         />
       )}
-
-      {/* Processing saving overlay */}
-      <AnimatePresence>
-        {isNavigating && isProcessing && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="bg-background/60 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
-          >
-            <div className="flex flex-col items-center gap-4">
-              <div className="border-primary h-10 w-10 animate-spin rounded-full border-4 border-t-transparent" />
-              <p className="text-muted-foreground text-sm">Saving results…</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Time-Up Modal */}
       <TimeUpModal

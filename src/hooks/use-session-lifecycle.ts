@@ -15,7 +15,6 @@ import { useNotifications } from "@/features/notifications/context/notification-
 
 export interface UseSessionLifecycleReturn {
   completionResult: SessionCompletionResult | null;
-  isProcessing: boolean;
   completeSession: (
     sessionResult: SessionResult,
     practiceMode: string,
@@ -26,32 +25,28 @@ export function useSessionLifecycle(): UseSessionLifecycleReturn {
   const { addNotification } = useNotifications();
   const [completionResult, setCompletionResult] =
     useState<SessionCompletionResult | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
 
+  // Session completion is entirely local (localStorage reads/writes, no
+  // network) and finishes synchronously — there's no async gap here to
+  // report progress for.
   const completeSession = useCallback(
     (sessionResult: SessionResult, practiceMode: string): SessionCompletionResult => {
-      setIsProcessing(true);
+      const result = handleSessionCompletion(sessionResult, practiceMode);
 
-      try {
-        const result = handleSessionCompletion(sessionResult, practiceMode);
-
-        if (result.saved) {
-          const modeLabel = practiceMode === "coding" ? "Coding" : "Typing";
-          addNotification(
-            `${modeLabel} session complete`,
-            `${sessionResult.finalWpm.toFixed(0)} WPM · ${sessionResult.finalAccuracy.toFixed(0)}% accuracy`,
-            "info",
-          );
-        }
-
-        setCompletionResult(result);
-        return result;
-      } finally {
-        setIsProcessing(false);
+      if (result.saved) {
+        const modeLabel = practiceMode === "coding" ? "Coding" : "Typing";
+        addNotification(
+          `${modeLabel} session complete`,
+          `${sessionResult.finalWpm.toFixed(0)} WPM · ${sessionResult.finalAccuracy.toFixed(0)}% accuracy`,
+          "info",
+        );
       }
+
+      setCompletionResult(result);
+      return result;
     },
     [addNotification],
   );
 
-  return { completionResult, isProcessing, completeSession };
+  return { completionResult, completeSession };
 }

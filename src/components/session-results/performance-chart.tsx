@@ -13,7 +13,7 @@ import {
   AreaChart,
 } from "recharts";
 import { Card } from "@/components/ui/card";
-import type { SessionResult } from "@/lib/typing-engine";
+import { StatisticsCalculator, type SessionResult } from "@/lib/typing-engine";
 import { cn } from "@/lib/utils";
 
 export interface PerformanceChartProps {
@@ -32,14 +32,37 @@ export function PerformanceChart({
       return [];
     }
 
-    return sessionResult.segments.map((segment, index) => ({
-      time: Math.floor((segment.endTime - sessionResult.timestamp) / 1000),
-      wpm: Math.round(segment.wpm),
-      rawWpm: Math.round(segment.wpm * 1.1), // Estimate raw WPM
-      accuracy: Math.round(segment.accuracy * 10) / 10,
-      consistency: 100 - Math.abs(segment.wpm - sessionResult.averageWpm),
-      index,
-    }));
+    const segments = sessionResult.segments;
+
+    return segments.map((segment, index) => {
+      // Raw WPM: same "before error adjustment" concept as the live-stats
+      // rawWpm — segment.characterCount already counts every attempted
+      // character (not just correct ones), so this is measured, not
+      // estimated.
+      const segmentMinutes = Math.max(
+        (segment.endTime - segment.startTime) / 60000,
+        1 / 60000,
+      );
+      const rawWpm = Math.round(segment.characterCount / 5 / segmentMinutes);
+
+      // Rolling consistency: the same coefficient-of-variation algorithm
+      // used for the headline consistency stat, computed over every
+      // segment up to this point in time — so the last point on this
+      // chart always matches the real session-level number shown
+      // elsewhere on the page, instead of a different ad-hoc formula.
+      const consistency = StatisticsCalculator.calculateConsistency(
+        segments.slice(0, index + 1),
+      );
+
+      return {
+        time: Math.floor((segment.endTime - sessionResult.timestamp) / 1000),
+        wpm: Math.round(segment.wpm),
+        rawWpm,
+        accuracy: Math.round(segment.accuracy * 10) / 10,
+        consistency,
+        index,
+      };
+    });
   }, [sessionResult]);
 
   if (chartData.length === 0) {

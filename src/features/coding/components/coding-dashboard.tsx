@@ -26,6 +26,7 @@ import { useCodingPracticeStore } from "@/stores/coding-practice-store";
 import { getAllLanguages, getLanguageConfig } from "@/lib/coding-practice/languages";
 import { LanguageBadge } from "@/features/coding/components/language-badge";
 import { DifficultyBadge } from "@/features/coding/components/difficulty-badge";
+import { CodingConfigurationDrawer } from "@/features/coding/components/coding-configuration-drawer";
 import type {
   ProgrammingLanguage,
   CodingDifficulty,
@@ -93,7 +94,8 @@ const SNIPPET_SOURCES = [
 
 export function CodingDashboard() {
   const router = useRouter();
-  const { config, updateConfig, setConfigDrawerOpen } = useCodingPracticeStore();
+  const { config, updateConfig, isConfigDrawerOpen, setConfigDrawerOpen } =
+    useCodingPracticeStore();
   const [selectedLanguage, setSelectedLanguage] = useState<ProgrammingLanguage>(
     config.language,
   );
@@ -401,6 +403,11 @@ export function CodingDashboard() {
           </p>
         </TiltCard>
       </div>
+
+      <CodingConfigurationDrawer
+        open={isConfigDrawerOpen}
+        onOpenChange={setConfigDrawerOpen}
+      />
     </div>
   );
 }
