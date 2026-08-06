@@ -144,6 +144,18 @@ export const useCodingPracticeStore = create<CodingPracticeStore>()(
       partialize: (state) => ({
         config: state.config,
       }),
+      // Deep-merge persisted config over the current defaults so fields
+      // added after a user already has a saved config (e.g. snippetSource)
+      // still get a valid default instead of silently staying undefined —
+      // otherwise a stale persisted config permanently overrides new
+      // defaults for anyone who already has one saved.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<Pick<CodingPracticeStore, "config">>;
+        return {
+          ...current,
+          config: { ...current.config, ...p.config },
+        };
+      },
     },
   ),
 );

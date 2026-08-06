@@ -62,7 +62,7 @@ export function FAQSection() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section id="faq" className="relative py-24 sm:py-32" ref={ref}>
+    <section id="faq" className="relative py-14 sm:py-20" ref={ref}>
       <div className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

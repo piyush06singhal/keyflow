@@ -94,7 +94,7 @@ export function CodingPracticeSection() {
   const snippetLines = activeSnippet.split("\n");
 
   return (
-    <section id="coding" className="relative py-24 sm:py-32" ref={ref}>
+    <section id="coding" className="relative py-14 sm:py-20" ref={ref}>
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
           {/* Left Column - Content */}

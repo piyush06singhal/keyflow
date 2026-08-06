@@ -11,7 +11,7 @@ export function CTASection() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section className="relative py-24 sm:py-32" ref={ref}>
+    <section className="relative py-14 sm:py-20" ref={ref}>
       {/* Animated Background */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="bg-primary/10 absolute top-1/2 left-1/4 h-96 w-96 -translate-y-1/2 animate-pulse rounded-full blur-3xl" />
@@ -86,11 +86,6 @@ export function CTASection() {
               transition={{ duration: 0.5, delay: 0.6 }}
               className="text-muted-foreground mt-10 flex flex-wrap items-center justify-center gap-6 text-sm"
             >
-              <div className="flex items-center gap-2">
-                <span className="text-success">✓</span>
-                <span>Free forever</span>
-              </div>
-              <div className="bg-border hidden h-4 w-px sm:block" />
               <div className="flex items-center gap-2">
                 <span className="text-success">✓</span>
                 <span>Local-first, no tracking</span>

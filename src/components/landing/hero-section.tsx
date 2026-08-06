@@ -3,12 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Zap, TrendingUp } from "lucide-react";
+import { ArrowRight, TrendingUp } from "lucide-react";
 import { TypingDemo } from "./typing-demo";
 
 export function HeroSection() {
   return (
-    <section id="hero" className="relative min-h-screen overflow-hidden pt-16">
+    <section id="hero" className="relative overflow-hidden pt-16">
       {/* Animated Background */}
       <div className="absolute inset-0 -z-10">
         <div className="bg-primary/10 absolute top-1/4 left-1/4 h-96 w-96 animate-pulse rounded-full blur-3xl" />
@@ -16,20 +16,7 @@ export function HeroSection() {
         <div className="bg-orange/10 absolute bottom-1/4 left-1/3 h-96 w-96 animate-pulse rounded-full blur-3xl delay-500" />
       </div>
 
-      <div className="relative container mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl flex-col items-center justify-center px-4 py-20 sm:px-6 lg:px-8">
-        {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-          className="mb-8"
-        >
-          <div className="border-border bg-card shadow-pop-sm inline-flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-bold">
-            <Zap className="text-primary h-4 w-4" />
-            <span>Free forever • No account needed</span>
-          </div>
-        </motion.div>
-
+      <div className="relative container mx-auto flex max-w-7xl flex-col items-center px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         {/* Main Heading */}
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
