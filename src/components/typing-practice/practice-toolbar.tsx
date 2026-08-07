@@ -95,6 +95,21 @@ export function PracticeToolbar({ onRestart, disabled = false }: PracticeToolbar
     String(config.duration),
   );
 
+  // Zustand's persist middleware rehydrates from localStorage
+  // asynchronously, after the first render — so the useState initializers
+  // above can capture the pre-hydration default duration instead of the
+  // user's actual saved one. Re-sync whenever the store's real duration
+  // changes, using React's render-time state-adjustment pattern (not an
+  // effect) so this resolves within the same render instead of causing an
+  // extra pass. Safely a no-op on changes this component itself caused,
+  // since those already leave both values consistent with config.duration.
+  const [syncedDuration, setSyncedDuration] = useState(config.duration);
+  if (config.duration !== syncedDuration) {
+    setSyncedDuration(config.duration);
+    setIsCustomDuration(!isPresetDuration(config.duration));
+    setCustomDurationInput(String(config.duration));
+  }
+
   const handleDurationChange = (value: string) => {
     if (value === "custom") {
       setIsCustomDuration(true);

@@ -343,7 +343,28 @@ export class TypingEngine {
   private extendContent(): void {
     if (!this.cursorManager) return;
 
+    // Hard safety cap: however this got triggered, never let the word
+    // buffer grow unboundedly. Downstream per-session work (stats,
+    // segment generation, persistence) scales with word count, so an
+    // unbounded buffer is a real performance cliff, not just wasted
+    // memory — just end the session instead of continuing to grow it.
+    const MAX_TOTAL_WORDS = 2000;
+    if (this.words.length >= MAX_TOTAL_WORDS) {
+      this.complete();
+      return;
+    }
+
     const config = this.configManager.getConfig();
+    // Size the extension for the time actually remaining, not the full
+    // original session duration — otherwise every single extension pads
+    // up to the same ~200-word minimum regardless of how little time is
+    // left, and a session with several extensions can balloon the word
+    // list far more than it ever needed to.
+    const remainingSeconds = Math.max(
+      (this.timerManager?.getRemainingTime() ?? 0) / 1000,
+      5,
+    );
+
     // Modes with fixed, externally-supplied text (AI-generated prose, a
     // pasted/loaded custom text, or a specific code snippet) would just
     // repeat the exact same content verbatim if regenerated as-is — fall
@@ -351,12 +372,12 @@ export class TypingEngine {
     // material to keep typing, not a duplicate of what they just finished.
     const extensionConfig: TypingEngineConfig =
       config.mode === "custom"
-        ? { ...config, mode: "word" }
+        ? { ...config, mode: "word", duration: remainingSeconds }
         : config.mode === "coding"
           ? { ...config, customText: undefined }
-          : config;
+          : { ...config, duration: remainingSeconds };
 
-    const additionalText = TextGenerator.generate(extensionConfig);
+    const additionalText = TextGenerator.generate(extensionConfig, { minWords: 40 });
     const freshWords = this.parseContent(additionalText);
 
     if (freshWords.length === 0) {

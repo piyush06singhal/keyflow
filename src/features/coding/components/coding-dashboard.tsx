@@ -7,7 +7,6 @@
  * Allows users to select language, difficulty, topics, and start practice.
  */
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Code2, Zap, Target, Clock, TrendingUp, Play, Settings2 } from "lucide-react";
@@ -96,32 +95,25 @@ export function CodingDashboard() {
   const router = useRouter();
   const { config, updateConfig, isConfigDrawerOpen, setConfigDrawerOpen } =
     useCodingPracticeStore();
-  const [selectedLanguage, setSelectedLanguage] = useState<ProgrammingLanguage>(
-    config.language,
-  );
-  const [selectedDifficulty, setSelectedDifficulty] = useState<CodingDifficulty>(
-    config.difficulty,
-  );
-  const [selectedCategory, setSelectedCategory] = useState<CodingCategory | undefined>(
-    config.category,
-  );
-  const [selectedDuration, setSelectedDuration] = useState(config.duration || 300);
-  const [snippetSource, setSnippetSource] = useState<"static" | "ai-generated">(
-    (config.snippetSource as "static" | "ai-generated") || "ai-generated",
-  );
+
+  // Read selections directly from the store instead of mirroring them into
+  // local useState: Zustand's persist middleware rehydrates from
+  // localStorage asynchronously (after the first render), so a `useState`
+  // seeded from `config.xxx` at mount time captures the pre-hydration
+  // default and never updates — every saved preference would silently
+  // appear reset to the default on every fresh page load.
+  const selectedLanguage = config.language;
+  const selectedDifficulty = config.difficulty;
+  const selectedCategory = config.category;
+  const selectedDuration = config.duration || 300;
+  const snippetSource =
+    (config.snippetSource as "static" | "ai-generated") || "ai-generated";
 
   const languages = getAllLanguages();
   const currentLanguageConfig = getLanguageConfig(selectedLanguage);
   const availableCategories = currentLanguageConfig.categories;
 
   const handleStartPractice = () => {
-    updateConfig({
-      language: selectedLanguage,
-      difficulty: selectedDifficulty,
-      category: selectedCategory,
-      duration: selectedDuration,
-      snippetSource: snippetSource,
-    });
     router.push("/practice/code");
   };
 
@@ -225,7 +217,7 @@ export function CodingDashboard() {
               <Select
                 value={selectedLanguage}
                 onValueChange={(value) =>
-                  setSelectedLanguage(value as ProgrammingLanguage)
+                  updateConfig({ language: value as ProgrammingLanguage })
                 }
               >
                 <SelectTrigger>
@@ -250,7 +242,7 @@ export function CodingDashboard() {
               <Select
                 value={selectedDifficulty}
                 onValueChange={(value) =>
-                  setSelectedDifficulty(value as CodingDifficulty)
+                  updateConfig({ difficulty: value as CodingDifficulty })
                 }
               >
                 <SelectTrigger>
@@ -280,9 +272,9 @@ export function CodingDashboard() {
               <Select
                 value={selectedCategory || "all"}
                 onValueChange={(value) =>
-                  setSelectedCategory(
-                    value === "all" ? undefined : (value as CodingCategory),
-                  )
+                  updateConfig({
+                    category: value === "all" ? undefined : (value as CodingCategory),
+                  })
                 }
               >
                 <SelectTrigger>
@@ -307,7 +299,7 @@ export function CodingDashboard() {
               <Select
                 value={snippetSource}
                 onValueChange={(value) =>
-                  setSnippetSource(value as "static" | "ai-generated")
+                  updateConfig({ snippetSource: value as "static" | "ai-generated" })
                 }
               >
                 <SelectTrigger>
@@ -336,7 +328,7 @@ export function CodingDashboard() {
               <Label>Practice Duration</Label>
               <Select
                 value={selectedDuration.toString()}
-                onValueChange={(value) => setSelectedDuration(parseInt(value))}
+                onValueChange={(value) => updateConfig({ duration: parseInt(value) })}
               >
                 <SelectTrigger>
                   <SelectValue />

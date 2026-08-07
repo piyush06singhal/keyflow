@@ -44,10 +44,10 @@ export class TextGenerator {
   /**
    * Generate text content based on configuration
    */
-  static generate(config: TypingEngineConfig): string {
+  static generate(config: TypingEngineConfig, options?: { minWords?: number }): string {
     switch (config.mode) {
       case "word":
-        return this.generateWords(config);
+        return this.generateWords(config, options?.minWords);
       case "paragraph":
         return this.generateParagraph(config);
       case "quote":
@@ -69,14 +69,20 @@ export class TextGenerator {
    * For countdown mode, generates enough words to last the full duration
    * (assumes ~70 WPM average → words needed = duration_seconds * 70 / 60 * 2 for safety)
    */
-  private static generateWords(config: TypingEngineConfig): string {
+  private static generateWords(config: TypingEngineConfig, minWords = 200): string {
     // For countdown mode, generate plenty of words so text never runs out
     let wordCount: number;
     if (config.timerMode === "countdown" && config.duration) {
-      // Generate 3× the expected word count at average WPM (80) to be safe
+      // Generate 3× the expected word count at average WPM (80) to be safe.
+      // `minWords` defaults to a generous floor for a session's initial
+      // buffer, but content-extension calls (typing-engine.ts extendContent)
+      // pass a much smaller floor — without that, every single extension
+      // would pad up to 200 words regardless of how little time is left,
+      // and repeated extensions over a long session could otherwise grow
+      // the word list without bound.
       const avgWpm = 80;
       const expectedWords = Math.ceil((config.duration / 60) * avgWpm);
-      wordCount = Math.max(expectedWords * 3, 200);
+      wordCount = Math.max(expectedWords * 3, minWords);
     } else {
       wordCount = config.wordCount ?? 50;
     }

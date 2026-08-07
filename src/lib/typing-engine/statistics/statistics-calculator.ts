@@ -268,33 +268,51 @@ export class StatisticsCalculator {
     words: Word[],
     segmentDuration: number = 5000, // 5 seconds
   ): TypingSegment[] {
-    const segments: TypingSegment[] = [];
     const completedWords = words.filter((w) => w.isCompleted);
 
-    if (completedWords.length === 0) return segments;
+    if (completedWords.length === 0) return [];
 
     const startTime = completedWords[0]!.startTime!;
     const endTime = completedWords[completedWords.length - 1]!.endTime!;
-    const duration = endTime - startTime;
+    const duration = Math.max(endTime - startTime, 0);
 
-    const segmentCount = Math.ceil(duration / segmentDuration);
+    // Cap the segment count as a hard safety net, and bucket words into
+    // their segment in a single pass instead of re-filtering the full
+    // completed-word list once per segment. The previous nested-filter
+    // version was O(segmentCount * words) — for a long or fast-typed
+    // session that's easily tens of thousands of iterations, and on a
+    // pathological word count it measured as a multi-second (up to ~60s)
+    // main-thread block that presented as the whole tab freezing.
+    const MAX_SEGMENTS = 500;
+    const segmentCount = Math.min(
+      Math.max(Math.ceil(duration / segmentDuration), 1),
+      MAX_SEGMENTS,
+    );
+
+    const buckets: Word[][] = Array.from({ length: segmentCount }, () => []);
+    for (const word of completedWords) {
+      const bucketIndex = Math.min(
+        Math.max(Math.floor((word.startTime! - startTime) / segmentDuration), 0),
+        segmentCount - 1,
+      );
+      buckets[bucketIndex]!.push(word);
+    }
+
+    const segments: TypingSegment[] = [];
+    const segmentMinutes = segmentDuration / 60000;
 
     for (let i = 0; i < segmentCount; i++) {
+      const segmentWords = buckets[i]!;
+      if (segmentWords.length === 0) continue;
+
       const segmentStart = startTime + i * segmentDuration;
       const segmentEnd = segmentStart + segmentDuration;
-
-      const segmentWords = completedWords.filter(
-        (w) => w.startTime! >= segmentStart && w.endTime! <= segmentEnd,
-      );
-
-      if (segmentWords.length === 0) continue;
 
       const characterCount = segmentWords.reduce((sum, w) => sum + w.text.length, 0);
       const correctChars = segmentWords.reduce((sum, w) => {
         return sum + w.characters.filter((c) => c.typed && c.isCorrect).length;
       }, 0);
 
-      const segmentMinutes = segmentDuration / 60000;
       const wpm = Math.round(correctChars / 5 / segmentMinutes);
       const accuracy = characterCount > 0 ? (correctChars / characterCount) * 100 : 100;
 
