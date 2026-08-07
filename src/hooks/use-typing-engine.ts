@@ -126,6 +126,11 @@ export function useTypingEngine({
         }
       }),
       engine.on("character:deleted", () => setWords([...engine.getWords()])),
+      // Content extension (extendContent in typing-engine.ts) mutates the
+      // engine's word list without a character being typed, so it needs
+      // its own event — otherwise React wouldn't pick up the new content
+      // until the next keystroke fires character:typed.
+      engine.on("content:extended", () => setWords([...engine.getWords()])),
     ];
 
     // Update initial state from engine

@@ -1,6 +1,6 @@
 /**
  * Core Typing Engine - Type Definitions
- * 
+ *
  * Framework-independent type definitions for the typing engine.
  * These types are used across all engine modules.
  */
@@ -35,7 +35,7 @@ export interface TypingEngineConfig {
   mode: PracticeMode;
   timerMode: TimerMode;
   duration?: number; // in seconds, required for countdown mode
-  
+
   // Content settings
   language: Language;
   includePunctuation: boolean;
@@ -44,24 +44,24 @@ export interface TypingEngineConfig {
   wordCount?: number;
   customText?: string;
   customWords?: string[];
-  
+
   // Difficulty settings
   difficulty?: Difficulty;
-  
+
   // Keyboard settings
   keyboardLayout?: KeyboardLayout;
-  
+
   // Feature flags
   allowBackspace: boolean;
   allowSkip: boolean;
   blindMode: boolean; // Hide text until typed
   instantDeath: boolean; // End session on first mistake
   strictMode: boolean; // Require exact match including whitespace
-  
+
   // Accessibility
   soundEnabled: boolean;
   hapticEnabled: boolean;
-  
+
   // Advanced
   seedValue?: string; // For reproducible sessions
   multiplayerSessionId?: string;
@@ -73,13 +73,7 @@ export interface TypingEngineConfig {
 // ============================================================================
 
 export type SessionStatus =
-  | "idle"
-  | "ready"
-  | "active"
-  | "paused"
-  | "completed"
-  | "cancelled"
-  | "failed";
+  "idle" | "ready" | "active" | "paused" | "completed" | "cancelled" | "failed";
 
 export interface SessionState {
   status: SessionStatus;
@@ -155,31 +149,31 @@ export interface LiveStatistics {
   wpm: number; // Words Per Minute (adjusted for errors)
   rawWpm: number; // Raw WPM (without error adjustment)
   cpm: number; // Characters Per Minute
-  
+
   // Accuracy metrics
   accuracy: number; // Percentage
   errorRate: number; // Percentage
-  
+
   // Character counts
   correctChars: number;
   incorrectChars: number;
   totalChars: number;
   extraChars: number;
   missedChars: number;
-  
+
   // Word counts
   correctWords: number;
   incorrectWords: number;
   totalWords: number;
-  
+
   // Consistency
   consistency: number; // Variation in WPM over time (lower is better)
-  
+
   // Progress
   progress: number; // Percentage
   completedWords: number;
   remainingWords: number;
-  
+
   // Time
   elapsedTime: number; // milliseconds
   remainingTime: number | null; // milliseconds, null for untimed
@@ -215,10 +209,10 @@ export interface SessionResult {
   duration: number; // milliseconds
   mode: PracticeMode;
   config: TypingEngineConfig;
-  
+
   // Final statistics
   finalStats: LiveStatistics;
-  
+
   // Performance metrics
   averageWpm: number;
   peakWpm: number;
@@ -226,30 +220,33 @@ export interface SessionResult {
   averageAccuracy: number;
   finalAccuracy: number;
   consistency: number;
-  
+
   // Detailed data
   mistakes: MistakeRecord[];
   segments: TypingSegment[]; // Time-based performance segments
-  
+
   // Character analysis
-  characterStats: Map<string, {
-    total: number;
-    correct: number;
-    incorrect: number;
-    accuracy: number;
-  }>;
-  
+  characterStats: Map<
+    string,
+    {
+      total: number;
+      correct: number;
+      incorrect: number;
+      accuracy: number;
+    }
+  >;
+
   // Word analysis
   wordStats: {
     averageWordTime: number;
     fastestWord: { text: string; time: number } | null;
     slowestWord: { text: string; time: number } | null;
   };
-  
+
   // Completion
   completed: boolean;
   completionPercentage: number;
-  
+
   // Raw data for replay
   inputHistory: InputAction[];
   textContent: string;
@@ -280,7 +277,8 @@ export type EngineEventType =
   | "timer:expired"
   | "cursor:moved"
   | "progress:updated"
-  | "config:changed";
+  | "config:changed"
+  | "content:extended";
 
 export interface EngineEvent<T = unknown> {
   type: EngineEventType;
@@ -316,7 +314,7 @@ export class TypingEngineError extends Error {
   constructor(
     message: string,
     public code: string,
-    public details?: unknown
+    public details?: unknown,
   ) {
     super(message);
     this.name = "TypingEngineError";

@@ -397,6 +397,13 @@ export class TypingEngine {
 
     this.words = [...this.words, ...reindexed];
     this.cursorManager.updateWords(this.words);
+    // The word list just grew but no character was typed, so nothing else
+    // in this call stack tells the UI layer to re-read it — without this,
+    // React's `words` state (and therefore the displayed lines) wouldn't
+    // pick up the extension until the *next* keystroke's character:typed
+    // event, which could look like the content silently stalled if the
+    // user pauses even briefly right after finishing what was on screen.
+    this.eventDispatcher.emit("content:extended", { wordCount: this.words.length });
   }
 
   /**
