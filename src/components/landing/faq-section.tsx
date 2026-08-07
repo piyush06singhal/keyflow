@@ -23,7 +23,7 @@ const faqs = [
   {
     question: "What programming languages are supported?",
     answer:
-      "We currently support JavaScript, TypeScript, Python, Java, C++, C#, SQL, HTML, CSS, React, Next.js, and more. Each language includes real-world code snippets and syntax patterns, plus AI-generated snippets on demand.",
+      "17 languages: JavaScript, TypeScript, Python, Java, C++, C, Go, Rust, SQL, HTML, CSS, JSON, Markdown, Bash, Docker, YAML, and Git commands. Each one includes real-world code snippets and syntax patterns, plus AI-generated snippets on demand.",
   },
   {
     question: "How does the AI-generated content work?",
@@ -43,7 +43,7 @@ const faqs = [
   {
     question: "What are daily challenges?",
     answer:
-      "Daily challenges are fresh typing exercises designed to keep you motivated and consistent — speed challenges, accuracy goals, special character practice, and coding-specific tasks.",
+      "One deterministic typing challenge shared by everyone that calendar day — the same text for you as for anyone else who practices today. Your runs on it are saved locally so you can track your own progress over time.",
   },
   {
     question: "Is my data private?",

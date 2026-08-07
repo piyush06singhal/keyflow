@@ -399,7 +399,8 @@ export function CodingDashboard() {
             Track Progress
           </h3>
           <p className="text-muted-foreground text-sm">
-            Detailed statistics including bracket accuracy, symbol accuracy, and more.
+            Live WPM, accuracy, and progress as you type, saved to your local history
+            when you finish.
           </p>
         </TiltCard>
       </div>
