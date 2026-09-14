@@ -95,7 +95,9 @@ export async function generateAiCodeSnippet(
           },
         ],
         temperature: 0.7,
-        maxOutputTokens: 2000,
+        // Kept under the free tier's ~1000 output-tokens-per-minute cap for
+        // on-demand models — 2000 made snippet generation 429 rate-limit.
+        maxOutputTokens: 800,
       },
       {
         provider: "groq",

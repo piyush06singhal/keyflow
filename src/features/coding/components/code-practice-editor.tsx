@@ -134,7 +134,16 @@ export function CodePracticeEditor({
   const progressPct = isCountdown
     ? Math.max(0, Math.min(100, (timerMs / totalMs) * 100))
     : 0;
-  const displaySec = Math.ceil(timerMs / 1000);
+  // Format minute-scale countdowns as "5:00" instead of raw "300s" — matches
+  // the typing practice timer, where a 5-minute session reads naturally at a
+  // glance and the seconds figure doesn't silently balloon past 100.
+  const totalDisplaySec = Math.ceil(timerMs / 1000);
+  const displayMinutes = Math.floor(totalDisplaySec / 60);
+  const displaySec = totalDisplaySec % 60;
+  const displayTime =
+    displayMinutes > 0
+      ? `${displayMinutes}:${String(displaySec).padStart(2, "0")}`
+      : `${totalDisplaySec}s`;
   const isLowTime = isCountdown && timerMs < 10_000;
 
   const isStarted =
@@ -206,9 +215,7 @@ export function CodePracticeEditor({
               >
                 <Timer className="h-3.5 w-3.5" />
                 <span className={isLowTime ? "text-red-400" : undefined}>
-                  {isCountdown
-                    ? `${displaySec}s`
-                    : `${Math.floor(elapsedTime / 1000)}s`}
+                  {isCountdown ? displayTime : `${Math.floor(elapsedTime / 1000)}s`}
                 </span>
               </div>
             )}

@@ -8,7 +8,7 @@ import type {
 
 export class GroqProvider implements AiProvider {
   readonly id = "groq" as const;
-  readonly defaultModel = "llama-3.1-8b-instant";
+  readonly defaultModel = "qwen/qwen3.8-27b";
 
   async generateText(input: AiGenerateTextInput): Promise<AiGenerateTextResult> {
     const startedAt = performance.now();
