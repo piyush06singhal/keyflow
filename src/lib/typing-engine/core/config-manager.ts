@@ -1,6 +1,6 @@
 /**
  * Configuration Manager
- * 
+ *
  * Manages typing engine configuration with validation and defaults.
  */
 
@@ -23,19 +23,13 @@ export const DEFAULT_CONFIG: TypingEngineConfig = {
   // Difficulty settings
   difficulty: "intermediate",
 
-  // Keyboard settings
-  keyboardLayout: "qwerty",
-
   // Feature flags
   allowBackspace: true,
-  allowSkip: false,
   blindMode: false,
-  instantDeath: false,
   strictMode: false,
 
   // Accessibility
   soundEnabled: false,
-  hapticEnabled: false,
 };
 
 export class ConfigManager {
@@ -78,10 +72,7 @@ export class ConfigManager {
   /**
    * Set a specific config value
    */
-  set<K extends keyof TypingEngineConfig>(
-    key: K,
-    value: TypingEngineConfig[K]
-  ): void {
+  set<K extends keyof TypingEngineConfig>(key: K, value: TypingEngineConfig[K]): void {
     this.config[key] = value;
     this.validate();
   }
@@ -90,7 +81,7 @@ export class ConfigManager {
    * Merge user config with defaults
    */
   private mergeWithDefaults(
-    userConfig?: Partial<TypingEngineConfig>
+    userConfig?: Partial<TypingEngineConfig>,
   ): TypingEngineConfig {
     return {
       ...DEFAULT_CONFIG,
@@ -107,36 +98,32 @@ export class ConfigManager {
       if (!this.config.duration || this.config.duration <= 0) {
         throw new TypingEngineError(
           "Duration must be positive for countdown mode",
-          "INVALID_DURATION"
+          "INVALID_DURATION",
         );
       }
     }
 
     // Validate word count
     if (this.config.wordCount !== undefined && this.config.wordCount <= 0) {
-      throw new TypingEngineError(
-        "Word count must be positive",
-        "INVALID_WORD_COUNT"
-      );
+      throw new TypingEngineError("Word count must be positive", "INVALID_WORD_COUNT");
     }
 
     // Validate custom text
     if (this.config.mode === "custom" && !this.config.customText) {
       throw new TypingEngineError(
         "Custom text is required for custom mode",
-        "MISSING_CUSTOM_TEXT"
+        "MISSING_CUSTOM_TEXT",
       );
     }
 
     // Validate custom words
     if (
       this.config.customWords &&
-      (!Array.isArray(this.config.customWords) ||
-        this.config.customWords.length === 0)
+      (!Array.isArray(this.config.customWords) || this.config.customWords.length === 0)
     ) {
       throw new TypingEngineError(
         "Custom words must be a non-empty array",
-        "INVALID_CUSTOM_WORDS"
+        "INVALID_CUSTOM_WORDS",
       );
     }
 
@@ -144,7 +131,7 @@ export class ConfigManager {
     if (this.config.mode === "multiplayer" && !this.config.multiplayerSessionId) {
       throw new TypingEngineError(
         "Multiplayer session ID is required for multiplayer mode",
-        "MISSING_MULTIPLAYER_ID"
+        "MISSING_MULTIPLAYER_ID",
       );
     }
   }

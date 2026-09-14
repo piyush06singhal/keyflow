@@ -40,25 +40,15 @@ interface CodingPracticeStore {
 
 const DEFAULT_CONFIG: CodingPracticeConfig = {
   // Mode settings (from typing engine)
-  mode: "coding",
   timerMode: "countdown",
   duration: 300, // 5 minutes default
 
-  // Content settings (from typing engine)
-  includePunctuation: true,
-  includeNumbers: true,
-  includeCapitalization: true,
-
   // Feature flags
   allowBackspace: true,
-  allowSkip: false,
-  blindMode: false,
-  instantDeath: false,
   strictMode: true,
 
   // Accessibility
   soundEnabled: true,
-  hapticEnabled: false,
 
   // Coding-specific settings
   language: "javascript",
@@ -73,9 +63,6 @@ const DEFAULT_CONFIG: CodingPracticeConfig = {
 
   // Code theme
   codeTheme: "vs-dark",
-
-  // Indentation
-  tabSize: 2,
 
   // Typography
   fontFamily: "JetBrains Mono, Fira Code, Consolas, monospace",

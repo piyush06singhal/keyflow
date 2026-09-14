@@ -11,12 +11,9 @@ const baseConfig: TypingEngineConfig = {
   includeNumbers: false,
   includeCapitalization: false,
   allowBackspace: true,
-  allowSkip: false,
   blindMode: false,
-  instantDeath: false,
   strictMode: false,
   soundEnabled: false,
-  hapticEnabled: false,
 };
 
 function makeWords(...texts: string[]): Word[] {

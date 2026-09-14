@@ -1,6 +1,6 @@
 /**
  * Typing Engine - Public API
- * 
+ *
  * Exports all public interfaces and classes for the typing engine.
  */
 
@@ -15,28 +15,27 @@ export type {
   TimerMode,
   Language,
   Difficulty,
-  KeyboardLayout,
-  
+
   // Session
   SessionStatus,
   SessionState,
   SessionResult,
   SessionSnapshot,
-  
+
   // Text & Cursor
   Character,
   Word,
   CursorPosition,
-  
+
   // Input
   KeyEvent,
   InputAction,
-  
+
   // Statistics
   LiveStatistics,
   MistakeRecord,
   TypingSegment,
-  
+
   // Events
   EngineEventType,
   EngineEvent,

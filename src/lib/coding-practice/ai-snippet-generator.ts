@@ -1,7 +1,7 @@
 /**
  * AI Snippet Generator
  *
- * Generates custom code snippets using Groq/Gemini based on user preferences.
+ * Generates custom code snippets using Groq based on user preferences.
  * Runs on the server (calling Groq directly) or on the client (calling the server API).
  */
 
@@ -308,7 +308,13 @@ export async function generateMultipleSnippets(
 }
 
 /**
- * Generate snippet with fallback to static
+ * Generate a snippet via AI FIRST, falling back to a curated static snippet
+ * when Groq is unreachable or returns nothing useful.
+ *
+ * Policy: AI is the priority source, but a known-good curated snippet is a
+ * deliberate, visible backup so coding practice stays usable without a Groq
+ * key — it is never mislabeled as AI content. (Typing practice, by contrast,
+ * stays strict and surfaces an error state instead of a static word bank.)
  */
 export async function generateSnippetWithFallback(
   options: GenerateSnippetOptions,
@@ -316,10 +322,9 @@ export async function generateSnippetWithFallback(
   try {
     return await generateAiCodeSnippet(options);
   } catch (error) {
-    console.warn("AI generation failed, falling back to static snippet:", error);
+    console.warn("AI snippet generation failed, using curated fallback:", error);
 
     const { SnippetProvider } = await import("./snippet-provider");
-    // Fallback to static snippet
     const staticSnippet = await SnippetProvider.getSnippet({
       source: "static",
       filter: {

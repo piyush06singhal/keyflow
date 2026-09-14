@@ -44,13 +44,44 @@ const CODE_THEMES: { value: CodeTheme; label: string }[] = [
   { value: "one-dark", label: "One Dark" },
 ];
 
+/**
+ * Font family options for the code editor.
+ *
+ * The `value` must exactly match the `fontFamily` stored in
+ * `CodingPracticeConfig`. When a user picks a font here the full CSS
+ * font-stack (including the generic `monospace` fallback) is stored so
+ * the editor always has a valid stack even if the web-font hasn't loaded.
+ *
+ * If a previously-persisted `fontFamily` doesn't match any option (e.g.
+ * an older build stored just the font name without the fallback), we
+ * gracefully fall back to showing the first option — the Select component
+ * handles this via the `value` prop.
+ */
 const FONT_FAMILIES = [
-  { value: "JetBrains Mono, monospace", label: "JetBrains Mono" },
-  { value: "Fira Code, monospace", label: "Fira Code" },
-  { value: "Consolas, monospace", label: "Consolas" },
-  { value: "Monaco, monospace", label: "Monaco" },
-  { value: "Source Code Pro, monospace", label: "Source Code Pro" },
+  { value: "JetBrains Mono, Fira Code, Consolas, monospace", label: "JetBrains Mono" },
+  { value: "Fira Code, Consolas, monospace", label: "Fira Code" },
+  { value: "Consolas, Monaco, monospace", label: "Consolas" },
+  { value: "Monaco, Menlo, monospace", label: "Monaco" },
+  { value: "Source Code Pro, Fira Code, monospace", label: "Source Code Pro" },
 ];
+
+/**
+ * Match a potentially-stored fontFamily value to one of the known options.
+ * Handles legacy values that may lack the full fallback stack.
+ */
+function matchFontFamily(stored: string): string {
+  if (FONT_FAMILIES.some((f) => f.value === stored)) return stored;
+  // Try matching by the leading font name (before the first comma)
+  const leadingName = stored.split(",")[0]?.trim().toLowerCase();
+  if (leadingName) {
+    const match = FONT_FAMILIES.find(
+      (f) => f.value.split(",")[0]?.trim().toLowerCase() === leadingName,
+    );
+    if (match) return match.value;
+  }
+  // No match — default to first option
+  return FONT_FAMILIES[0]!.value;
+}
 
 export function CodingConfigurationDrawer({
   open,
@@ -95,7 +126,7 @@ export function CodingConfigurationDrawer({
             <div className="space-y-3">
               <Label>Font Family</Label>
               <Select
-                value={config.fontFamily}
+                value={matchFontFamily(config.fontFamily)}
                 onValueChange={(value) => updateConfig({ fontFamily: value })}
               >
                 <SelectTrigger>

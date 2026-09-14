@@ -19,6 +19,7 @@ import { useKeyboardShortcuts, TYPING_SHORTCUTS } from "@/hooks/use-keyboard-sho
 import { useTypingPracticeStore } from "@/stores/typing-practice-store";
 import { useSessionLifecycle } from "@/hooks/use-session-lifecycle";
 import type { SessionResult } from "@/lib/typing-engine";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -61,6 +62,9 @@ export default function PracticePage() {
   const [sessionResult, setSessionResult] = useState<SessionResult | null>(null);
   const [timeUpOpen, setTimeUpOpen] = useState(false);
   const [isGeneratingText, setIsGeneratingText] = useState(false);
+  // Set when AI text generation fails in strict AI mode, so the canvas shows
+  // an explicit error state instead of silently falling back to static text.
+  const [aiUnavailable, setAiUnavailable] = useState(false);
 
   // Session lifecycle management
   const { completeSession } = useSessionLifecycle();
@@ -111,12 +115,9 @@ export default function PracticePage() {
       wordCount: config.wordCount,
       customText: config.customText,
       allowBackspace: config.allowBackspace,
-      allowSkip: false,
       blindMode: config.blindMode,
-      instantDeath: false,
       strictMode: config.strictMode,
       soundEnabled: uiSettings.soundEnabled,
-      hapticEnabled: false,
     },
     onComplete: handleComplete,
     autoStart: false,
@@ -162,12 +163,22 @@ export default function PracticePage() {
       (config.mode === "quote" || config.mode === "paragraph" || config.mode === "word")
     ) {
       setIsGeneratingText(true);
+      setAiUnavailable(false);
       const text = await getPracticeText(config.mode, config.duration);
       setIsGeneratingText(false);
-      if (text) {
-        finalMode = "custom";
-        finalText = text;
+      if (!text) {
+        // Strict AI mode: never silently fall back to the engine's static
+        // word bank — surface the failure and show an error state instead,
+        // so the user can fix GROQ_API_KEYS and retry.
+        setAiUnavailable(true);
+        toast.error("AI text generation failed", {
+          description:
+            "Groq was unreachable or returned no text. Check GROQ_API_KEYS in .env.local and retry.",
+        });
+        return;
       }
+      finalMode = "custom";
+      finalText = text;
     }
 
     typing.restart({
@@ -332,7 +343,23 @@ export default function PracticePage() {
             {/* Left: Typing Area */}
             <div className="min-w-0 space-y-6">
               <div className="relative">
-                <TypingCanvas typing={typing} />
+                {aiUnavailable ? (
+                  <div className="bg-muted/40 border-border flex min-h-56 flex-col items-center justify-center gap-3 rounded-2xl border-2 p-8 text-center">
+                    <p className="text-lg font-bold">
+                      AI text generation is unavailable
+                    </p>
+                    <p className="text-muted-foreground max-w-md text-sm">
+                      Groq could not be reached, so no practice text was loaded —
+                      KeyFlow never substitutes static text in AI mode. Check that
+                      GROQ_API_KEYS is set in .env.local, then try again.
+                    </p>
+                    <Button variant="outline" size="sm" onClick={handleRestart}>
+                      Try Again
+                    </Button>
+                  </div>
+                ) : (
+                  <TypingCanvas typing={typing} />
+                )}
 
                 {/* AI Text generation overlay */}
                 <AnimatePresence>

@@ -158,6 +158,14 @@ export function useTypingEngine({
       const engine = engineRef.current;
       if (!engine) return;
 
+      // Keystrokes fired while an IME composition is in progress (e.g. CJK
+      // text entry) carry intermediate key values that aren't the final
+      // composed character, so feeding them to the engine would garble the
+      // session. `KeyboardEvent.isComposing` is the standards way to detect
+      // this; the compositionstart/compositionend listeners below additionally
+      // gate the engine for browsers/IMEs that don't set the flag on keydown.
+      if (e.isComposing) return;
+
       const engineStatus = engine.getStatus();
 
       // If ready, start the session on first real keypress
@@ -204,8 +212,21 @@ export function useTypingEngine({
       }
     };
 
+    // While an IME composition is in progress, tell the engine to ignore
+    // keydown events until the composition ends — both boundaries mirror
+    // the same check as the isComposing guard above, but engine-side so any
+    // other caller of processInput gets the same protection.
+    const handleCompositionStart = () => engineRef.current?.setComposing(true);
+    const handleCompositionEnd = () => engineRef.current?.setComposing(false);
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("compositionstart", handleCompositionStart);
+    window.addEventListener("compositionend", handleCompositionEnd);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("compositionstart", handleCompositionStart);
+      window.removeEventListener("compositionend", handleCompositionEnd);
+    };
   }, []);
 
   // Actions

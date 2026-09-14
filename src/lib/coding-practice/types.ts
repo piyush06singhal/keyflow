@@ -140,9 +140,6 @@ export interface CodingPracticeConfig extends Omit<
   // Code editor theme
   codeTheme: CodeTheme;
 
-  // Indentation settings
-  tabSize: number;
-
   // Typography
   fontFamily: string;
   fontSize: number;
@@ -284,14 +281,6 @@ export interface SnippetProviderConfig {
 // ============================================================================
 // Future Extension Points
 // ============================================================================
-
-export interface AIGenerationConfig {
-  model: "groq" | "gemini";
-  difficulty: CodingDifficulty;
-  topic?: string;
-  style?: "tutorial" | "interview" | "project";
-  maxTokens?: number;
-}
 
 export interface InterviewPrepConfig {
   company?: string;

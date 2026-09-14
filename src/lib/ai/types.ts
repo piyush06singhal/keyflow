@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export type AiProviderId = "gemini" | "groq";
+export type AiProviderId = "groq";
 
 export type AiRequestKind =
   | "typing_session_analysis"

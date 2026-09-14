@@ -43,7 +43,6 @@ export interface PracticeUISettings {
   cursorStyle: "line" | "block" | "underline";
 
   // Display options
-  showLiveWpm: boolean;
   showKeyboard: boolean;
   keyboardLayout: KeyboardLayoutVariant;
 
@@ -96,7 +95,6 @@ const defaultUISettings: PracticeUISettings = {
   fontSize: "lg",
   fontFamily: "mono",
   cursorStyle: "line",
-  showLiveWpm: true,
   showKeyboard: true,
   keyboardLayout: "ansi",
   soundEnabled: false,

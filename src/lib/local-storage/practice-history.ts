@@ -8,6 +8,12 @@
 const HISTORY_KEY = "keyflow.practice-history.v1";
 const MAX_ENTRIES = 200;
 
+/**
+ * Custom event name dispatched whenever practice history is written, so
+ * live viewers (e.g. the navbar streak) can recompute without polling.
+ */
+export const HISTORY_CHANGE_EVENT = "keyflow:history-changed";
+
 export interface LocalSessionRecord {
   id: string;
   completedAt: number;
@@ -54,6 +60,13 @@ export function appendSessionToHistory(record: LocalSessionRecord): void {
   const existing = readHistory();
   const updated = [record, ...existing].slice(0, MAX_ENTRIES);
   writeHistory(updated);
+  notifyHistoryChanged();
+}
+
+/** Dispatch the history-changed event to live consumers (navbar streak etc.). */
+export function notifyHistoryChanged(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(HISTORY_CHANGE_EVENT));
 }
 
 /** All sessions, newest-first. */
@@ -68,4 +81,5 @@ export function getRecentSessions(limit: number): LocalSessionRecord[] {
 
 export function clearSessionHistory(): void {
   writeHistory([]);
+  notifyHistoryChanged();
 }

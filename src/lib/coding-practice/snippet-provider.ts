@@ -118,7 +118,14 @@ export class SnippetProvider {
         loosened = loosened.filter((s) => s.language === filter.language);
       }
       if (loosened.length === 0) {
-        return STATIC_SNIPPETS[0] || null;
+        // No static snippets exist for the requested language.  Rather
+        // than silently returning a JavaScript snippet (which confused
+        // users), signal that the caller should try AI or show a message.
+        console.warn(
+          `No static snippets available for language "${filter?.language ?? "unknown"}". ` +
+            "Enable AI generation or switch to a supported language.",
+        );
+        return null;
       }
       const randomIndex = Math.floor(Math.random() * loosened.length);
       return loosened[randomIndex] || null;
@@ -144,7 +151,9 @@ export class SnippetProvider {
   }
 
   /**
-   * Get AI-generated snippet (placeholder for future implementation)
+   * Get AI-generated snippet. AI is the priority, but a curated static
+   * snippet is the working backup when Groq is unreachable, so coding
+   * practice never dead-ends on a missing key.
    */
   private static async getAIGeneratedSnippet(
     filter?: SnippetFilter,
@@ -153,15 +162,13 @@ export class SnippetProvider {
       // Import dynamically
       const { generateSnippetWithFallback } = await import("./ai-snippet-generator");
 
-      const snippet = await generateSnippetWithFallback({
+      return await generateSnippetWithFallback({
         language: filter?.language || "javascript",
         difficulty: filter?.difficulty || "beginner",
         category: filter?.category,
         framework: filter?.framework,
         lineCount: filter?.maxLines || 20,
       });
-
-      return snippet;
     } catch (error) {
       console.error("AI snippet generation error:", error);
       return this.getStaticSnippet(filter);
@@ -179,25 +186,52 @@ export class SnippetProvider {
   }
 
   /**
-   * Get interview question snippet (placeholder for future implementation)
+   * Get an interview-style question snippet — AI first (interview framing),
+   * with the curated static library as the working backup.
    */
   private static async getInterviewSnippet(
     filter?: SnippetFilter,
   ): Promise<CodeSnippet | null> {
-    // TODO: Implement interview question snippets
-    console.warn("Interview snippets not yet implemented");
-    return this.getStaticSnippet(filter);
+    try {
+      const { generateSnippetWithFallback } = await import("./ai-snippet-generator");
+
+      return await generateSnippetWithFallback({
+        language: filter?.language || "javascript",
+        difficulty: filter?.difficulty || "intermediate",
+        category: filter?.category,
+        framework: filter?.framework,
+        lineCount: filter?.maxLines || 25,
+        style: "interview",
+      });
+    } catch (error) {
+      console.error("Interview snippet generation error:", error);
+      return this.getStaticSnippet(filter);
+    }
   }
 
   /**
-   * Get LeetCode-style snippet (placeholder for future implementation)
+   * Get a LeetCode-style algorithm snippet — AI first (algorithm framing),
+   * with the curated static library as the working backup.
    */
   private static async getLeetCodeSnippet(
     filter?: SnippetFilter,
   ): Promise<CodeSnippet | null> {
-    // TODO: Implement LeetCode-style snippets
-    console.warn("LeetCode snippets not yet implemented");
-    return this.getStaticSnippet(filter);
+    try {
+      const { generateSnippetWithFallback } = await import("./ai-snippet-generator");
+
+      return await generateSnippetWithFallback({
+        language: filter?.language || "javascript",
+        difficulty: filter?.difficulty || "intermediate",
+        category: "algorithms",
+        framework: filter?.framework,
+        topic: "a classic LeetCode-style algorithm problem",
+        lineCount: filter?.maxLines || 30,
+        style: "algorithm",
+      });
+    } catch (error) {
+      console.error("LeetCode snippet generation error:", error);
+      return this.getStaticSnippet(filter);
+    }
   }
 
   /**

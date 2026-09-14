@@ -122,8 +122,45 @@ export default function CodePracticeClient() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="space-y-4 text-center">
-          <div className="border-primary mx-auto h-12 w-12 animate-spin rounded-full border-b-2" />
-          <p className="text-muted-foreground">Loading code snippet…</p>
+          {isLoading ? (
+            <>
+              <div className="border-primary mx-auto h-12 w-12 animate-spin rounded-full border-b-2" />
+              <p className="text-muted-foreground">Loading code snippet…</p>
+            </>
+          ) : (
+            <>
+              <p className="text-muted-foreground text-lg">
+                No snippet available for {config.language}.
+              </p>
+              <p className="text-muted-foreground text-sm">
+                {config.snippetSource === "ai-generated"
+                  ? "AI generation is unavailable. Check that GROQ_API_KEYS is set in .env.local, or switch Content Source to Curated Snippets."
+                  : "Switch to a language with curated snippets, or enable AI generation."}
+              </p>
+              <div className="flex justify-center gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push("/practice/code/dashboard")}
+                >
+                  Back to Dashboard
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    useCodingPracticeStore
+                      .getState()
+                      .updateConfig({ snippetSource: "static" });
+                    setSnippet(null);
+                    setLoading(true);
+                  }}
+                >
+                  Try Curated Snippets
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );

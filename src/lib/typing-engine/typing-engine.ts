@@ -233,6 +233,18 @@ export class TypingEngine {
   // ============================================================================
 
   /**
+   * Notify the engine that an IME composition is in progress or finished.
+   * While composing, keystroke events are ignored to prevent garbled input.
+   */
+  setComposing(composing: boolean): void {
+    if (composing) {
+      this.inputManager.onCompositionStart();
+    } else {
+      this.inputManager.onCompositionEnd();
+    }
+  }
+
+  /**
    * Process keyboard input
    */
   processInput(event: KeyboardEvent): void {

@@ -9,5 +9,3 @@ export type {
   KeyboardShortcut,
   UseKeyboardShortcutsOptions,
 } from "./use-keyboard-shortcuts";
-export { useToast } from "./use-toast";
-export type { Toast } from "./use-toast";

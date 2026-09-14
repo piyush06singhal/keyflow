@@ -31,7 +31,7 @@ export const TextRenderer = memo(function TextRenderer({
   cursorPosition,
   className,
 }: TextRendererProps) {
-  const { uiSettings } = useTypingPracticeStore();
+  const { uiSettings, config } = useTypingPracticeStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const wordEls = useRef<Map<number, HTMLSpanElement>>(new Map());
@@ -109,6 +109,8 @@ export const TextRenderer = memo(function TextRenderer({
             isActiveWord={word.index === activeWordIndex}
             activeCharIndex={word.index === activeWordIndex ? activeCharIndex : null}
             cursorStyle={uiSettings.cursorStyle}
+            blindMode={config.blindMode}
+            highContrast={uiSettings.highContrast}
             registerRef={registerWordRef}
           />
         ))}
@@ -122,6 +124,8 @@ interface WordRendererProps {
   isActiveWord: boolean;
   activeCharIndex: number | null;
   cursorStyle: "line" | "block" | "underline";
+  blindMode: boolean;
+  highContrast: boolean;
   registerRef: (index: number, el: HTMLSpanElement | null) => void;
 }
 
@@ -130,6 +134,8 @@ const WordRenderer = memo(function WordRenderer({
   isActiveWord,
   activeCharIndex,
   cursorStyle,
+  blindMode,
+  highContrast,
   registerRef,
 }: WordRendererProps) {
   const isCompleted = word.isCompleted;
@@ -138,7 +144,11 @@ const WordRenderer = memo(function WordRenderer({
     <span
       ref={(el) => registerRef(word.index, el)}
       className={cn("relative inline-flex", {
-        "opacity-40": !isCompleted && !isActiveWord,
+        // Blind mode: hide non-active words entirely so the user can't
+        // peek ahead.  The active word is always visible (with untyped
+        // chars hidden at the CharacterRenderer level).
+        "opacity-0": blindMode && !isActiveWord && !isCompleted,
+        "opacity-40": !blindMode && !isCompleted && !isActiveWord,
         "opacity-100": isCompleted || isActiveWord,
       })}
     >
@@ -148,6 +158,9 @@ const WordRenderer = memo(function WordRenderer({
           character={char}
           showCursor={isActiveWord && activeCharIndex === charIdx}
           cursorStyle={cursorStyle}
+          // In blind mode only show chars that have been typed
+          hidden={!isActiveWord ? false : blindMode && !char.typed}
+          highContrast={highContrast}
         />
       ))}
     </span>
@@ -158,24 +171,34 @@ interface CharacterRendererProps {
   character: Readonly<Character>;
   showCursor: boolean;
   cursorStyle: "line" | "block" | "underline";
+  /** Blind mode: hide the character entirely (renders as blank space) */
+  hidden?: boolean;
+  /** High contrast: use stronger colors for correct/incorrect */
+  highContrast?: boolean;
 }
 
 const CharacterRenderer = memo(function CharacterRenderer({
   character,
   showCursor,
   cursorStyle,
+  hidden,
+  highContrast,
 }: CharacterRendererProps) {
   const { char, isCorrect, typed } = character;
 
   const getCharacterColor = () => {
     if (!typed) return "text-muted-foreground/70";
-    if (isCorrect === true) return "text-foreground";
-    return "text-destructive";
+    if (isCorrect === true) {
+      return highContrast ? "text-green-600 dark:text-green-400" : "text-foreground";
+    }
+    return highContrast ? "text-red-600 dark:text-red-400" : "text-destructive";
   };
 
   const getBgColor = () => {
     if (!typed) return "";
-    if (isCorrect === false) return "bg-destructive/15";
+    if (isCorrect === false) {
+      return highContrast ? "bg-red-500/25" : "bg-destructive/15";
+    }
     return "";
   };
 
@@ -189,7 +212,8 @@ const CharacterRenderer = memo(function CharacterRenderer({
           getBgColor(),
         )}
       >
-        {char === " " ? " " : char}
+        {/* In blind mode, render a placeholder space for untyped chars */}
+        {hidden ? " " : char === " " ? " " : char}
       </span>
 
       {/* Cursor — blinking */}

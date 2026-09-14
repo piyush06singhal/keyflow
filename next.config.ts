@@ -17,10 +17,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "*.supabase.co",
-      },
-      {
-        protocol: "https",
         hostname: "avatars.githubusercontent.com",
       },
       {
@@ -56,9 +52,12 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            // Permissive but secure default for Next.js, Supabase, and WebSockets
+            // Hardened but Next.js-compatible. `script-src 'unsafe-inline'` (and
+            // `'unsafe-eval'` for `next dev` hot reload) are required by the
+            // App Router's inline bootstrap — there is no supported nonce
+            // path to strip them. Everything else is locked down.
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.supabase.co https://avatars.githubusercontent.com https://lh3.googleusercontent.com https://cdn.discordapp.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.groq.com; font-src 'self' data:;",
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://avatars.githubusercontent.com https://lh3.googleusercontent.com https://cdn.discordapp.com; connect-src 'self' https://api.groq.com; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self';",
           },
         ],
       },

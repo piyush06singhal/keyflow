@@ -28,8 +28,6 @@ export type Language = "english" | "spanish" | "french" | "german" | "custom";
 
 export type Difficulty = "beginner" | "intermediate" | "advanced" | "expert";
 
-export type KeyboardLayout = "qwerty" | "dvorak" | "colemak" | "azerty" | "custom";
-
 export interface TypingEngineConfig {
   // Mode settings
   mode: PracticeMode;
@@ -48,19 +46,13 @@ export interface TypingEngineConfig {
   // Difficulty settings
   difficulty?: Difficulty;
 
-  // Keyboard settings
-  keyboardLayout?: KeyboardLayout;
-
   // Feature flags
   allowBackspace: boolean;
-  allowSkip: boolean;
-  blindMode: boolean; // Hide text until typed
-  instantDeath: boolean; // End session on first mistake
+  blindMode: boolean; // Hide text until typed (rendered by the UI layer)
   strictMode: boolean; // Require exact match including whitespace
 
   // Accessibility
   soundEnabled: boolean;
-  hapticEnabled: boolean;
 
   // Advanced
   seedValue?: string; // For reproducible sessions

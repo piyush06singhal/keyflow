@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,7 +23,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getSessionHistory } from "@/lib/local-storage/practice-history";
+import {
+  getSessionHistory,
+  HISTORY_CHANGE_EVENT,
+} from "@/lib/local-storage/practice-history";
 
 const navLinks = [
   { href: "/practice", label: "Practice" },
@@ -72,13 +75,22 @@ export function SiteNavbar() {
   const { setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const streak = useMemo(() => computeStreak(), []);
+  const [streak, setStreak] = useState(() => computeStreak());
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // The streak is derived from local session history, so recompute it the
+  // moment a new session is recorded (or history is cleared) instead of
+  // freezing it at the value from first page load.
+  useEffect(() => {
+    const handleHistoryChanged = () => setStreak(computeStreak());
+    window.addEventListener(HISTORY_CHANGE_EVENT, handleHistoryChanged);
+    return () => window.removeEventListener(HISTORY_CHANGE_EVENT, handleHistoryChanged);
   }, []);
 
   return (

@@ -44,12 +44,9 @@ describe("TextGenerator.generate — coding mode", () => {
       includeNumbers: false,
       includeCapitalization: false,
       allowBackspace: true,
-      allowSkip: false,
       blindMode: false,
-      instantDeath: false,
       strictMode: false,
       soundEnabled: false,
-      hapticEnabled: false,
       customText,
     });
 

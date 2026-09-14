@@ -47,7 +47,7 @@ runs out, fresh content keeps arriving automatically so the session never dead-e
 
 Practice on a real code snippet — indentation, line breaks, brackets, and all — scored
 character by character against exactly what's on screen. Choose from **17 languages**
-and a library of **48 hand-picked snippets**, or let Groq generate a fresh one on demand
+and a library of **60 hand-picked snippets**, or let Groq generate a fresh one on demand
 for your chosen language and difficulty. Pick from **11 editor color themes** to match
 your taste.
 
@@ -72,22 +72,23 @@ drives the app's behavior rather than being decorative.
 
 There's no backend, no account system, and nothing about your typing is ever sent
 anywhere. The only network calls KeyFlow makes are to Groq's API, to generate fresh
-practice text or code snippets on request — and if that's ever unavailable, a curated
-local library keeps you practicing without interruption.
+practice text or code snippets on request. If Groq is ever unavailable, coding practice
+falls back to its curated local snippet library; typing practice instead shows an
+explicit "AI generation unavailable" state rather than silently substituting static text.
 
 Clear your browser data and your history goes with it. That's the honest trade-off for
 an app that genuinely doesn't track you.
 
 ## Tech Stack
 
-| Layer        | Choice                                                                                                                                    |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Framework    | Next.js 15 (App Router), React 19, TypeScript                                                                                             |
-| UI & Styling | Tailwind CSS v4, Radix UI primitives, Framer Motion                                                                                       |
-| State        | Zustand, persisted to `localStorage`                                                                                                      |
-| AI           | Groq Cloud API — round-robin multi-key pool, automatic rate-limit fallback (Gemini available as an alternate provider, unused by default) |
-| Testing      | Jest, covering the core typing engine                                                                                                     |
-| Persistence  | Browser `localStorage` only — no database, no backend                                                                                     |
+| Layer        | Choice                                                                                        |
+| ------------ | --------------------------------------------------------------------------------------------- |
+| Framework    | Next.js 15 (App Router), React 19, TypeScript                                                 |
+| UI & Styling | Tailwind CSS v4, Radix UI primitives, Framer Motion                                           |
+| State        | Zustand, persisted to `localStorage`                                                          |
+| AI           | Groq Cloud API — round-robin multi-key pool, automatic rate-limit fallback (sole AI provider) |
+| Testing      | Jest, covering the core typing engine                                                         |
+| Persistence  | Browser `localStorage` only — no database, no backend                                         |
 
 ## Getting Started
 
@@ -146,7 +147,7 @@ src/
 ├── lib/
 │   ├── typing-engine/      Framework-independent core typing engine
 │   ├── coding-practice/    Snippet library, language configs, AI snippet generation
-│   ├── ai/                 Groq/Gemini provider abstraction and key pool
+│   ├── ai/                 Groq provider abstraction and key pool
 │   ├── local-storage/      Practice history, personal bests, daily challenge records
 │   └── session-lifecycle/  Session completion, analytics aggregation
 └── stores/                 Zustand stores (typing config, coding config, settings)

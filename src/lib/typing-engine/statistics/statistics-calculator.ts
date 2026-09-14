@@ -42,8 +42,9 @@ export class StatisticsCalculator {
     // Calculate Error Rate
     const errorRate = totalChars > 0 ? (incorrectChars / totalChars) * 100 : 0;
 
-    // Calculate Consistency (placeholder - requires historical data)
-    const consistency = 100; // Will be calculated from segments
+    // Initial consistency estimate from accuracy; the engine recalculates
+    // this from real typing segments once enough words are completed.
+    const consistency = Math.round(accuracy);
 
     return {
       wpm,
