@@ -38,7 +38,10 @@ Do NOT include any title, introduction, or formatting. Return ONLY the raw parag
           { role: "user", content: userPrompt },
         ],
         temperature: 0.8,
-        maxOutputTokens: 1000,
+        // Kept under the free tier's ~1000 output-tokens-per-minute cap for
+        // on-demand models — 1000 made typing generation rate-limit (429) the
+        // moment quota was tight, same as coding snippet generation did.
+        maxOutputTokens: 700,
       },
       {
         provider: "groq",

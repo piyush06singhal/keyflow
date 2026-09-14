@@ -64,7 +64,10 @@ export default function PracticePage() {
   const [isGeneratingText, setIsGeneratingText] = useState(false);
   // Set when AI text generation fails in strict AI mode, so the canvas shows
   // an explicit error state instead of silently falling back to static text.
-  const [aiUnavailable, setAiUnavailable] = useState(false);
+  // True while Groq is unavailable and the engine's static text is shown as a
+  // visible fallback (typing practice only falls back to static text when it
+  // clearly flags it — never silently).
+  const [usingFallbackText, setUsingFallbackText] = useState(false);
 
   // Session lifecycle management
   const { completeSession } = useSessionLifecycle();
@@ -163,22 +166,25 @@ export default function PracticePage() {
       (config.mode === "quote" || config.mode === "paragraph" || config.mode === "word")
     ) {
       setIsGeneratingText(true);
-      setAiUnavailable(false);
       const text = await getPracticeText(config.mode, config.duration);
       setIsGeneratingText(false);
       if (!text) {
-        // Strict AI mode: never silently fall back to the engine's static
-        // word bank — surface the failure and show an error state instead,
-        // so the user can fix GROQ_API_KEYS and retry.
-        setAiUnavailable(true);
-        toast.error("AI text generation failed", {
+        // AI-first, visible static fallback: when Groq is unavailable (missing
+        // key, rate limit, outage) keep typing practice alive with the engine's
+        // static text and flag it clearly — the session never dead-ends, and
+        // the banner makes it obvious the text is not AI-generated. Typing mode
+        // stays "custom" for the previous AI text; otherwise finalMode stays the
+        // selected mode so the engine serves static words/paragraphs.
+        setUsingFallbackText(true);
+        toast.error("AI text generation is unavailable", {
           description:
-            "Groq was unreachable or returned no text. Check GROQ_API_KEYS in .env.local and retry.",
+            "Showing static practice text instead. Check GROQ_API_KEYS / your tier, or retry.",
         });
-        return;
+      } else {
+        setUsingFallbackText(false);
+        finalMode = "custom";
+        finalText = text;
       }
-      finalMode = "custom";
-      finalText = text;
     }
 
     typing.restart({
@@ -343,23 +349,23 @@ export default function PracticePage() {
             {/* Left: Typing Area */}
             <div className="min-w-0 space-y-6">
               <div className="relative">
-                {aiUnavailable ? (
-                  <div className="bg-muted/40 border-border flex min-h-56 flex-col items-center justify-center gap-3 rounded-2xl border-2 p-8 text-center">
-                    <p className="text-lg font-bold">
-                      AI text generation is unavailable
-                    </p>
-                    <p className="text-muted-foreground max-w-md text-sm">
-                      Groq could not be reached, so no practice text was loaded —
-                      KeyFlow never substitutes static text in AI mode. Check that
-                      GROQ_API_KEYS is set in .env.local, then try again.
+                {usingFallbackText && (
+                  <div
+                    className="bg-muted/60 border-border mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 px-4 py-3"
+                    role="status"
+                  >
+                    <p className="text-sm font-semibold">
+                      <span className="text-foreground">AI text is unavailable</span>{" "}
+                      <span className="text-muted-foreground">
+                        — showing static practice text instead (not AI-generated).
+                      </span>
                     </p>
                     <Button variant="outline" size="sm" onClick={handleRestart}>
-                      Try Again
+                      Try AI again
                     </Button>
                   </div>
-                ) : (
-                  <TypingCanvas typing={typing} />
                 )}
+                <TypingCanvas typing={typing} />
 
                 {/* AI Text generation overlay */}
                 <AnimatePresence>
