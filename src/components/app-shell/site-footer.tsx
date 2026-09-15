@@ -18,15 +18,15 @@ const footerLinks = {
 /** Shared footer used on the landing page and every app page. */
 export function SiteFooter() {
   return (
-    <footer className="border-border bg-card/40 relative border-t-2 backdrop-blur-sm">
-      <div className="container mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-10 sm:grid-cols-3">
+    <footer className="border-border bg-card relative border-t-2">
+      <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="grid gap-8 sm:grid-cols-3">
           <div>
             <Link
               href="/"
-              className="font-display mb-3 flex items-center gap-2 text-lg"
+              className="font-display mb-3 flex items-center gap-2 text-base"
             >
-              <div className="border-border bg-primary text-primary-foreground shadow-pop-sm flex h-9 w-9 items-center justify-center rounded-xl border-2">
+              <div className="border-border bg-primary text-primary-foreground shadow-pop-sm flex h-8 w-8 items-center justify-center rounded-xl border-2">
                 <Keyboard className="h-4 w-4" />
               </div>
               <span>KeyFlow</span>
@@ -42,8 +42,8 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-bold">Practice</h3>
-            <ul className="space-y-3">
+            <h3 className="mb-3 text-sm font-bold">Practice</h3>
+            <ul className="space-y-2">
               {footerLinks.practice.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -58,8 +58,8 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-bold">Learn</h3>
-            <ul className="space-y-3">
+            <h3 className="mb-3 text-sm font-bold">Learn</h3>
+            <ul className="space-y-2">
               {footerLinks.learn.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -74,7 +74,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="border-border-subtle mt-10 flex flex-col items-center justify-between gap-4 border-t-2 pt-6 sm:flex-row">
+        <div className="border-border-subtle mt-6 flex flex-col items-center justify-between gap-3 border-t-2 pt-4 sm:flex-row">
           <p className="text-muted-foreground text-sm">
             © {new Date().getFullYear()} KeyFlow.
           </p>

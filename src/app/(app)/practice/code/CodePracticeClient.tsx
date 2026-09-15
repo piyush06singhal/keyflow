@@ -174,7 +174,7 @@ export default function CodePracticeClient() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-card/50 sticky top-0 z-40 border-b backdrop-blur-sm"
       >
-        <div className="mx-auto max-w-[1800px] px-6 py-4">
+        <div className="mx-auto max-w-7xl px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" onClick={handleBack}>
@@ -219,7 +219,7 @@ export default function CodePracticeClient() {
       </motion.div>
 
       {/* Main Content */}
-      <div className="mx-auto max-w-[1800px] px-6 py-8">
+      <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
           {/* Editor - Takes up 3 columns */}
           <div className="xl:col-span-3">
